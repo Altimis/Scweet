@@ -136,8 +136,8 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
     end_date = datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(days=days_between)
 
     refresh = 0
-    save_every = days_between  #save every "days_between" days
-    #saved_header=False
+    save_every = 2  #save every 30 days
+    saved_header=False
 
     while end_date<=datetime.datetime.strptime(max_date, '%Y-%m-%d'):
         scroll=0
@@ -206,9 +206,9 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
             with open(requests[0]+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv', 'a', newline='', encoding='utf-8') as f:
                 header = ['UserName', 'Handle', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Is_Promoted']
                 writer = csv.writer(f)
-                #if saved_header==False:
-                writer.writerow(header)
-                saved_header=True
+                if saved_header==False:
+                    writer.writerow(header)
+                    saved_header=True
                 writer.writerows(data)
 
     # close the web driver
@@ -225,9 +225,9 @@ if __name__ == '__main__':
     parser.add_argument('--queries', type=str,
                     help='queries. they should be devided by "//" : Cat//Dog.')
     parser.add_argument('--max_date', type=str,
-                    help='max date for search query. example : %%Y-%%m-%%d.')
+                    help='max date for search query. example : %Y-%m-%d.')
     parser.add_argument('--start_date', type=str,
-                    help='start date for search query. example : %%Y-%%m-%%d.')
+                    help='start date for search query. example : %Y-%m-%d.')
     parser.add_argument('--days_between', type=int,
                     help='days between each start date and end date for search queries. example : 5.')
     parser.add_argument('--navig', type=str,

@@ -21,10 +21,14 @@ I also tried to maximize the srcraped tweets between each start_date and end_dat
 ```pip install -r requirements.txt```
 ## Usage example :
 
-
 ![](usage.PNG?raw=true)
 
 ### To execute the script : 
 ```python scweet.py --queries "bubbaloo//alpaccino" --max_date 2020-01-05 --start_date 2020-01-01 --days_between 2 --navig edge --lang="en"```
+
+### results :
+ 
+![](csv1.PNG?raw=true)
+![](csv2.PNG?raw=true)
 
 ## Licence : 
