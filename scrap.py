@@ -78,12 +78,12 @@ def get_tweet_data(card):
 
 
 
-def log_search(driver, start_date, end_date,requests):
+def log_search(driver, start_date, end_date,requests,lang):
 
     ''' Search for this query between start_date and end_date'''
 
     req='%20OR%20'.join(requests)
-    driver.get('https://twitter.com/search?q=('+req+')%20until%3A'+end_date+'%20since%3A'+start_date+'&src=typed_query')
+    driver.get('https://twitter.com/search?q=('+req+')%20until%3A'+end_date+'%20since%3A'+start_date+'%20lang%3A'+lang+'&src=typed_query')
     
     #https://twitter.com/search?q=(AIRbnb%20OR%20Amazon%20Web%20Services%20)%20until%3A'+end_date+'%20since%3A'+start_date+'&src=typed_query
 
@@ -114,7 +114,7 @@ def init_driver(navig="chrome"):
         return driver
 
 
-def scrap(requests, start_date, max_date, days_between, navig="chrome"):
+def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en"):
 
     ''' 
     scrap data from twitter using requests, starting from start_date until max_date. The bot make a search between each start_date and end_date 
@@ -142,9 +142,9 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome"):
     while end_date<=datetime.datetime.strptime(max_date, '%Y-%m-%d'):
         scroll=0
         if type(start_date)!=str:
-            log_search(driver=driver,requests=requests,start_date=datetime.datetime.strftime(start_date,'%Y-%m-%d'),end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'))
+            log_search(driver=driver,requests=requests,start_date=datetime.datetime.strftime(start_date,'%Y-%m-%d'),end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'),lang=lang)
         else : 
-            log_search(driver=driver,requests=requests,start_date=start_date,end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'))
+            log_search(driver=driver,requests=requests,start_date=start_date,end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'),lang=lang)
         
         refresh+=1
         days_passed= refresh*days_between
@@ -223,15 +223,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scrap tweets.')
 
     parser.add_argument('--queries', type=str,
-                    help='queries. they should be devided by "//" : Cat//Dog')
+                    help='queries. they should be devided by "//" : Cat//Dog.')
     parser.add_argument('--max_date', type=str,
-                    help='max date for search query. example : %Y-%m-%d')
+                    help='max date for search query. example : %Y-%m-%d.')
     parser.add_argument('--start_date', type=str,
-                    help='start date for search query. example : %Y-%m-%d')
+                    help='start date for search query. example : %Y-%m-%d.')
     parser.add_argument('--days_between', type=int,
-                    help='days between each start date and end date for search queries. example : 5')
+                    help='days between each start date and end date for search queries. example : 5.')
     parser.add_argument('--navig', type=str,
-                    help='navigator to use : chrome or edge')
+                    help='navigator to use : chrome or edge.')
+    parser.add_argument('--lang', type=str,
+                    help='tweets language. example : "en" for english and "fr" for french.')
 
     args = parser.parse_args()
 
@@ -241,6 +243,7 @@ if __name__ == '__main__':
     start_date = args.start_date
     days_between = args.days_between
     navig = args.navig
+    lang = args.lang
 
-    data=scrap(requests,start_date,max_date,days_between,navig)
+    data=scrap(requests,start_date,max_date,days_between,navig,lang)
 
