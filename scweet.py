@@ -101,12 +101,12 @@ def init_driver(navig="chrome"):
     # create instance of web driver
     #path to the chromdrive.exe
     if navig == "chrome":
-        browser_path = 'C:/Users/Yassine/Documents/GitHub/Predict-AXA-stocks-prices/chromedriver.exe'
+        browser_path = 'C:/Users/Yassine/Documents/GitHub/Predict-AXA-stocks-prices/drivers/chromedriver.exe'
         driver = webdriver.Chrome(executable_path=browser_path)
         driver.set_page_load_timeout(100)
         return driver
     elif navig == "edge":
-        browser_path = 'C:/Users/Yassine/Documents/GitHub/Predict-AXA-stocks-prices/msedgedriver.exe'
+        browser_path = 'C:/Users/Yassine/Documents/GitHub/Predict-AXA-stocks-prices/drivers/msedgedriver.exe'
         options = EdgeOptions()
         options.headless = True
         options.use_chromium = True
