@@ -1,7 +1,7 @@
 import re
 import csv
 import os
-from getpass import getpass
+#from getpass import getpass
 from time import sleep
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
@@ -86,12 +86,6 @@ def log_search(driver, start_date, end_date,requests,lang):
     req='%20OR%20'.join(requests)
     driver.get('https://twitter.com/search?q=('+req+')%20until%3A'+end_date+'%20since%3A'+start_date+'%20lang%3A'+lang+'&src=typed_query')
     
-    #https://twitter.com/search?q=(AIRbnb%20OR%20Amazon%20Web%20Services%20)%20until%3A'+end_date+'%20since%3A'+start_date+'&src=typed_query
-
-    # find search input and search for term
-    #search_input = driver.find_element_by_xpath('//input[@aria-label="Search query"]')
-    #search_input.send_keys(search_term)
-    #search_input.send_keys(Keys.RETURN)
     sleep(1)
 
     # navigate to historical 'Top' tab
