@@ -8,6 +8,21 @@ I also tried to maximize the srcraped tweets between each start_date and end_dat
 ## Requierments : 
 
 ```pip install -r requirements.txt```
+
+## results :
+
+The CSV file contains the following features (for each tweet) :
+- 'UserName' : username
+- 'Handle' : handle 
+- 'Timestamp' : timestamp of the tweet
+- 'Text' : tweet text
+- 'Emojis' : emojis existing in tweet
+- 'Comments' : number of comments
+- 'Likes' : number of likes
+- 'Retweets' : number of retweets
+- 'Is_Promoted' : check if this it's a promoted tweet, since it would have nothing to do with out query.
+
+
 ## Usage example :
 
 ```Scrap tweets.
@@ -27,17 +42,4 @@ optional arguments:
 
 ### To execute the script : 
 ```python scweet.py --queries "bubbaloo//alpaccino" --max_date 2020-01-05 --start_date 2020-01-01 --days_between 2 --navig edge --lang="en"```
-
-## results :
-
-The CSV file contains the following features (for each tweet) :
-- 'UserName' : username
-- 'Handle' : handle 
-- 'Timestamp' : timestamp of the tweet
-- 'Text' : tweet text
-- 'Emojis' : emojis existing in tweet
-- 'Comments' : number of comments
-- 'Likes' : number of likes
-- 'Retweets' : number of retweets
-- 'Is_Promoted' : check if this it's a promoted tweet, since it would have nothing to do with out query.
 
