@@ -41,5 +41,5 @@ optional arguments:
                         for french.```
 
 ### To execute the script : 
-```python scweet.py --queries "bubbaloo//alpaccino" --max_date 2020-01-05 --start_date 2020-01-01 --days_between 2 --navig edge --lang="en"```
+python scweet.py --queries "bubbaloo//alpaccino" --max_date 2020-01-05 --start_date 2020-01-01 --days_between 2 --navig edge --lang="en"
 
