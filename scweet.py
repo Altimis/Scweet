@@ -1,5 +1,6 @@
 import re
 import csv
+import os
 from getpass import getpass
 from time import sleep
 from selenium.webdriver.common.keys import Keys
@@ -129,6 +130,9 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
     driver=init_driver(navig)
     data = []
     tweet_ids = set()
+    save_dir = "outputs"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
     #start scraping from start_date until max_date
     init_date=start_date #used for saving file
@@ -203,7 +207,7 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
 
         if days_passed%save_every==0:
 
-            with open(requests[0]+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv', 'a', newline='', encoding='utf-8') as f:
+            with open(save_dir+"/"+requests[0]+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv', 'a', newline='', encoding='utf-8') as f:
                 header = ['UserName', 'Handle', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Is_Promoted']
                 writer = csv.writer(f)
                 #if saved_header==False:
