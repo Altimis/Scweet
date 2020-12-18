@@ -6,6 +6,7 @@ from time import sleep
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import datetime
 import argparse
 from msedge.selenium_tools import Edge, EdgeOptions
@@ -89,19 +90,25 @@ def log_search(driver, start_date, end_date,requests,lang):
     sleep(1)
 
     # navigate to historical 'Top' tab
-    driver.find_element_by_link_text('Latest').click()
+    try:
+        driver.find_element_by_link_text('Latest').click()
+    except:
+        print("Latest Button doesnt exist.")
     
 
 def init_driver(navig="chrome"):
     # create instance of web driver
     #path to the chromdrive.exe
     if navig == "chrome":
-        browser_path = 'C:/Users/Yassine/Documents/GitHub/Predict-AXA-stocks-prices/drivers/chromedriver.exe'
-        driver = webdriver.Chrome(executable_path=browser_path)
+        browser_path = './drivers/chromedriver.exe'
+        options = Options()
+        options.headless=True
+        options.add_argument('--disable-gpu')
+        driver = webdriver.Chrome(options=options,executable_path=browser_path)
         driver.set_page_load_timeout(100)
         return driver
     elif navig == "edge":
-        browser_path = 'C:/Users/Yassine/Documents/GitHub/Predict-AXA-stocks-prices/drivers/msedgedriver.exe'
+        browser_path = './drivers/msedgedriver.exe'
         options = EdgeOptions()
         options.headless = True
         options.use_chromium = True
@@ -150,7 +157,7 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
         last_position = driver.execute_script("return window.pageYOffset;")
         scrolling = True
         
-        print("looking for tweets between "+str(start_date)+ " and " +str(end_date))
+        print("looking for tweets between "+str(start_date)+ " and " +str(end_date)+" ...")
 
         while scrolling:
             page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
@@ -159,7 +166,7 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
                 if tweet:
                     is_promoted= tweet[-1]
                     if is_promoted==True:
-                        print("tis tweet is promoted : ", tweet[3])
+                        print("This tweet is promoted : ", tweet[3])
                     tweet_id = ''.join(tweet[:-1])
                     if tweet_id not in tweet_ids and is_promoted==False:
                         tweet_ids.add(tweet_id)
@@ -168,7 +175,7 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
                             last_date=datetime.datetime.strptime(data[-1][2],'%Y-%m-%dT%H:%M:%S.000Z')
                         except :
                             last_date=data[-1][2]
-                        print(last_date)
+                        print("Tweet made at: " + str(last_date)+" is found.")
                         
 
             scroll_attempt = 0
