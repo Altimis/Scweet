@@ -1,7 +1,6 @@
 import re
 import csv
 import os
-#from getpass import getpass
 from time import sleep
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
@@ -12,7 +11,7 @@ import argparse
 from msedge.selenium_tools import Edge, EdgeOptions
 
 
-def get_tweet_data(card):
+def get_data(card):
     """Extract data from tweet card"""
     try:
         username = card.find_element_by_xpath('.//span').text
@@ -80,7 +79,7 @@ def get_tweet_data(card):
 
 
 
-def log_search(driver, start_date, end_date,requests,lang):
+def log_search_page(driver, start_date, end_date,requests,lang):
 
     ''' Search for this query between start_date and end_date'''
 
@@ -89,7 +88,7 @@ def log_search(driver, start_date, end_date,requests,lang):
     
     sleep(1)
 
-    # navigate to historical 'Top' tab
+    # navigate to historical 'Top' or 'Latest' tab
     try:
         driver.find_element_by_link_text('Latest').click()
     except:
@@ -142,42 +141,52 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
 
     refresh = 0
     save_every = days_between  #save every "days_between" days
-    #saved_header=False
 
+    #keep searching until max_date
     while end_date<=datetime.datetime.strptime(max_date, '%Y-%m-%d'):
+        #number of scrolls
         scroll=0
+
+        #log search page between start_date and end_date
         if type(start_date)!=str:
-            log_search(driver=driver,requests=requests,start_date=datetime.datetime.strftime(start_date,'%Y-%m-%d'),end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'),lang=lang)
+            log_search_page(driver=driver,requests=requests,start_date=datetime.datetime.strftime(start_date,'%Y-%m-%d'),end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'),lang=lang)
         else : 
-            log_search(driver=driver,requests=requests,start_date=start_date,end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'),lang=lang)
+            log_search_page(driver=driver,requests=requests,start_date=start_date,end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'),lang=lang)
         
+        #number of logged pages (refresh each <between_days>)
         refresh+=1
+        #number of days crossed
         days_passed= refresh*days_between
 
+        #last position of the page : the purpose for this is to know if we reached the end of the page of not so that we refresh for another <start_date> and <end_date>
         last_position = driver.execute_script("return window.pageYOffset;")
+        #should we keep scrolling ?
         scrolling = True
         
         print("looking for tweets between "+str(start_date)+ " and " +str(end_date)+" ...")
 
+        #start scrolling and get tweets
         while scrolling:
+            #get the card of tweets
             page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
-            for card in page_cards[-40:]:
-                tweet = get_tweet_data(card)
+            for card in page_cards:
+                tweet = get_data(card)
                 if tweet:
+                    #check if the tweet is promoted
                     is_promoted= tweet[-1]
                     if is_promoted==True:
                         print("This tweet is promoted : ", tweet[3])
+                    #check if the tweet is unique
                     tweet_id = ''.join(tweet[:-1])
                     if tweet_id not in tweet_ids and is_promoted==False:
                         tweet_ids.add(tweet_id)
                         data.append(tweet)
                         try:
+                            #date to be printed
                             last_date=datetime.datetime.strptime(data[-1][2],'%Y-%m-%dT%H:%M:%S.000Z')
                         except :
                             last_date=data[-1][2]
                         print("Tweet made at: " + str(last_date)+" is found.")
-                        
-
             scroll_attempt = 0
             while True:
                 # check scroll position
@@ -199,19 +208,19 @@ def scrap(requests, start_date, max_date, days_between, navig="chrome", lang="en
                 else:
                     last_position = curr_position
                     break
-        #keep updating start date and end date for every search
+        #keep updating <start date> and <end date> for every search
         if type(start_date)==str:
             start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(days=days_between)
         else:
             start_date = start_date + datetime.timedelta(days=days_between)
         end_date = end_date + datetime.timedelta(days=days_between)
 
+        #save csv file for every <save_every> days.
         if days_passed%save_every==0:
 
-            with open(save_dir+"/"+requests[0]+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv', 'a', newline='', encoding='utf-8') as f:
+            with open(save_dir+"/"+requests[0]+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv', 'w', newline='', encoding='utf-8') as f:
                 header = ['UserName', 'Handle', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Is_Promoted']
                 writer = csv.writer(f)
-                #if saved_header==False:
                 writer.writerow(header)
                 saved_header=True
                 writer.writerows(data)
