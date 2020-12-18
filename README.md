@@ -10,7 +10,7 @@ I also tried to maximize the srcraped tweets between each start_date and end_dat
 ```pip install -r requirements.txt```
 ## Usage example :
 
-```Scrap tweets.
+``Scrap tweets.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -23,7 +23,7 @@ optional arguments:
                         queries. example : 5.
   --navig NAVIG         navigator to use : chrome or edge.
   --lang LANG           tweets language. example : "en" for english and "fr"
-                        for french.```
+                        for french.``
 
 ### To execute the script : 
 ```python scweet.py --queries "bubbaloo//alpaccino" --max_date 2020-01-05 --start_date 2020-01-01 --days_between 2 --navig edge --lang="en"```
