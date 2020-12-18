@@ -22,6 +22,7 @@ The CSV file contains the following features (for each tweet) :
 - 'Retweets' : number of retweets
 - 'Is_Promoted' : check if this it's a promoted tweet, since it would have nothing to do with out query.
 
+*As a good example of the efficienty of this script, I could extract more than 30k tweets in 20 days for the query : "Tesla".*
 
 ## Usage example :
 
