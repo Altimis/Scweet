@@ -7,7 +7,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 import datetime
 import argparse
-#from msedge.selenium_tools import Edge, EdgeOptions
+from msedge.selenium_tools import Edge, EdgeOptions
 
 
 def get_tweet_data(card):
@@ -94,19 +94,27 @@ def log_search(driver, start_date, end_date,requests):
     sleep(1)
 
     # navigate to historical 'Top' tab
-    driver.find_element_by_link_text('Top').click()
+    driver.find_element_by_link_text('Latest').click()
     
 
-def init_driver():
+def init_driver(navig="chrome"):
     # create instance of web driver
     #path to the chromdrive.exe
-    browser_path = 'C:/Users/Yassine/Documents/GitHub/Twitter-Scraper-notebook-main/chromedriver.exe'
-    driver = webdriver.Chrome(executable_path=browser_path)
-    driver.set_page_load_timeout(100)
-    return driver
+    if navig == "chrome":
+        browser_path = 'C:/Users/Yassine/Documents/GitHub/Predict-AXA-stocks-prices/chromedriver.exe'
+        driver = webdriver.Chrome(executable_path=browser_path)
+        driver.set_page_load_timeout(100)
+        return driver
+    elif navig == "edge":
+        browser_path = 'C:/Users/Yassine/Documents/GitHub/Predict-AXA-stocks-prices/msedgedriver.exe'
+        options = EdgeOptions()
+        options.headless = True
+        options.use_chromium = True
+        driver = Edge(options=options, executable_path=browser_path)
+        return driver
 
 
-def scrap(requests, start_date, max_date, days_between):
+def scrap(requests, start_date, max_date, days_between, navig="chrome"):
 
     ''' 
     scrap data from twitter using requests, starting from start_date until max_date. The bot make a search between each start_date and end_date 
@@ -118,25 +126,33 @@ def scrap(requests, start_date, max_date, days_between):
     '''
 
     #initiate the driver
-    driver=init_driver()
+    driver=init_driver(navig)
     data = []
     tweet_ids = set()
 
     #start scraping from start_date until max_date
-    
+    init_date=start_date #used for saving file
+    #add days_between to start_date to get end_date for te first search
     end_date = datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(days=days_between)
 
-    while end_date<datetime.datetime.strptime(max_date, '%Y-%m-%d'):
+    refresh = 0
+    save_every = 2  #save every 30 days
+    saved_header=False
+
+    while end_date<=datetime.datetime.strptime(max_date, '%Y-%m-%d'):
         scroll=0
         if type(start_date)!=str:
             log_search(driver=driver,requests=requests,start_date=datetime.datetime.strftime(start_date,'%Y-%m-%d'),end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'))
         else : 
             log_search(driver=driver,requests=requests,start_date=start_date,end_date=datetime.datetime.strftime(end_date,'%Y-%m-%d'))
         
+        refresh+=1
+        days_passed= refresh*days_between
+
         last_position = driver.execute_script("return window.pageYOffset;")
         scrolling = True
         
-        print("looking for tweets between %s and %s", str(start_date), str(end_date))
+        print("looking for tweets between "+str(start_date)+ " and " +str(end_date))
 
         while scrolling:
             page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
@@ -161,10 +177,10 @@ def scrap(requests, start_date, max_date, days_between):
             while True:
                 # check scroll position
                 print("scroll", scroll)
-                sleep(3)
+                sleep(1)
                 driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
                 scroll+=1
-                sleep(3)
+                sleep(1)
                 curr_position = driver.execute_script("return window.pageYOffset;")
                 if last_position == curr_position:
                     scroll_attempt += 1
@@ -174,24 +190,29 @@ def scrap(requests, start_date, max_date, days_between):
                         scrolling = False
                         break
                     else:
-                        sleep(4) # attempt another scroll
+                        sleep(2) # attempt another scroll
                 else:
                     last_position = curr_position
                     break
-        
+        #keep updating start date and end date for every search
         if type(start_date)==str:
             start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(days=days_between)
         else:
             start_date = start_date + datetime.timedelta(days=days_between)
         end_date = end_date + datetime.timedelta(days=days_between)
+
+        if days_passed%save_every==0:
+
+            with open(requests[0]+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv', 'a', newline='', encoding='utf-8') as f:
+                header = ['UserName', 'Handle', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Is_Promoted']
+                writer = csv.writer(f)
+                if saved_header==False:
+                    writer.writerow(header)
+                    saved_header=True
+                writer.writerows(data)
+
     # close the web driver
     driver.close()
-
-    with open(requests[0]+'_'+start_date+'_'+max_date+'.csv', 'w', newline='', encoding='utf-8') as f:
-        header = ['UserName', 'Handle', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Is_Promoted']
-        writer = csv.writer(f)
-        writer.writerow(header)
-        writer.writerows(data)
 
     return data
 
@@ -209,6 +230,8 @@ if __name__ == '__main__':
                     help='start date for search query. example : %Y-%m-%d')
     parser.add_argument('--days_between', type=int,
                     help='days between each start date and end date for search queries. example : 5')
+    parser.add_argument('--navig', type=str,
+                    help='navigator to use : chrome or edge')
 
     args = parser.parse_args()
 
@@ -217,6 +240,7 @@ if __name__ == '__main__':
     max_date = args.max_date
     start_date = args.start_date
     days_between = args.days_between
+    navig = args.navig
 
-    data=scrap(requests,start_date,max_date,days_between)
+    data=scrap(requests,start_date,max_date,days_between,navig)
 
