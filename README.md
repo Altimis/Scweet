@@ -9,7 +9,7 @@ I also tried to maximize the srcraped tweets between each start_date and end_dat
 
 ```pip install -r requirements.txt```
 
-## results :
+## Results :
 
 The CSV file contains the following features (for each tweet) :
 - 'UserName' : username
