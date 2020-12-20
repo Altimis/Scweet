@@ -50,5 +50,5 @@ optional arguments:
   --resume RESUME       resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <end_date>...)```
 
 ### To execute the script : 
-python scweet.py --words "excellente//car" --to_account "@tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --navig chrome --display_type Latest --lang="en" --headless True
+python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --navig chrome --display_type Latest --lang="en" --headless True
 
