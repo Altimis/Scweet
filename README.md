@@ -30,10 +30,10 @@ The CSV file contains the following features (for each tweet) :
 
 optional arguments:
   -h, --help            show this help message and exit
-  --words WORDS         queries. they should be devided by "//" : Cat//Dog.
-  --from_accounts FROM_ACCOUNTS
+  --words WORDS         words to search. they should be devided by "//" : Cat//Dog.
+  --from_account FROM_ACCOUNTS
                         From account name.
-  --to_accounts TO_ACCOUNTS
+  --to_account TO_ACCOUNTS
                         To account name.
   --max_date MAX_DATE   max date for search query. example : %Y-%m-%d.
   --start_date START_DATE
@@ -46,8 +46,8 @@ optional arguments:
   --headless HEADLESS   headless webdrives or not. True or False
   --limit LIMIT         Limit tweets per <interval>
   --display_type DISPLAY_TYPE
-                        Display type of twitter page : Latest or Top
-  --resume RESUME       resume the last scraping work. You need to pass the same requests (<words>, <start_date>, <end_date>...)```
+                        Display type of twitter page : Latest or Top tweets
+  --resume RESUME       resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <end_date>...)```
 
 ### To execute the script : 
 python scweet.py --words "excellente//car" --to_account "@tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --navig chrome --display_type Latest --lang="en" --headless True
