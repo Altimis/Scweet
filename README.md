@@ -1,9 +1,9 @@
 # A simple and effective tool for tweets scraping using Selenium
 
-In the last days, Twitter banned every tweets scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of requests, and saves a csv file. 
+In the last days, Twitter banned every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of words or account name, and saves a csv file containing scraped data. 
 
-In this script, it is possible to use both chromedrivee.exe and msedgedriver.exe, based on the "navig" argument. These two drivers are available in the navigator website (based on you navigator version).  
-I also tried to maximize the srcraped tweets between each start_date and end_date (these two dates are being updated for each refrsh of the website page. for more details please look at the source code in [scweet.py](https://github.com/Altimis/Scweet/blob/master/scweet.py).), and also by hiding the selenium browser window. 
+In this script, it is possible to use both chromedrivee.exe and msedgedriver.exe, based on the "navig" argument. These two drivers are available in the navigator website (based on your navigator version).  
+I also tried to maximize the srcraped tweets between each start_date and end_date (these two dates are being updated for each refrsh of the website page (for more details please look at the source code in [scweet.py](https://github.com/Altimis/Scweet/blob/master/scweet.py)), and also by hiding the selenium browser window. 
 
 ## Requierments : 
 
