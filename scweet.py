@@ -82,23 +82,38 @@ def get_data(card):
     tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link, promoted)
     return tweet    
 
-def log_search_page(driver, start_date, end_date,words, lang, display_type, to_accounts=None, from_accounts=None):
+def log_search_page(driver, start_date, end_date, lang, display_type, words, to_accounts, from_accounts):
 
     ''' Search for this query between start_date and end_date'''
 
-    req='%20OR%20'.join(words)
+    #req='%20OR%20'.join(words)
     if from_accounts!=None:
-    	from_accounts = "(from%3A"+from_accounts+")"
-    else:  
-    	from_accounts=""
-    if to_accounts!=None:
-    	to_accounts = "(to%3A"+to_accounts+")"
+    	from_accounts = "(from%3A"+from_accounts+")%20"
     else :
+    	from_accounts=""
+
+    if to_accounts!=None:
+    	to_accounts = "(to%3A"+to_accounts+")%20"
+    else:
     	to_accounts=""
 
-    to_from = str('%20'.join([from_accounts,to_accounts]))+"%20"
+    if words!=None:
+    	words = str(words).split("//")
+    	words = "("+str('%20OR%20'.join(words))+")%20"
+    else : 
+    	words=""
 
-    driver.get('https://twitter.com/search?q=('+req+')'+to_from+'until%3A'+end_date+'%20since%3A'+start_date+'%20lang%3A'+lang+'&src=typed_query')
+    if lang!=None:
+    	lang = 'lang%3A'+lang
+    else : 
+    	lang=""
+    	
+    end_date = "until%3A"+end_date+"%20"
+    start_date = "since%3A"+start_date+"%20"
+
+    #to_from = str('%20'.join([from_accounts,to_accounts]))+"%20"
+
+    driver.get('https://twitter.com/search?q='+words+from_accounts+to_accounts+end_date+start_date+lang+'&src=typed_query')
     
     sleep(1)
 
@@ -139,13 +154,58 @@ def init_driver(navig, headless):
         driver = Edge(options=options, executable_path=browser_path)
         return driver
 
+
 def get_last_date_from_csv(path):
 
 	df = pd.read_csv(path)
 	return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
 
 
-def scrap(words,to_accounts, from_accounts, start_date, max_date, days_between=5, navig="chrome", lang="en", headless=True, limit_search=1000, display_type="Top", resume=False):
+def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit_search, scroll, last_position):
+
+	""" scrolling function """
+
+	while scrolling and tweet_parsed<limit_search:
+		#get the card of tweets
+		page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
+		for card in page_cards:
+			tweet = get_data(card)
+			if tweet:
+				#check if the tweet is unique
+				tweet_id = ''.join(tweet[:-1])
+				if tweet_id not in tweet_ids:
+					tweet_ids.add(tweet_id)
+					data.append(tweet)
+					last_date=str(tweet[2])
+					print("Tweet made at: " + str(last_date)+" is found.")
+					writer.writerows([tweet])
+					tweet_parsed+=1
+					if tweet_parsed>=limit_search:
+						break
+		scroll_attempt = 0
+		while True and tweet_parsed<limit_search:
+			# check scroll position
+			print("scroll", scroll)
+			#sleep(1)
+			driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+			scroll+=1
+			sleep(1)
+			curr_position = driver.execute_script("return window.pageYOffset;")
+			if last_position == curr_position:
+				scroll_attempt += 1
+
+				# end of scroll region
+				if scroll_attempt >= 2:
+					scrolling = False
+					break
+				else:
+					sleep(1) # attempt another scroll
+			else:
+				last_position = curr_position
+				break
+	return driver,data,writer, tweet_ids,scrolling, tweet_parsed, scroll, last_position
+
+def scrap(start_date, max_date, words,to_accounts, from_accounts, days_between=5, navig="chrome", lang="en", headless=True, limit_search=1000, display_type="Top", resume=False):
 
     ''' 
     scrap data from twitter using requests, starting from start_date until max_date. The bot make a search between each start_date and end_date 
@@ -157,8 +217,6 @@ def scrap(words,to_accounts, from_accounts, start_date, max_date, days_between=5
     '''
 
     #initiate the driver
-
-
     driver=init_driver(navig, headless)
 
     data = []
@@ -171,7 +229,12 @@ def scrap(words,to_accounts, from_accounts, start_date, max_date, days_between=5
     #start scraping from start_date until max_date
     init_date=start_date #used for saving file
     #add days_between to start_date to get end_date for te first search
-    path = save_dir+"/"+words[0]+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv'
+    if words:
+    	path = save_dir+"/"+words.split("//")[0]+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv'
+    elif from_accounts:
+    	path = save_dir+"/"+from_accounts+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv'
+    elif to_accounts:
+    	path = save_dir+"/"+to_accounts+'_'+str(init_date).split(' ')[0]+'_'+str(max_date).split(' ')[0]+'.csv'
 
     if resume==True:
     	start_date = str(get_last_date_from_csv(path))[:10]
@@ -213,44 +276,10 @@ def scrap(words,to_accounts, from_accounts, start_date, max_date, days_between=5
 
 	        #start scrolling and get tweets
 	       	tweet_parsed=0
-	        while scrolling and tweet_parsed<limit_search:
-	            #get the card of tweets
-	            page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
-	            for card in page_cards:
-	                tweet = get_data(card)
-	                if tweet:
-	                    #check if the tweet is unique
-	                    tweet_id = ''.join(tweet[:-1])
-	                    if tweet_id not in tweet_ids:
-	                        tweet_ids.add(tweet_id)
-	                        data.append(tweet)
-	                        last_date=str(tweet[2])
-	                        print("Tweet made at: " + str(last_date)+" is found.")
-	                        writer.writerows([tweet])
-	                        tweet_parsed+=1
-	                        if tweet_parsed>=limit_search:
-	                        	break
-	            scroll_attempt = 0
-	            while True and tweet_parsed<limit_search:
-	                # check scroll position
-	                print("scroll", scroll)
-	                #sleep(1)
-	                driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-	                scroll+=1
-	                sleep(1)
-	                curr_position = driver.execute_script("return window.pageYOffset;")
-	                if last_position == curr_position:
-	                    scroll_attempt += 1
 
-	                    # end of scroll region
-	                    if scroll_attempt >= 2:
-	                        scrolling = False
-	                        break
-	                    else:
-	                        sleep(1) # attempt another scroll
-	                else:
-	                    last_position = curr_position
-	                    break
+	       	driver,data,writer, tweet_ids,scrolling, tweet_parsed, scroll, last_position =\
+	       	keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit_search, scroll, last_position)
+
 	        #keep updating <start date> and <end date> for every search
 	        if type(start_date)==str:
 	            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d') + datetime.timedelta(days=days_between)
@@ -270,11 +299,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scrap tweets.')
 
     parser.add_argument('--words', type=str,
-                    help='queries. they should be devided by "//" : Cat//Dog.',required=True)
+                    help='queries. they should be devided by "//" : Cat//Dog.',default = None)
     parser.add_argument('--from_account', type=str,
-                    help='Tweets from this account (axample : @Tesla).', default=None )
+                    help='Tweets from this account (axample : @Tesla).',default = None)
     parser.add_argument('--to_account', type=str,
-                    help='Tweets replyed to this account (axample : @Tesla).',default=None)
+                    help='Tweets replyed to this account (axample : @Tesla).',default = None)
     parser.add_argument('--max_date', type=str,
                     help='max date for search query. example : %%Y-%%m-%%d.',required=True)
     parser.add_argument('--start_date', type=str,
@@ -284,7 +313,7 @@ if __name__ == '__main__':
     parser.add_argument('--navig', type=str,
                     help='navigator to use : chrome or edge.', default = "chrome")
     parser.add_argument('--lang', type=str,
-                    help='tweets language. example : "en" for english and "fr" for french.', default = "en")
+                    help='tweets language. example : "en" for english and "fr" for french.', default = None)
     parser.add_argument('--headless', type=bool,
                     help='headless webdrives or not. True or False', default=False)
     parser.add_argument('--limit', type=int,
@@ -298,7 +327,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     words = args.words
-    words = str(words).split("//")
     max_date = args.max_date
     start_date = args.start_date
     interval = args.interval
@@ -311,5 +339,4 @@ if __name__ == '__main__':
     to_account = args.to_account
     resume=args.resume
 
-    data=scrap(words, to_account, from_account, start_date,max_date,interval,navig,lang, headless, limit,display_type,resume)
-
+    data=scrap(start_date, max_date, words, to_account, from_account,interval,navig,lang, headless, limit,display_type,resume)
