@@ -1,4 +1,4 @@
-# A simple and efficient twitter scraper with python and without authentification. 
+# A simple and unlimited twitter scraper with python and without authentification. 
 
 In the last days, Twitter banned every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of words or account name, and saves a csv file containing scraped data. 
 
