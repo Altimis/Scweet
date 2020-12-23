@@ -128,7 +128,7 @@ def init_driver(navig, headless,proxy):
     # create instance of web driver
     #path to the chromdrive.exe
     if navig == "chrome":
-        browser_path = './drivers/chromedriver.exe'
+        browser_path = 'drivers/chromedriver.exe'
         options = Options()
         if headless==True:
         	options.headless=True
@@ -144,7 +144,7 @@ def init_driver(navig, headless,proxy):
         driver.set_page_load_timeout(100)
         return driver
     elif navig == "edge":
-        browser_path = './drivers/msedgedriver.exe'
+        browser_path = 'drivers/msedgedriver.exe'
         options = EdgeOptions()
         if proxy!=None:
         	options.add_argument('--proxy-server=%s' % proxy)
