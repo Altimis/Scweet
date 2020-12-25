@@ -87,7 +87,7 @@ def get_data(card):
             emoji_list.append(emoji)
     emojis = ' '.join(emoji_list)
 
-    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link, promoted)
+    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link)
     return tweet  
 
 
@@ -272,7 +272,7 @@ def scrap(start_date, max_date, words,to_accounts, from_accounts, days_between=5
     #keep searching until max_date
 
     with open(path, write_mode, newline='', encoding='utf-8') as f:
-    	header = ['UserName', 'Handle', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Image link', 'Is_Promoted']
+    	header = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Image link']
     	writer = csv.writer(f)
     	if write_mode=='w':
     		writer.writerow(header)
