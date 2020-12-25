@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-with open('requirements.txt') as requirements:
+with open('./requirements.txt') as requirements:
     required = requirements.read().splitlines()
 
 setup(
