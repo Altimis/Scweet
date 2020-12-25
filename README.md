@@ -20,9 +20,10 @@ The CSV file contains the following features (for each tweet) :
 - 'Comments' : number of comments
 - 'Likes' : number of likes
 - 'Retweets' : number of retweets
-- 'Is_Promoted' : check if it's a promoted tweet, since it would have nothing to do with out query.
+- 'Image link' : Link of the image in the tweet (it will be an option to download images soon).
+- 'Tweet URL' : Tweet URL.
 
-**As a good example of the efficienty of this script, I could extract more than 30k tweets in 20 days for the query : "Tesla".**
+More features will be added soon, such as "all reaplies of each tweet for a specific twitter account"
 
 ## Usage example :
 
@@ -31,9 +32,9 @@ The CSV file contains the following features (for each tweet) :
 optional arguments:
   -h, --help            show this help message and exit
   --words WORDS         words to search. they should be devided by "//" : Cat//Dog.
-  --from_account FROM_ACCOUNTS
+  --from_account FROM_ACCOUNT
                         From account name.
-  --to_account TO_ACCOUNTS
+  --to_account TO_ACCOUNT
                         To account name.
   --max_date MAX_DATE   max date for search query. example : %Y-%m-%d.
   --start_date START_DATE
