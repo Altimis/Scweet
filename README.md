@@ -12,8 +12,9 @@ I also tried to maximize the srcraped tweets between each start_date and end_dat
 ## Results :
 
 The CSV file contains the following features (for each tweet) :
-- 'UserName' : username
-- 'Handle' : handle 
+
+- 'UserScreenName' : 
+- 'UserName' : UserName 
 - 'Timestamp' : timestamp of the tweet
 - 'Text' : tweet text
 - 'Emojis' : emojis existing in tweet
