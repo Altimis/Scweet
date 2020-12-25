@@ -12,7 +12,7 @@ setup(
   author = 'Soufiane and Yassine',
   author_email = 'bokudakgainaimachi@gmail.com',
   url = 'https://github.com/Altimis/Scweet',
-  download_url = 'https://github.com/user/reponame/archive/v_01.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/Altimis/Scweet/archive/0.1.tar.gz', 
   keywords = ['twitter', 'scraper', 'python', "crawl"],
   install_requires=required,
   classifiers=[
