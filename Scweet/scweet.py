@@ -10,6 +10,7 @@ import datetime
 import argparse
 from msedge.selenium_tools import Edge, EdgeOptions
 import pandas as pd
+import platform
 
 
 def get_data(card):
@@ -128,7 +129,18 @@ def init_driver(navig, headless,proxy):
     # create instance of web driver
     #path to the chromdrive.exe
     if navig == "chrome":
-        browser_path = 'drivers/chromedriver.exe'
+        browser_path = ''
+        if platform.system() == 'Windows':
+            print('Detected OS : Windows')
+            browser_path = './drivers/chromedriver_win.exe'
+        elif platform.system() == 'Linux':
+            print('Detected OS : Linux')
+            browser_path = './drivers/chromedriver_linux'
+        elif platform.system() == 'Darwin':
+            print('Detected OS : Mac')
+            browser_path = './drivers/chromedriver_mac'
+        else:
+            raise OSError('Unknown OS Type')    
         options = Options()
         if headless==True:
         	options.headless=True
