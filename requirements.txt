@@ -1,0 +1,3 @@
+msedge-selenium-tools
+selenium
+pandas
