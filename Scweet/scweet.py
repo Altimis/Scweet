@@ -2,11 +2,10 @@ import re
 import csv
 import os
 from time import sleep
-from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import datetime
+import datetimeKeys
 import argparse
 from msedge.selenium_tools import Edge, EdgeOptions
 import pandas as pd
