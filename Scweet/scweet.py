@@ -19,19 +19,22 @@ def get_data(card):
         username = card.find_element_by_xpath('.//span').text
     except :
         return
+
     try:
         handle = card.find_element_by_xpath('.//span[contains(text(), "@")]').text
     except :
         return
-    
+
     try:
         postdate = card.find_element_by_xpath('.//time').get_attribute('datetime')
     except :
         return
+
     try:
         comment = card.find_element_by_xpath('.//div[2]/div[2]/div[1]').text
     except :
         comment = ""
+
     try:
         responding = card.find_element_by_xpath('.//div[2]/div[2]/div[2]').text
     except :
@@ -43,28 +46,32 @@ def get_data(card):
         reply_cnt = card.find_element_by_xpath('.//div[@data-testid="reply"]').text
     except :
         reply_cnt= 0
+
     try:
         retweet_cnt = card.find_element_by_xpath('.//div[@data-testid="retweet"]').text
     except :
         retweet_cnt = 0
+
     try:
         like_cnt = card.find_element_by_xpath('.//div[@data-testid="like"]').text
     except :
         like_cnt = 0
-    #handle promoted tweets
+
     try:
-    	image_link = card.find_element_by_xpath('.//img[@alt="Image"]')
-    	image_link = image_link.get_attribute('innerHTML')
+    	element = card.find_element_by_xpath('.//div[2]/div[2]//img[contains(@src, "twimg")]')
+    	image_link = element.get_attribute('src') 
     except:
-   		image_link = ""
+	image_link = ""
+
+   	#handle promoted tweets
     try:
         promoted = card.find_element_by_xpath('.//div[2]/div[2]/[last()]//span').text == "Promoted"
     except:
         promoted = False
-    
+    if promoted:
+    	return
+
     # get a string of all emojis contained in the tweet
-    """Emojis are stored as images... so I convert the filename, which is stored as unicode, into 
-    the emoji character."""
     try:
         emoji_tags = card.find_elements_by_xpath('.//img[contains(@src, "emoji")]')
     except : 
@@ -79,9 +86,10 @@ def get_data(card):
         if emoji:
             emoji_list.append(emoji)
     emojis = ' '.join(emoji_list)
-    
+
     tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link, promoted)
-    return tweet    
+    return tweet  
+
 
 def log_search_page(driver, start_date, end_date, lang, display_type, words, to_accounts, from_accounts):
 
