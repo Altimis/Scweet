@@ -61,8 +61,8 @@ def get_data(card):
     	element = card.find_element_by_xpath('.//div[2]/div[2]//img[contains(@src, "twimg")]')
     	image_link = element.get_attribute('src') 
     except:
-	image_link = ""
-
+        image_link = ""
+        
    	#handle promoted tweets
     try:
         promoted = card.find_element_by_xpath('.//div[2]/div[2]/[last()]//span').text == "Promoted"
