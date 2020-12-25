@@ -87,7 +87,15 @@ def get_data(card):
             emoji_list.append(emoji)
     emojis = ' '.join(emoji_list)
 
-    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link)
+    #tweet url
+    try:
+    	element = card.find_element_by_xpath('.//a[contains(@href, "/status/")]')
+    	tweet_url = element.get_attribute('href') 
+    except:
+    	return
+
+
+    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link, tweet_url)
     return tweet  
 
 
@@ -272,7 +280,7 @@ def scrap(start_date, max_date, words,to_accounts, from_accounts, days_between=5
     #keep searching until max_date
 
     with open(path, write_mode, newline='', encoding='utf-8') as f:
-    	header = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Image link']
+    	header = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Emojis', 'Comments', 'Likes', 'Retweets', 'Image link', 'Tweet URL']
     	writer = csv.writer(f)
     	if write_mode=='w':
     		writer.writerow(header)
