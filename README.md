@@ -31,24 +31,24 @@ More features will be added soon, such as "all reaplies of each tweet for a spec
 
 optional arguments:
   -h, --help            show this help message and exit
-  --words WORDS         words to search. they should be devided by "//" : Cat//Dog.
+  --words WORDS         Words to search. they should be separated by "//" : Cat//Dog.
   --from_account FROM_ACCOUNT
-                        From account name.
+                        Tweets posted by "from_account" account.
   --to_account TO_ACCOUNT
-                        To account name.
+                        Tweets posted in response to "to_account" account.
   --max_date MAX_DATE   max date for search query. example : %Y-%m-%d.
   --start_date START_DATE
-                        start date for search query. example : %Y-%m-%d.
+                        Start date for search query. example : %Y-%m-%d.
   --interval INTERVAL   Interval days between each start date and end date for
                         search queries. example : 5.
-  --navig NAVIG         navigator to use : chrome or edge.
-  --lang LANG           tweets language. example : "en" for english and "fr"
+  --navig NAVIG         Navigator to use : chrome or edge.
+  --lang LANG           tweets language. Example : "en" for english and "fr"
                         for french.
-  --headless HEADLESS   headless webdrives or not. True or False
+  --headless HEADLESS   Headless webdrives or not. True or False
   --limit LIMIT         Limit tweets per <interval>
   --display_type DISPLAY_TYPE
-                        Display type of twitter page : Latest or Top tweets
-  --resume RESUME       resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <end_date>...)```
+                        Display type of twitter page : Latest or Top tweets (
+  --resume RESUME       Resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <max_date>...)```
 
 ### To execute the script : 
 python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --navig chrome --display_type Latest --lang="en" --headless True
