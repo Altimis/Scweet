@@ -5,7 +5,7 @@ In the last days, Twitter banned every twitter scrapers. This repository represe
 In this script, it is possible to use both chromedrivee.exe and msedgedriver.exe, based on the "navig" argument. These two drivers are available in the navigator website (based on your navigator version).  
 I also tried to maximize the srcraped tweets between each start_date and end_date (these two dates are being updated for each refrsh of the website page (for more details please look at the source code in [scweet.py](https://github.com/Altimis/Scweet/blob/master/Scweet/scweet.py)), and also by hiding the selenium browser window. 
 
-## Requierments : 
+## Requirements : 
 
 ```pip install -r requirements.txt```
 
@@ -28,7 +28,8 @@ More features will be added soon, such as "all reaplies of each tweet for a spec
 
 ## Usage example :
 
-```Scrap tweets.
+```
+Scrap tweets.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -37,7 +38,7 @@ optional arguments:
                         Tweets posted by "from_account" account.
   --to_account TO_ACCOUNT
                         Tweets posted in response to "to_account" account.
-  --max_date MAX_DATE   max date for search query. example : %Y-%m-%d.
+  --max_date MAX_DATE   Max date for search query. example : %Y-%m-%d.
   --start_date START_DATE
                         Start date for search query. example : %Y-%m-%d.
   --interval INTERVAL   Interval days between each start date and end date for
@@ -46,11 +47,14 @@ optional arguments:
   --lang LANG           tweets language. Example : "en" for english and "fr"
                         for french.
   --headless HEADLESS   Headless webdrives or not. True or False
-  --limit LIMIT         Limit tweets per <interval>
+  --limit LIMIT         Limit tweets per <interval> (default: 1000)
   --display_type DISPLAY_TYPE
-                        Display type of twitter page : Latest or Top tweets (
-  --resume RESUME       Resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <max_date>...)```
+                        Display type of twitter page : Latest or Top tweets
+  --resume RESUME       Resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <max_date>...)
+```
 
 ### To execute the script : 
+```
 python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --navig chrome --display_type Latest --lang="en" --headless True
+```
 
