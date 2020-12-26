@@ -47,7 +47,7 @@ optional arguments:
   --lang LANG           tweets language. Example : "en" for english and "fr"
                         for french.
   --headless HEADLESS   Headless webdrives or not. True or False
-  --limit LIMIT         Limit tweets per <interval> (default: 1000)
+  --limit LIMIT         Limit tweets per <interval>
   --display_type DISPLAY_TYPE
                         Display type of twitter page : Latest or Top tweets
   --resume RESUME       Resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <max_date>...)
