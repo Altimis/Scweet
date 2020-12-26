@@ -348,7 +348,7 @@ if __name__ == '__main__':
     parser.add_argument('--headless', type=bool,
                     help='Headless webdrives or not. True or False', default=False)
     parser.add_argument('--limit', type=int,
-                    help='Limit tweets per <interval>', default=1000)
+                    help='Limit tweets per <interval>', default=10**10)
     parser.add_argument('--display_type', type=str,
                     help='Display type of twitter page : Latest or Top', default="Top")
     parser.add_argument('--resume', type=bool,
