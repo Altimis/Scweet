@@ -5,6 +5,7 @@ In the last days, Twitter banned every twitter scrapers. This repository represe
 In this script, it is possible to use both chromedrivee.exe and msedgedriver.exe, based on the "navig" argument. These two drivers are available in the navigator website (based on your navigator version).  
 I also tried to maximize the srcraped tweets between each start_date and end_date (these two dates are being updated for each refrsh of the website page (for more details please look at the source code in [scweet.py](https://github.com/Altimis/Scweet/blob/master/Scweet/scweet.py)), and also by hiding the selenium browser window. 
 
+
 ## Requierments : 
 
 ```pip install -r requirements.txt```
@@ -53,4 +54,8 @@ optional arguments:
 
 ### To execute the script : 
 python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --navig chrome --display_type Latest --lang="en" --headless True
+```
 
+### Notebook example : 
+
+** You can check the example [here](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).
