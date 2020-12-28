@@ -58,4 +58,4 @@ python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020
 
 ### Notebook example : 
 
-** You can check the example [here](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).
+** You can check the example [here](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).**
