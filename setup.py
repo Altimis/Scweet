@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
   name = 'Scweet',
   packages = ['Scweet'],
-  version = '0.1.2',
+  version = '0.2.1',
   license='MIT',
   description = 'Tool for scraping Tweets',
   author = 'Soufiane and Yassine',
