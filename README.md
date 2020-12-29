@@ -31,7 +31,7 @@ More features will be added soon, such as "all reaplies of each tweet for a spec
 
 ### Notebook example : 
 
-**You can check the example [here](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).**. The library will be ready soon. 
+**You can check the example [here](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).** The library will be ready soon. 
 
 ### Terminal :
 
