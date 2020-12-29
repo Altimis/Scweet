@@ -2,7 +2,7 @@ from distutils.core import setup
 import setuptools
 
 setup(
-  name = 'Scweet-Altimis',
+  name = 'Scweet',
   packages = ['Scweet'],
   version = '0.2.1',
   license='MIT',
