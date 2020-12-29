@@ -5,7 +5,7 @@ In the last days, Twitter banned every twitter scrapers. This repository represe
 In this script, it is possible to use both chromedrivee.exe and msedgedriver.exe, based on the "navig" argument. These two drivers are available in the navigator website (based on your navigator version).  
 I also tried to maximize the srcraped tweets between each start_date and end_date (these two dates are being updated for each refresh of the website page (for more details please look at the source code in [scweet.py](https://github.com/Altimis/Scweet/blob/master/Scweet/scweet.py)), and also by hiding the selenium browser window. 
 
-The [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) code allows you to get all user information, including location, join date and lists of **followers and following**. Check [this example]((https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).
+The [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) code allows you to get all user information, including location, join date and lists of **followers and following**. Check [this example](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).
 
 **Note that all these functionalities will be added in the final version of the library**.
 
