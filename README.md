@@ -58,3 +58,6 @@ optional arguments:
 python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --navig chrome --display_type Latest --lang="en" --headless True
 ```
 
+### Notebook example : 
+
+**You can check the example [here](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).**
