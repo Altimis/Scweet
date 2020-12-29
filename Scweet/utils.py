@@ -1,16 +1,91 @@
-import re
-import csv
+from io import StringIO, BytesIO
 import os
+import re
 from time import sleep
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import datetime
-import argparse
 from msedge.selenium_tools import Edge, EdgeOptions
 import pandas as pd
 import platform
 from selenium.webdriver.common.keys import Keys
+import pathlib
+
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+import const
+import requests
+import zipfile
+current_dir = pathlib.Path(__file__).parent.absolute()
+
+
+class OperatingSystem:
+    WINDOWS = "Windows"
+    LINUX = "Linux"
+    MAC = "Darwin"
+
+
+def download_chromedriver(version_string, operating_system: str):
+
+    version_string_patch_strip = '.'.join(version_string.split(".")[:-1])
+    zip_names = {
+        OperatingSystem.MAC: "chromedriver_mac64.zip",
+        OperatingSystem.WINDOWS: "chromedriver_win32.zip",
+        OperatingSystem.LINUX: "chromedriver_linux64.zip"
+    }
+
+    extension = ".exe" if operating_system == OperatingSystem.WINDOWS else ""
+    chromedriver_out_filename = f"chromedriver_{version_string}{extension}"
+    chromedriver_path = current_dir.joinpath("drivers").joinpath(chromedriver_out_filename)
+
+    if chromedriver_path.exists():
+        return chromedriver_path
+
+    # Chromedriver not downloaded. Lets download.
+    content = requests.get(f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{version_string_patch_strip}")
+    supported_version = content.text
+    zip_name = zip_names[operating_system]
+
+    zip_resp = requests.get(f"https://chromedriver.storage.googleapis.com/{supported_version}/{zip_name}")
+    zip_binary = BytesIO(zip_resp.content)
+
+    zip_file = zipfile.ZipFile(zip_binary)
+
+    chromedriver_binary = zip_file.read(f"chromedriver{extension}")
+
+    with open(chromedriver_path, "wb+") as chromeriver_file:
+        chromeriver_file.write(chromedriver_binary)
+    os.chmod(chromedriver_path, 0o777)
+
+    return chromedriver_path
+
+def chrome_version():
+    osname = platform.system()
+    if osname == OperatingSystem.MAC:
+        install_paths = [
+            "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+        ]
+    elif osname == OperatingSystem.WINDOWS:
+        install_paths = [
+            "C:\Program Files\Google\Chrome\Application\chrome.exe"
+        ]
+    elif osname == OperatingSystem.LINUX:
+        install_paths = [
+            "/usr/bin/google-chrome",
+            "/usr/bin/google-chrome-stable"
+        ]
+    else:
+        raise NotImplemented(f"Unknown OS '{osname}'")
+
+    version_strings = [os.popen(f"{ip} --version").read().strip('Google Chrome ').strip() for ip in install_paths]
+    version_strings = list(sorted(filter(None, version_strings)))
+
+    if len(version_strings) == 0:
+        raise RuntimeError("Could not find Chrome installed on this system")
+
+    return version_strings.pop()
 
 
 def get_data(card):
@@ -100,19 +175,12 @@ def get_data(card):
 
 def init_driver(navig="chrome", headless=True, proxy=None):
     # create instance of web driver
+
     if navig == "chrome":
-        browser_path = ''
-        if platform.system() == 'Windows':
-            print('Detected OS : Windows')
-            browser_path = './drivers/chromedriver_win.exe'
-        elif platform.system() == 'Linux':
-            print('Detected OS : Linux')
-            browser_path = './drivers/chromedriver_linux'
-        elif platform.system() == 'Darwin':
-            print('Detected OS : Mac')
-            browser_path = './drivers/chromedriver_mac'
-        else:
-            raise OSError('Unknown OS Type')
+
+        version = chrome_version()
+        chromedriver_path = download_chromedriver(version, platform.system())
+
         options = Options()
         if headless is True:
             print("Scraping on headless mode.")
@@ -121,11 +189,11 @@ def init_driver(navig="chrome", headless=True, proxy=None):
         else:
             options.headless = False
         options.add_argument('log-level=3')
-        if proxy != None:
+        if proxy is not None:
             options.add_argument('--proxy-server=%s' % proxy)
         prefs = {"profile.managed_default_content_settings.images": 2}
         options.add_experimental_option("prefs", prefs)
-        driver = webdriver.Chrome(options=options, executable_path=browser_path)
+        driver = webdriver.Chrome(options=options, executable_path=chromedriver_path)
         driver.set_page_load_timeout(100)
         return driver
     elif navig == "edge":
@@ -145,7 +213,7 @@ def init_driver(navig="chrome", headless=True, proxy=None):
 
 
 def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account):
-    ''' Search for this query between start_date and end_date'''
+    """ Search for this query between start_date and end_date"""
 
     # req='%20OR%20'.join(words)
     from_account = "(from%3A" + from_account + ")%20" if from_account is not None else ""
@@ -184,22 +252,17 @@ def get_last_date_from_csv(path):
     return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
 
 
-def log_in(driver, username, my_password):
+def log_in(driver, username=const.USERNAME, password=const.PASSWORD, timeout=10):
     driver.get('https://www.twitter.com/login')
+    username_xpath = '//input[@name="session[username_or_email]"]'
+    password_xpath = '//input[@name="session[password]"]'
 
-    sleep(4)
+    username_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, username_xpath)))
+    password_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, password_xpath)))
 
-    # log in
-    user = username  # input('username: ')
-    my_password = my_password  # getpass('Password: ')
-
-    username = driver.find_element_by_xpath('//input[@name="session[username_or_email]"]')
-    username.send_keys(user)
-
-    password = driver.find_element_by_xpath('//input[@name="session[password]"]')
-    password.send_keys(my_password)
-    password.send_keys(Keys.RETURN)
-    sleep(4)
+    username_el.sendqw_keys(username)
+    password_el.send_keys(password)
+    password_el.send_keys(Keys.RETURN)
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position):
