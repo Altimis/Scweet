@@ -49,35 +49,26 @@ def get_user_information(user, driver=None):
         print("You should specify the user.")
         return
 
-def log_user_page(user, driver):
+def log_user_page(user, driver, headless = True):
 
     driver.get('https://twitter.com/'+user)
     sleep(2)
 
-def get_followers(user, driver):
 
-    utils.log_in(driver)
-    log_user_page(user,driver)
+def get_followers(user, username, my_password, verbose, headless = True, wait=2):
 
-    sleep(2)
+    followers = {}
 
-    driver.find_element_by_xpath('//a[contains(@href,"/'+user+'/followers")]/span[1]/span[1]').click()
+    followers["Following"] = utils.get_follow(user, username, my_password, headless, "followers", verbose, wait=wait)
 
-    cards = driver.find_elements_by_xpath('//div[contains(@data-testid,"UserCell")]')
+    return followers
 
+def get_following(user, username, my_password, verbose, headless = True, wait=2):
 
-    for card in cards:
-        #follower = card.find_element_by_xpath('//a[contains(@href,"/")][1]').get_attribute('href')
-        follower = card.find_element_by_class_name('css-901oao.css-16my406.r-1qd0xha.r-ad9z0x.r-bcqeeo.r-qvutc0').text
-        print(follower)
+    following = {}
 
-if __name__ == '__main__':
-	
-	
+    following["Followers"] = utils.get_follow(user, username, my_password, headless, "following", verbose, wait=wait)
 
-	#following, followers, join_date, location, website, desc = get_user_information("Tesla", driver)
+    return following
 
-	#print('following:'+following+'\nfollowers: '+followers+'\njoin_date: '+join_date+ '\nlocation: ' +location + '\nwebsite: '+website + '\ndescription: '+desc)
-
-	get_followers("Tesla", driver)
 

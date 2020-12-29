@@ -99,7 +99,7 @@ def scrap(start_date, max_date, words=None,to_account=None, from_account=None, i
 
 if __name__ == '__main__':
 
-	"""
+	
 
     parser = argparse.ArgumentParser(description='Scrap tweets.')
 
@@ -149,4 +149,4 @@ if __name__ == '__main__':
 
     data=scrap(start_date, max_date, words, to_account, from_account,interval,navig,lang, headless, limit,display_type,resume,proxy)
 
-    """
+    

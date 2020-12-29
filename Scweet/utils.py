@@ -2,7 +2,7 @@ import re
 import csv
 import os
 from time import sleep
-#from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import datetime
@@ -10,7 +10,7 @@ import argparse
 from msedge.selenium_tools import Edge, EdgeOptions
 import pandas as pd
 import platform
-#from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.keys import Keys
 
 
 
@@ -194,14 +194,15 @@ def get_last_date_from_csv(path):
 	return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
 
 
-def log_in(driver):
+def log_in(driver, username, my_password):
 
 	driver.get('https://www.twitter.com/login')
 
 	sleep(4)
 
-	user = "bokudakgainaimachi@gmail.com"#input('username: ')
-	my_password = "mmm010203"#getpass('Password: ')
+	#log in
+	user = username          #input('username: ')
+	my_password = my_password   #getpass('Password: ')
 
 	username = driver.find_element_by_xpath('//input[@name="session[username_or_email]"]')
 	username.send_keys(user)
@@ -209,7 +210,7 @@ def log_in(driver):
 	password = driver.find_element_by_xpath('//input[@name="session[password]"]')
 	password.send_keys(my_password)
 	password.send_keys(Keys.RETURN)
-	sleep(1.5)
+	sleep(4)
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position):
@@ -255,3 +256,74 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
 				last_position = curr_position
 				break
 	return driver,data,writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
+
+
+def get_follow(user, username, my_password, headless, follow=None, verbose=1, wait = 2):
+
+    driver = init_driver(headless = headless)
+    sleep(wait)
+    log_in(driver, username, my_password)
+    sleep(wait)
+    #log_user_page(user,driver)
+    driver.get('https://twitter.com/'+user)
+
+    sleep(wait)
+
+    driver.find_element_by_xpath('//a[contains(@href,"/'+user+'/'+follow+'")]/span[1]/span[1]').click()
+    sleep(wait)
+
+    if check_exists_by_link_text("Log in", driver):
+
+    	login = driver.find_element_by_link_text("Log in")
+    	sleep(wait)
+    	driver.execute_script("arguments[0].click();", login)
+    	sleep(wait)
+    	driver.get('https://twitter.com/'+user)
+    	sleep(wait)
+    	driver.find_element_by_xpath('//a[contains(@href,"/'+user+'/'+follow+'")]/span[1]/span[1]').click()
+    	sleep(wait)
+
+    scrolling = True
+    last_position = driver.execute_script("return window.pageYOffset;")
+    follows_elem = []
+
+    while scrolling:
+        #get the card of followings
+        page_cards = driver.find_elements_by_xpath('//div[contains(@data-testid,"UserCell")]')
+        for card in page_cards:
+            element = card.find_element_by_xpath('.//div[1]/div[1]/div[1]//a[1]')
+            follow_elem = element.get_attribute('href')
+            follows_elem.append(follow_elem)
+            if verbose:
+            	print(follow_elem)
+        print("Found "+str(len(follows_elem))+ " "+ follow)
+        scroll_attempt = 0
+        while True:
+            sleep(wait)
+            driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+            sleep(wait)
+            curr_position = driver.execute_script("return window.pageYOffset;")
+            if last_position == curr_position:
+                scroll_attempt += 1
+
+                # end of scroll region
+                if scroll_attempt >= 3:
+                    scrolling = False
+                    return follows_elem
+                else:
+                    sleep(wait) # attempt another scroll
+            else:
+                last_position = curr_position
+                break
+      
+def check_exists_by_link_text(text, driver):
+    try:
+        driver.find_element_by_link_text(text)
+    except NoSuchElementException:
+        return False
+    return True
+
+
+
+
+
