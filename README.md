@@ -7,6 +7,8 @@ I also tried to maximize the srcraped tweets between each start_date and end_dat
 
 The [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) code allows you to get all user information, including location, join date and lists of **followers and following**. Check [this example]((https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).
 
+**Note that all these functionalities will be added in the final version of the library**.
+
 ## Requierments : 
 
 ```pip install -r requirements.txt```
