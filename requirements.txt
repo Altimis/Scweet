@@ -1,3 +1,5 @@
 msedge-selenium-tools
 selenium
 pandas
+python-dotenv
+requests
