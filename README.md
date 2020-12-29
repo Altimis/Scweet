@@ -1,9 +1,8 @@
 # A simple and unlimited twitter scraper with python and without authentification. 
 
-In the last days, Twitter banned every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of words or account name, and saves a csv file containing scraped data. 
+In the last days, Twitter banned every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of words or account name, and saves a csv file containing scraped data. It is also possible to scrape user profile information, including following and followers.
 
-In this script, it is possible to use both chromedrivee.exe and msedgedriver.exe, based on the "navig" argument. These two drivers are available in the navigator website (based on your navigator version).  
-I also tried to maximize the srcraped tweets between each start_date and end_date (these two dates are being updated for each refresh of the website page (for more details please look at the source code in [scweet.py](https://github.com/Altimis/Scweet/blob/master/Scweet/scweet.py)), and also by hiding the selenium browser window. 
+Scweet uses only selenium to scrape data. Authentification is required in the case of followers/following scraping. It is recommended to log in with a new account (if the list of followers is very long, it is possible that your account will be banned). To log in to your account, you need to enter your ``username`` and ``password`` in [env](https://github.com/Altimis/Scweet/blob/master/.env) file. You can controle the timeout parameter in the get_followers and get_following functions. 
 
 The [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) code allows you to get all user information, including location, join date and lists of **followers and following**. Check [this example](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).
 
@@ -14,6 +13,8 @@ The [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) code al
 ```pip install -r requirements.txt```
 
 ## Results :
+
+### Tweets :
 
 The CSV file contains the following features (for each tweet) :
 
@@ -27,6 +28,10 @@ The CSV file contains the following features (for each tweet) :
 - 'Retweets' : number of retweets
 - 'Image link' : Link of the image in the tweet (it will be an option to download images soon).
 - 'Tweet URL' : Tweet URL.
+
+### Following / Followers :
+
+The get_following and get_followers in [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) give a list of followers and following fo a given user. Note that the ``user`` should start with an uppercase letter. 
 
 More features will be added soon, such as "all reaplies of each tweet for a specific twitter account"
 
