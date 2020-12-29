@@ -1,12 +1,13 @@
 from distutils.core import setup
+import setuptools
 
 setup(
-  name = 'Scweet',
+  name = 'Scweet-Altimis',
   packages = ['Scweet'],
   version = '0.2.1',
   license='MIT',
   description = 'Tool for scraping Tweets',
-  author = 'Soufiane and Yassine',
+  author = 'Yassine AIT JEDDI and Soufiane Bengadi ',
   author_email = 'bokudakgainaimachi@gmail.com',
   url = 'https://github.com/Altimis/Scweet',
   download_url = 'https://github.com/Altimis/Scweet/archive/0.1.1.tar.gz',
