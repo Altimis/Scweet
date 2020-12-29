@@ -13,75 +13,73 @@ import platform
 from selenium.webdriver.common.keys import Keys
 
 
-
-
 def get_data(card):
     """Extract data from tweet card"""
     try:
         username = card.find_element_by_xpath('.//span').text
-    except :
+    except:
         return
 
     try:
         handle = card.find_element_by_xpath('.//span[contains(text(), "@")]').text
-    except :
+    except:
         return
 
     try:
         postdate = card.find_element_by_xpath('.//time').get_attribute('datetime')
-    except :
+    except:
         return
 
     try:
         comment = card.find_element_by_xpath('.//div[2]/div[2]/div[1]').text
-    except :
+    except:
         comment = ""
 
     try:
         responding = card.find_element_by_xpath('.//div[2]/div[2]/div[2]').text
-    except :
+    except:
         responding = ""
-    
+
     text = comment + responding
-    
+
     try:
         reply_cnt = card.find_element_by_xpath('.//div[@data-testid="reply"]').text
-    except :
-        reply_cnt= 0
+    except:
+        reply_cnt = 0
 
     try:
         retweet_cnt = card.find_element_by_xpath('.//div[@data-testid="retweet"]').text
-    except :
+    except:
         retweet_cnt = 0
 
     try:
         like_cnt = card.find_element_by_xpath('.//div[@data-testid="like"]').text
-    except :
+    except:
         like_cnt = 0
 
     try:
-    	element = card.find_element_by_xpath('.//div[2]/div[2]//img[contains(@src, "twimg")]')
-    	image_link = element.get_attribute('src') 
+        element = card.find_element_by_xpath('.//div[2]/div[2]//img[contains(@src, "twimg")]')
+        image_link = element.get_attribute('src')
     except:
         image_link = ""
-        
-   	#handle promoted tweets
+
+    # handle promoted tweets
     try:
         promoted = card.find_element_by_xpath('.//div[2]/div[2]/[last()]//span').text == "Promoted"
     except:
         promoted = False
     if promoted:
-    	return
+        return
 
     # get a string of all emojis contained in the tweet
     try:
         emoji_tags = card.find_elements_by_xpath('.//img[contains(@src, "emoji")]')
-    except : 
+    except:
         return
     emoji_list = []
     for tag in emoji_tags:
         try:
-            filename = tag.get_attribute('src') 
+            filename = tag.get_attribute('src')
             emoji = chr(int(re.search(r'svg\/([a-z0-9]+)\.svg', filename).group(1), base=16))
         except AttributeError:
             continue
@@ -89,16 +87,15 @@ def get_data(card):
             emoji_list.append(emoji)
     emojis = ' '.join(emoji_list)
 
-    #tweet url
+    # tweet url
     try:
-    	element = card.find_element_by_xpath('.//a[contains(@href, "/status/")]')
-    	tweet_url = element.get_attribute('href') 
+        element = card.find_element_by_xpath('.//a[contains(@href, "/status/")]')
+        tweet_url = element.get_attribute('href')
     except:
-    	return
-    
-    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link, tweet_url)
-    return tweet  
+        return
 
+    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link, tweet_url)
+    return tweet
 
 
 def init_driver(navig="chrome", headless=True, proxy=None):
@@ -115,70 +112,64 @@ def init_driver(navig="chrome", headless=True, proxy=None):
             print('Detected OS : Mac')
             browser_path = './drivers/chromedriver_mac'
         else:
-            raise OSError('Unknown OS Type')    
+            raise OSError('Unknown OS Type')
         options = Options()
         if headless is True:
-        	print("Scraping on headless mode.")
-        	options.add_argument('--disable-gpu')
-        	options.headless=True
+            print("Scraping on headless mode.")
+            options.add_argument('--disable-gpu')
+            options.headless = True
         else:
-        	options.headless=False
+            options.headless = False
         options.add_argument('log-level=3')
-        if proxy!=None:
-        	options.add_argument('--proxy-server=%s' % proxy)
+        if proxy != None:
+            options.add_argument('--proxy-server=%s' % proxy)
         prefs = {"profile.managed_default_content_settings.images": 2}
         options.add_experimental_option("prefs", prefs)
-        driver = webdriver.Chrome(options=options,executable_path=browser_path)
+        driver = webdriver.Chrome(options=options, executable_path=browser_path)
         driver.set_page_load_timeout(100)
         return driver
     elif navig == "edge":
         browser_path = 'drivers/msedgedriver.exe'
         options = EdgeOptions()
-        if proxy!=None:
-        	options.add_argument('--proxy-server=%s' % proxy)
-        if headless==True:
-        	options.headless = True
-        	options.use_chromium = False
+        if proxy is not None:
+            options.add_argument('--proxy-server=%s' % proxy)
+        if headless:
+            options.headless = True
+            options.use_chromium = False
         else:
-        	options.headless = False
-        	options.use_chromium = True
+            options.headless = False
+            options.use_chromium = True
         options.add_argument('log-level=3')
         driver = Edge(options=options, executable_path=browser_path)
         return driver
 
-def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account):
 
+def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account):
     ''' Search for this query between start_date and end_date'''
 
-    #req='%20OR%20'.join(words)
-    if from_account!=None:
-    	from_account = "(from%3A"+from_account+")%20"
-    else :
-    	from_account=""
+    # req='%20OR%20'.join(words)
+    from_account = "(from%3A" + from_account + ")%20" if from_account is not None else ""
+    to_account = "(to%3A" + to_account + ")%20" if to_account is not None else ""
 
-    if to_account!=None:
-    	to_account = "(to%3A"+to_account+")%20"
+    if words is not None:
+        words = str(words).split("//")
+        words = "(" + str('%20OR%20'.join(words)) + ")%20"
     else:
-    	to_account=""
+        words = ""
 
-    if words!=None:
-    	words = str(words).split("//")
-    	words = "("+str('%20OR%20'.join(words))+")%20"
-    else : 
-    	words=""
+    if lang is not None:
+        lang = 'lang%3A' + lang
+    else:
+        lang = ""
 
-    if lang!=None:
-    	lang = 'lang%3A'+lang
-    else : 
-    	lang=""
-    	
-    end_date = "until%3A"+end_date+"%20"
-    start_date = "since%3A"+start_date+"%20"
+    end_date = "until%3A" + end_date + "%20"
+    start_date = "since%3A" + start_date + "%20"
 
-    #to_from = str('%20'.join([from_account,to_account]))+"%20"
+    # to_from = str('%20'.join([from_account,to_account]))+"%20"
 
-    driver.get('https://twitter.com/search?q='+words+from_account+to_account+end_date+start_date+lang+'&src=typed_query')
-    
+    driver.get(
+        'https://twitter.com/search?q=' + words + from_account + to_account + end_date + start_date + lang + '&src=typed_query')
+
     sleep(1)
 
     # navigate to historical 'Top' or 'Latest' tab
@@ -187,116 +178,111 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     except:
         print("Latest Button doesnt exist.")
 
-        
-def get_last_date_from_csv(path):
 
-	df = pd.read_csv(path)
-	return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
+def get_last_date_from_csv(path):
+    df = pd.read_csv(path)
+    return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
 
 
 def log_in(driver, username, my_password):
+    driver.get('https://www.twitter.com/login')
 
-	driver.get('https://www.twitter.com/login')
+    sleep(4)
 
-	sleep(4)
+    # log in
+    user = username  # input('username: ')
+    my_password = my_password  # getpass('Password: ')
 
-	#log in
-	user = username          #input('username: ')
-	my_password = my_password   #getpass('Password: ')
+    username = driver.find_element_by_xpath('//input[@name="session[username_or_email]"]')
+    username.send_keys(user)
 
-	username = driver.find_element_by_xpath('//input[@name="session[username_or_email]"]')
-	username.send_keys(user)
-
-	password = driver.find_element_by_xpath('//input[@name="session[password]"]')
-	password.send_keys(my_password)
-	password.send_keys(Keys.RETURN)
-	sleep(4)
+    password = driver.find_element_by_xpath('//input[@name="session[password]"]')
+    password.send_keys(my_password)
+    password.send_keys(Keys.RETURN)
+    sleep(4)
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position):
+    """ scrolling function """
 
-	""" scrolling function """
+    while scrolling and tweet_parsed < limit:
+        # get the card of tweets
+        page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
+        for card in page_cards:
+            tweet = get_data(card)
+            if tweet:
+                # check if the tweet is unique
+                tweet_id = ''.join(tweet[:-1])
+                if tweet_id not in tweet_ids:
+                    tweet_ids.add(tweet_id)
+                    data.append(tweet)
+                    last_date = str(tweet[2])
+                    print("Tweet made at: " + str(last_date) + " is found.")
+                    writer.writerows([tweet])
+                    tweet_parsed += 1
+                    if tweet_parsed >= limit:
+                        break
+        scroll_attempt = 0
+        while True and tweet_parsed < limit:
+            # check scroll position
+            print("scroll", scroll)
+            # sleep(1)
+            driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+            scroll += 1
+            sleep(1)
+            curr_position = driver.execute_script("return window.pageYOffset;")
+            if last_position == curr_position:
+                scroll_attempt += 1
 
-	while scrolling and tweet_parsed<limit:
-		#get the card of tweets
-		page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
-		for card in page_cards:
-			tweet = get_data(card)
-			if tweet:
-				#check if the tweet is unique
-				tweet_id = ''.join(tweet[:-1])
-				if tweet_id not in tweet_ids:
-					tweet_ids.add(tweet_id)
-					data.append(tweet)
-					last_date=str(tweet[2])
-					print("Tweet made at: " + str(last_date)+" is found.")
-					writer.writerows([tweet])
-					tweet_parsed+=1
-					if tweet_parsed>=limit:
-						break
-		scroll_attempt = 0
-		while True and tweet_parsed<limit:
-			# check scroll position
-			print("scroll", scroll)
-			#sleep(1)
-			driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-			scroll+=1
-			sleep(1)
-			curr_position = driver.execute_script("return window.pageYOffset;")
-			if last_position == curr_position:
-				scroll_attempt += 1
-
-				# end of scroll region
-				if scroll_attempt >= 2:
-					scrolling = False
-					break
-				else:
-					sleep(1) # attempt another scroll
-			else:
-				last_position = curr_position
-				break
-	return driver,data,writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
+                # end of scroll region
+                if scroll_attempt >= 2:
+                    scrolling = False
+                    break
+                else:
+                    sleep(1)  # attempt another scroll
+            else:
+                last_position = curr_position
+                break
+    return driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
 
 
-def get_follow(user, username, my_password, headless, follow=None, verbose=1, wait = 2):
-
-    driver = init_driver(headless = headless)
+def get_follow(user, username, my_password, headless, follow=None, verbose=1, wait=2):
+    driver = init_driver(headless=headless)
     sleep(wait)
     log_in(driver, username, my_password)
     sleep(wait)
-    #log_user_page(user,driver)
-    driver.get('https://twitter.com/'+user)
+    # log_user_page(user,driver)
+    driver.get('https://twitter.com/' + user)
 
     sleep(wait)
 
-    driver.find_element_by_xpath('//a[contains(@href,"/'+user+'/'+follow+'")]/span[1]/span[1]').click()
+    driver.find_element_by_xpath('//a[contains(@href,"/' + user + '/' + follow + '")]/span[1]/span[1]').click()
     sleep(wait)
 
     if check_exists_by_link_text("Log in", driver):
-
-    	login = driver.find_element_by_link_text("Log in")
-    	sleep(wait)
-    	driver.execute_script("arguments[0].click();", login)
-    	sleep(wait)
-    	driver.get('https://twitter.com/'+user)
-    	sleep(wait)
-    	driver.find_element_by_xpath('//a[contains(@href,"/'+user+'/'+follow+'")]/span[1]/span[1]').click()
-    	sleep(wait)
+        login = driver.find_element_by_link_text("Log in")
+        sleep(wait)
+        driver.execute_script("arguments[0].click();", login)
+        sleep(wait)
+        driver.get('https://twitter.com/' + user)
+        sleep(wait)
+        driver.find_element_by_xpath('//a[contains(@href,"/' + user + '/' + follow + '")]/span[1]/span[1]').click()
+        sleep(wait)
 
     scrolling = True
     last_position = driver.execute_script("return window.pageYOffset;")
     follows_elem = []
 
     while scrolling:
-        #get the card of followings
+        # get the card of followings
         page_cards = driver.find_elements_by_xpath('//div[contains(@data-testid,"UserCell")]')
         for card in page_cards:
             element = card.find_element_by_xpath('.//div[1]/div[1]/div[1]//a[1]')
             follow_elem = element.get_attribute('href')
             follows_elem.append(follow_elem)
             if verbose:
-            	print(follow_elem)
-        print("Found "+str(len(follows_elem))+ " "+ follow)
+                print(follow_elem)
+        print("Found " + str(len(follows_elem)) + " " + follow)
         scroll_attempt = 0
         while True:
             sleep(wait)
@@ -311,19 +297,15 @@ def get_follow(user, username, my_password, headless, follow=None, verbose=1, wa
                     scrolling = False
                     return follows_elem
                 else:
-                    sleep(wait) # attempt another scroll
+                    sleep(wait)  # attempt another scroll
             else:
                 last_position = curr_position
                 break
-      
+
+
 def check_exists_by_link_text(text, driver):
     try:
         driver.find_element_by_link_text(text)
     except NoSuchElementException:
         return False
     return True
-
-
-
-
-
