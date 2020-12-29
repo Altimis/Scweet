@@ -2,24 +2,26 @@ from io import StringIO, BytesIO
 import os
 import re
 from time import sleep
+import chromedriver_autoinstaller
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import datetime
-from msedge.selenium_tools import Edge, EdgeOptions
 import pandas as pd
 import platform
 from selenium.webdriver.common.keys import Keys
-import pathlib
+#import pathlib
 
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import const
-import requests
-import zipfile
-current_dir = pathlib.Path(__file__).parent.absolute()
+#import requests
+#import zipfile
 
+#current_dir = pathlib.Path(__file__).parent.absolute()
+
+"""
 
 class OperatingSystem:
     WINDOWS = "Windows"
@@ -44,6 +46,7 @@ def download_chromedriver(version_string, operating_system: str):
         return chromedriver_path
 
     # Chromedriver not downloaded. Lets download.
+    print("Dowloading driver...")
     content = requests.get(f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{version_string_patch_strip}")
     supported_version = content.text
     zip_name = zip_names[operating_system]
@@ -69,7 +72,7 @@ def chrome_version():
         ]
     elif osname == OperatingSystem.WINDOWS:
         install_paths = [
-            "C:\Program Files\Google\Chrome\Application\chrome.exe"
+            "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
         ]
     elif osname == OperatingSystem.LINUX:
         install_paths = [
@@ -87,7 +90,7 @@ def chrome_version():
 
     return version_strings.pop()
 
-
+"""
 def get_data(card):
     """Extract data from tweet card"""
     try:
@@ -178,8 +181,10 @@ def init_driver(navig="chrome", headless=True, proxy=None):
 
     if navig == "chrome":
 
-        version = chrome_version()
-        chromedriver_path = download_chromedriver(version, platform.system())
+        #version = chrome_version()
+        #chromedriver_path = download_chromedriver(version, platform.system())
+
+        chromedriver_path = chromedriver_autoinstaller.install()
 
         options = Options()
         if headless is True:
@@ -252,17 +257,21 @@ def get_last_date_from_csv(path):
     return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
 
 
-def log_in(driver, username=const.USERNAME, password=const.PASSWORD, timeout=10):
-    driver.get('https://www.twitter.com/login')
-    username_xpath = '//input[@name="session[username_or_email]"]'
-    password_xpath = '//input[@name="session[password]"]'
+def log_in(driver, timeout=10):
 
-    username_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, username_xpath)))
-    password_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, password_xpath)))
+	username=const.USERNAME
+	password=const.PASSWORD
 
-    username_el.sendqw_keys(username)
-    password_el.send_keys(password)
-    password_el.send_keys(Keys.RETURN)
+	driver.get('https://www.twitter.com/login')
+	username_xpath = '//input[@name="session[username_or_email]"]'
+	password_xpath = '//input[@name="session[password]"]'
+
+	username_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, username_xpath)))
+	password_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, password_xpath)))
+
+	username_el.send_keys(username)
+	password_el.send_keys(password)
+	password_el.send_keys(Keys.RETURN)
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position):
@@ -309,10 +318,10 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
     return driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
 
 
-def get_follow(user, username, my_password, headless, follow=None, verbose=1, wait=2):
+def get_follow(user, headless, follow=None, verbose=1, wait=2):
     driver = init_driver(headless=headless)
     sleep(wait)
-    log_in(driver, username, my_password)
+    log_in(driver)
     sleep(wait)
     # log_user_page(user,driver)
     driver.get('https://twitter.com/' + user)
@@ -372,3 +381,4 @@ def check_exists_by_link_text(text, driver):
     except NoSuchElementException:
         return False
     return True
+
