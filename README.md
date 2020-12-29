@@ -27,7 +27,7 @@ The CSV file contains the following features (for each tweet) :
 
 More features will be added soon, such as "all reaplies of each tweet for a specific twitter account"
 
-## Usage example :
+## Usage :
 
 ### Notebook example : 
 
