@@ -217,12 +217,13 @@ def init_driver(navig="chrome", headless=True, proxy=None):
         return driver
 
 
-def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account):
+def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, hashtag):
     """ Search for this query between start_date and end_date"""
 
     # req='%20OR%20'.join(words)
     from_account = "(from%3A" + from_account + ")%20" if from_account is not None else ""
     to_account = "(to%3A" + to_account + ")%20" if to_account is not None else ""
+    hash_tags = "(%23"+hashtag+")%20" if hashtag is not None else ""
 
     if words is not None:
         words = str(words).split("//")
@@ -241,7 +242,7 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     # to_from = str('%20'.join([from_account,to_account]))+"%20"
 
     driver.get(
-        'https://twitter.com/search?q=' + words + from_account + to_account + end_date + start_date + lang + '&src=typed_query')
+        'https://twitter.com/search?q=' + words + from_account + to_account + hash_tags +end_date + start_date + lang + '&src=typed_query')
 
     sleep(1)
 

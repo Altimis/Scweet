@@ -8,7 +8,7 @@ from utils import init_driver, get_last_date_from_csv, log_search_page, keep_scr
 
 # class Scweet():
 def scrap(start_date, max_date, words=None, to_account=None, from_account=None, interval=5, navig="chrome", lang="en",
-          headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None):
+          headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None):
     """
     scrap data from twitter using requests, starting from start_date until max_date. The bot make a search between each start_date and end_date
     (days_between) until it reaches the max_date.
@@ -40,6 +40,9 @@ def scrap(start_date, max_date, words=None, to_account=None, from_account=None, 
     elif to_account:
         path = save_dir + "/" + to_account + '_' + str(init_date).split(' ')[0] + '_' + str(max_date).split(' ')[
             0] + '.csv'
+    elif hashtag:
+        path = save_dir + "/" + hashtag + '_' + str(init_date).split(' ')[0] + '_' + str(max_date).split(' ')[
+            0] + '.csv'
 
     if resume:
         start_date = str(get_last_date_from_csv(path))[:10]
@@ -67,11 +70,12 @@ def scrap(start_date, max_date, words=None, to_account=None, from_account=None, 
                 log_search_page(driver=driver, words=words,
                                 start_date=datetime.datetime.strftime(start_date, '%Y-%m-%d'),
                                 end_date=datetime.datetime.strftime(end_date, '%Y-%m-%d'), to_account=to_account,
-                                from_account=from_account, lang=lang, display_type=display_type)
+                                from_account=from_account, lang=lang, display_type=display_type,
+                                hashtag=hashtag)
             else:
                 log_search_page(driver=driver, words=words, start_date=start_date,
                                 end_date=datetime.datetime.strftime(end_date, '%Y-%m-%d'), to_account=to_account,
-                                from_account=from_account, lang=lang, display_type=display_type)
+                                from_account=from_account, hashtag=hashtag, lang=lang, display_type=display_type)
 
             # number of logged pages (refresh each <between_days>)
             refresh += 1
