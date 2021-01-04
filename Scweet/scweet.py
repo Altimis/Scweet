@@ -7,7 +7,7 @@ from utils import init_driver, get_last_date_from_csv, log_search_page, keep_scr
 
 
 # class Scweet():
-def scrap(start_date, max_date, words=None, to_account=None, from_account=None, interval=5, navig="chrome", lang="en",
+def scrap(start_date, max_date, words=None, to_account=None, from_account=None, interval=5, navig="chrome", lang=None,
           headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None):
     """
     scrap data from twitter using requests, starting from start_date until max_date. The bot make a search between each start_date and end_date
