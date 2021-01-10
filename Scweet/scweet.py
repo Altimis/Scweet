@@ -7,7 +7,7 @@ from utils import init_driver, get_last_date_from_csv, log_search_page, keep_scr
 
 
 # class Scweet():
-def scrap(start_date, max_date, words=None, to_account=None, from_account=None, interval=5, navig="chrome", lang=None,
+def scrap(start_date, max_date, words=None, to_account=None, from_account=None, interval=5, lang=None,
           headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None):
     """
     scrap data from twitter using requests, starting from start_date until max_date. The bot make a search between each start_date and end_date
@@ -125,8 +125,6 @@ if __name__ == '__main__':
     parser.add_argument('--interval', type=int,
                         help='Interval days between each start date and end date for search queries. example : 5.',
                         default=1)
-    parser.add_argument('--navig', type=str,
-                        help='Navigator to use : chrome or edge.', default="chrome")
     parser.add_argument('--lang', type=str,
                         help='Tweets language. example : "en" for english and "fr" for french.', default=None)
     parser.add_argument('--headless', type=bool,
@@ -146,7 +144,6 @@ if __name__ == '__main__':
     max_date = args.max_date
     start_date = args.start_date
     interval = args.interval
-    navig = args.navig
     lang = args.lang
     headless = args.headless
     limit = args.limit
@@ -156,5 +153,5 @@ if __name__ == '__main__':
     resume = args.resume
     proxy = args.proxy
 
-    data = scrap(start_date, max_date, words, to_account, from_account, interval, navig, lang, headless, limit,
+    data = scrap(start_date, max_date, words, to_account, from_account, interval, lang, headless, limit,
                  display_type, resume, proxy)
