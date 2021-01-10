@@ -12,6 +12,8 @@ The [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) code al
 
 ```pip install -r requirements.txt```
 
+Note : You need to have Chrome installed in your system
+
 ## Results :
 
 ### Tweets :
@@ -59,7 +61,6 @@ optional arguments:
                         Start date for search query. example : %Y-%m-%d.
   --interval INTERVAL   Interval days between each start date and end date for
                         search queries. example : 5.
-  --navig NAVIG         Navigator to use : chrome or edge.
   --lang LANG           tweets language. Example : "en" for english and "fr"
                         for french.
   --headless HEADLESS   Headless webdrives or not. True or False
@@ -69,5 +70,5 @@ optional arguments:
   --resume RESUME       Resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <max_date>...)```
 
 ### To execute the script : 
-python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --navig chrome --display_type Latest --lang="en" --headless True
+python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --display_type Latest --lang="en" --headless True
 ```
