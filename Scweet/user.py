@@ -56,10 +56,10 @@ def get_user_information(user, driver=None, headless=True):
 
 def log_user_page(user, driver, headless=True):
     driver.get('https://twitter.com/' + user)
-    sleep(2)
+    sleep(random.uniform(1.5, 2.5))
 
 
-def get_followers(user, verbose=1, headless=True, wait=2):
+def get_followers(user, verbose=1, headless=True, wait=3):
     followers = {
         "Following": utils.get_follow(user, headless, "followers", verbose, wait=wait)
     }
