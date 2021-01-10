@@ -115,19 +115,20 @@ def init_driver(headless=True, proxy=None):
 	chromedriver_path = chromedriver_autoinstaller.install()
 	options = Options()
 	if headless is True:
-            print("Scraping on headless mode.")
-            options.add_argument('--disable-gpu')
-            options.headless = True
-        else:
-            options.headless = False
-        options.add_argument('log-level=3')
-        if proxy is not None:
-            options.add_argument('--proxy-server=%s' % proxy)
-        prefs = {"profile.managed_default_content_settings.images": 2}
-        options.add_experimental_option("prefs", prefs)
-        driver = webdriver.Chrome(options=options, executable_path=chromedriver_path)
-        driver.set_page_load_timeout(100)
-        return driver
+
+		print("Scraping on headless mode.")
+		options.add_argument('--disable-gpu')
+		options.headless = True
+	else:
+		options.headless = False
+	options.add_argument('log-level=3')
+	if proxy is not None:
+		options.add_argument('--proxy-server=%s' % proxy)
+	prefs = {"profile.managed_default_content_settings.images": 2}
+	options.add_experimental_option("prefs", prefs)
+	driver = webdriver.Chrome(options=options, executable_path=chromedriver_path)
+	driver.set_page_load_timeout(100)
+	return driver
 
 def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, hashtag):
     """ Search for this query between start_date and end_date"""

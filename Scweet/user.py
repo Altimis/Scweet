@@ -1,5 +1,6 @@
 import utils
 from time import sleep
+import random
 
 
 def get_user_information(user, driver=None, headless=True):
@@ -17,7 +18,7 @@ def get_user_information(user, driver=None, headless=True):
             followers = driver.find_element_by_xpath(
                 '//a[contains(@href,"/' + user + '/followers")]/span[1]/span[1]').text
         except Exception as e:
-            print(e)
+            #print(e)
             return
 
         try:
@@ -38,13 +39,13 @@ def get_user_information(user, driver=None, headless=True):
             element = driver.find_element_by_xpath('//div[contains(@data-testid,"UserProfileHeader_Items")]//a[1]')
             website = element.get_attribute("href")
         except Exception as e:
-            print(e)
+            #print(e)
             website = ""
 
         try:
             desc = driver.find_element_by_xpath('//div[contains(@data-testid,"UserDescription")]').text
         except Exception as e:
-            print(e)
+            #print(e)
             desc = ""
 
         return following, followers, join_date, location, website, desc

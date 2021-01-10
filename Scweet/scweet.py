@@ -19,7 +19,7 @@ def scrap(start_date, max_date, words=None, to_account=None, from_account=None, 
     """
 
     # initiate the driver
-    driver = init_driver(navig, headless, proxy)
+    driver = init_driver(headless, proxy)
 
     data = []
     tweet_ids = set()
