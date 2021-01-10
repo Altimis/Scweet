@@ -2,6 +2,7 @@ from io import StringIO, BytesIO
 import os
 import re
 from time import sleep
+import random
 import chromedriver_autoinstaller
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
@@ -16,81 +17,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import const
-#import requests
-#import zipfile
 
 #current_dir = pathlib.Path(__file__).parent.absolute()
 
-"""
-
-class OperatingSystem:
-    WINDOWS = "Windows"
-    LINUX = "Linux"
-    MAC = "Darwin"
-
-
-def download_chromedriver(version_string, operating_system: str):
-
-    version_string_patch_strip = '.'.join(version_string.split(".")[:-1])
-    zip_names = {
-        OperatingSystem.MAC: "chromedriver_mac64.zip",
-        OperatingSystem.WINDOWS: "chromedriver_win32.zip",
-        OperatingSystem.LINUX: "chromedriver_linux64.zip"
-    }
-
-    extension = ".exe" if operating_system == OperatingSystem.WINDOWS else ""
-    chromedriver_out_filename = f"chromedriver_{version_string}{extension}"
-    chromedriver_path = current_dir.joinpath("drivers").joinpath(chromedriver_out_filename)
-
-    if chromedriver_path.exists():
-        return chromedriver_path
-
-    # Chromedriver not downloaded. Lets download.
-    print("Dowloading driver...")
-    content = requests.get(f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{version_string_patch_strip}")
-    supported_version = content.text
-    zip_name = zip_names[operating_system]
-
-    zip_resp = requests.get(f"https://chromedriver.storage.googleapis.com/{supported_version}/{zip_name}")
-    zip_binary = BytesIO(zip_resp.content)
-
-    zip_file = zipfile.ZipFile(zip_binary)
-
-    chromedriver_binary = zip_file.read(f"chromedriver{extension}")
-
-    with open(chromedriver_path, "wb+") as chromeriver_file:
-        chromeriver_file.write(chromedriver_binary)
-    os.chmod(chromedriver_path, 0o777)
-
-    return chromedriver_path
-
-def chrome_version():
-    osname = platform.system()
-    if osname == OperatingSystem.MAC:
-        install_paths = [
-            "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-        ]
-    elif osname == OperatingSystem.WINDOWS:
-        install_paths = [
-            "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-        ]
-    elif osname == OperatingSystem.LINUX:
-        install_paths = [
-            "/usr/bin/google-chrome",
-            "/usr/bin/google-chrome-stable"
-        ]
-    else:
-        raise NotImplemented(f"Unknown OS '{osname}'")
-
-    version_strings = [os.popen(f"{ip} --version").read().strip('Google Chrome ').strip() for ip in install_paths]
-    version_strings = list(sorted(filter(None, version_strings)))
-
-    if len(version_strings) == 0:
-        raise RuntimeError("Could not find Chrome installed on this system")
-
-    return version_strings.pop()
-
-"""
 def get_data(card):
     """Extract data from tweet card"""
     try:
@@ -176,18 +105,16 @@ def get_data(card):
     return tweet
 
 
-def init_driver(navig="chrome", headless=True, proxy=None):
-    # create instance of web driver
-
-    if navig == "chrome":
-
-        #version = chrome_version()
-        #chromedriver_path = download_chromedriver(version, platform.system())
-
-        chromedriver_path = chromedriver_autoinstaller.install()
-
-        options = Options()
-        if headless is True:
+def init_driver(headless=True, proxy=None):
+	
+	""" 
+	intiate a chromedriver instance
+	"""
+	
+	# create instance of web driver
+	chromedriver_path = chromedriver_autoinstaller.install()
+	options = Options()
+	if headless is True:
             print("Scraping on headless mode.")
             options.add_argument('--disable-gpu')
             options.headless = True
@@ -201,26 +128,10 @@ def init_driver(navig="chrome", headless=True, proxy=None):
         driver = webdriver.Chrome(options=options, executable_path=chromedriver_path)
         driver.set_page_load_timeout(100)
         return driver
-    elif navig == "edge":
-        browser_path = 'drivers/msedgedriver.exe'
-        options = EdgeOptions()
-        if proxy is not None:
-            options.add_argument('--proxy-server=%s' % proxy)
-        if headless:
-            options.headless = True
-            options.use_chromium = False
-        else:
-            options.headless = False
-            options.use_chromium = True
-        options.add_argument('log-level=3')
-        driver = Edge(options=options, executable_path=browser_path)
-        return driver
-
 
 def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, hashtag):
     """ Search for this query between start_date and end_date"""
 
-    # req='%20OR%20'.join(words)
     from_account = "(from%3A" + from_account + ")%20" if from_account is not None else ""
     to_account = "(to%3A" + to_account + ")%20" if to_account is not None else ""
     hash_tags = "(%23"+hashtag+")%20" if hashtag is not None else ""
@@ -244,13 +155,13 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     driver.get(
         'https://twitter.com/search?q=' + words + from_account + to_account + hash_tags +end_date + start_date + lang + '&src=typed_query')
 
-    sleep(1)
+    sleep(random.uniform(0.5, 1.5))
 
     # navigate to historical 'Top' or 'Latest' tab
     try:
         driver.find_element_by_link_text(display_type).click()
     except:
-        print("Latest Button doesnt exist.")
+        print("%s Button doesnt exist.",display_type)
 
 
 def get_last_date_from_csv(path):
@@ -276,7 +187,7 @@ def log_in(driver, timeout=10):
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position):
-    """ scrolling function """
+    """ scrolling function for tweets crawling"""
 
     while scrolling and tweet_parsed < limit:
         # get the card of tweets
@@ -302,7 +213,7 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
             # sleep(1)
             driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
             scroll += 1
-            sleep(1)
+            sleep(random.uniform(0.5, 1.5))
             curr_position = driver.execute_script("return window.pageYOffset;")
             if last_position == curr_position:
                 scroll_attempt += 1
@@ -312,14 +223,14 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
                     scrolling = False
                     break
                 else:
-                    sleep(1)  # attempt another scroll
+                    sleep(random.uniform(0.5, 1.5))  # attempt another scroll
             else:
                 last_position = curr_position
                 break
     return driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
 
 
-def get_follow(user, headless, follow=None, verbose=1, wait=2):
+def get_follow(user, headless, follow=None, verbose=1, wait=3):
     driver = init_driver(headless=headless)
     sleep(wait)
     log_in(driver)
