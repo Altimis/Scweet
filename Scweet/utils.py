@@ -11,14 +11,15 @@ import datetime
 import pandas as pd
 import platform
 from selenium.webdriver.common.keys import Keys
-#import pathlib
+# import pathlib
 
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import const
 
-#current_dir = pathlib.Path(__file__).parent.absolute()
+
+# current_dir = pathlib.Path(__file__).parent.absolute()
 
 def get_data(card):
     """Extract data from tweet card"""
@@ -106,36 +107,34 @@ def get_data(card):
 
 
 def init_driver(headless=True, proxy=None):
-	
-	""" 
-	intiate a chromedriver instance
-	"""
-	
-	# create instance of web driver
-	chromedriver_path = chromedriver_autoinstaller.install()
-	options = Options()
-	if headless is True:
+    """ initiate a chromedriver instance """
 
-		print("Scraping on headless mode.")
-		options.add_argument('--disable-gpu')
-		options.headless = True
-	else:
-		options.headless = False
-	options.add_argument('log-level=3')
-	if proxy is not None:
-		options.add_argument('--proxy-server=%s' % proxy)
-	prefs = {"profile.managed_default_content_settings.images": 2}
-	options.add_experimental_option("prefs", prefs)
-	driver = webdriver.Chrome(options=options, executable_path=chromedriver_path)
-	driver.set_page_load_timeout(100)
-	return driver
+    # create instance of web driver
+    chromedriver_path = chromedriver_autoinstaller.install()
+    options = Options()
+    if headless is True:
+
+        print("Scraping on headless mode.")
+        options.add_argument('--disable-gpu')
+        options.headless = True
+    else:
+        options.headless = False
+    options.add_argument('log-level=3')
+    if proxy is not None:
+        options.add_argument('--proxy-server=%s' % proxy)
+    prefs = {"profile.managed_default_content_settings.images": 2}
+    options.add_experimental_option("prefs", prefs)
+    driver = webdriver.Chrome(options=options, executable_path=chromedriver_path)
+    driver.set_page_load_timeout(100)
+    return driver
+
 
 def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, hashtag):
     """ Search for this query between start_date and end_date"""
 
     from_account = "(from%3A" + from_account + ")%20" if from_account is not None else ""
     to_account = "(to%3A" + to_account + ")%20" if to_account is not None else ""
-    hash_tags = "(%23"+hashtag+")%20" if hashtag is not None else ""
+    hash_tags = "(%23" + hashtag + ")%20" if hashtag is not None else ""
 
     if words is not None:
         words = str(words).split("//")
@@ -154,7 +153,7 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     # to_from = str('%20'.join([from_account,to_account]))+"%20"
 
     driver.get(
-        'https://twitter.com/search?q=' + words + from_account + to_account + hash_tags +end_date + start_date + lang + '&src=typed_query')
+        'https://twitter.com/search?q=' + words + from_account + to_account + hash_tags + end_date + start_date + lang + '&src=typed_query')
 
     sleep(random.uniform(0.5, 1.5))
 
@@ -162,7 +161,7 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     try:
         driver.find_element_by_link_text(display_type).click()
     except:
-        print("%s Button doesnt exist.",display_type)
+        print("%s Button doesnt exist.", display_type)
 
 
 def get_last_date_from_csv(path):
@@ -171,26 +170,26 @@ def get_last_date_from_csv(path):
 
 
 def log_in(driver, timeout=10):
+    username = const.USERNAME
+    password = const.PASSWORD
 
-	username=const.USERNAME
-	password=const.PASSWORD
+    driver.get('https://www.twitter.com/login')
+    username_xpath = '//input[@name="session[username_or_email]"]'
+    password_xpath = '//input[@name="session[password]"]'
 
-	driver.get('https://www.twitter.com/login')
-	username_xpath = '//input[@name="session[username_or_email]"]'
-	password_xpath = '//input[@name="session[password]"]'
+    username_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, username_xpath)))
+    password_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, password_xpath)))
 
-	username_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, username_xpath)))
-	password_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, password_xpath)))
-
-	username_el.send_keys(username)
-	password_el.send_keys(password)
-	password_el.send_keys(Keys.RETURN)
+    username_el.send_keys(username)
+    password_el.send_keys(password)
+    password_el.send_keys(Keys.RETURN)
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position):
     """ scrolling function for tweets crawling"""
 
     while scrolling and tweet_parsed < limit:
+        sleep(random.uniform(0.5, 1.5))
         # get the card of tweets
         page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
         for card in page_cards:
@@ -203,18 +202,17 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
                     data.append(tweet)
                     last_date = str(tweet[2])
                     print("Tweet made at: " + str(last_date) + " is found.")
-                    writer.writerows([tweet])
+                    writer.writerow(tweet)
                     tweet_parsed += 1
                     if tweet_parsed >= limit:
                         break
         scroll_attempt = 0
-        while True and tweet_parsed < limit:
+        while tweet_parsed < limit:
             # check scroll position
             print("scroll", scroll)
             # sleep(1)
             driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
             scroll += 1
-            sleep(random.uniform(0.5, 1.5))
             curr_position = driver.execute_script("return window.pageYOffset;")
             if last_position == curr_position:
                 scroll_attempt += 1
@@ -294,4 +292,3 @@ def check_exists_by_link_text(text, driver):
     except NoSuchElementException:
         return False
     return True
-
