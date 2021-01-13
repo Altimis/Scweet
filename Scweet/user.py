@@ -3,56 +3,62 @@ from time import sleep
 import random
 
 
-def get_user_information(user, driver=None, headless=True):
+def get_user_information(users, driver=None, headless=True):
     """ get user information if the "from_account" argument is specified """
 
     driver = utils.init_driver(headless=headless)
 
-    log_user_page(user, driver)
+    users_info = {}
 
-    if user is not None:
+    for user in users :
 
-        try:
-            following = driver.find_element_by_xpath(
-                '//a[contains(@href,"/' + user + '/following")]/span[1]/span[1]').text
-            followers = driver.find_element_by_xpath(
-                '//a[contains(@href,"/' + user + '/followers")]/span[1]/span[1]').text
-        except Exception as e:
-            #print(e)
-            return
+        log_user_page(user, driver)
 
-        try:
-            span1 = driver.find_element_by_xpath(
-                '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[1]').text
-            span2 = driver.find_element_by_xpath(
-                '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[2]').text
-            join_date = span2
-            location = span1
+        if user is not None:
 
-        except Exception as e:
-            # print(e)
-            join_date = driver.find_element_by_xpath(
-                '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[1]').text
-            location = ""
+            try:
+                following = driver.find_element_by_xpath(
+                    '//a[contains(@href,"/' + user + '/following")]/span[1]/span[1]').text
+                followers = driver.find_element_by_xpath(
+                    '//a[contains(@href,"/' + user + '/followers")]/span[1]/span[1]').text
+            except Exception as e:
+                #print(e)
+                return
 
-        try:
-            element = driver.find_element_by_xpath('//div[contains(@data-testid,"UserProfileHeader_Items")]//a[1]')
-            website = element.get_attribute("href")
-        except Exception as e:
-            #print(e)
-            website = ""
+            try:
+                span1 = driver.find_element_by_xpath(
+                    '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[1]').text
+                span2 = driver.find_element_by_xpath(
+                    '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[2]').text
+                join_date = span2
+                location = span1
 
-        try:
-            desc = driver.find_element_by_xpath('//div[contains(@data-testid,"UserDescription")]').text
-        except Exception as e:
-            #print(e)
-            desc = ""
+            except Exception as e:
+                # print(e)
+                join_date = driver.find_element_by_xpath(
+                    '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[1]').text
+                location = ""
 
-        return following, followers, join_date, location, website, desc
+            try:
+                element = driver.find_element_by_xpath('//div[contains(@data-testid,"UserProfileHeader_Items")]//a[1]')
+                website = element.get_attribute("href")
+            except Exception as e:
+                #print(e)
+                website = ""
 
-    else:
-        print("You should specify the user.")
-        return
+            try:
+                desc = driver.find_element_by_xpath('//div[contains(@data-testid,"UserDescription")]').text
+            except Exception as e:
+                #print(e)
+                desc = ""
+
+            users_info[user] = [following, followers, join_date, location, website, desc]
+
+        else:
+            print("You must specify the user")
+            break
+            
+    return users_info
 
 
 def log_user_page(user, driver, headless=True):
@@ -60,17 +66,15 @@ def log_user_page(user, driver, headless=True):
     sleep(random.uniform(1.5, 2.5))
 
 
-def get_followers(user, verbose=1, headless=True, wait=3):
-    followers = {
-        "Following": utils.get_follow(user, headless, "followers", verbose, wait=wait)
-    }
+def get_users_followers(users, verbose=1, headless=True, wait=2):
+
+    followers = utils.get_users_follow(users, headless, "followers", verbose, wait=wait)
 
     return followers
 
 
-def get_following(user, verbose=1, headless=True, wait=2):
-    following = {
-        "Followers": utils.get_follow(user, headless, "following", verbose, wait=wait)
-    }
+def get_users_following(users, verbose=1, headless=True, wait=2):
+
+    following = utils.get_users_follow(users, headless, "following", verbose, wait=wait)
 
     return following

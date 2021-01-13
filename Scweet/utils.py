@@ -229,61 +229,82 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
     return driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
 
 
-def get_follow(user, headless, follow=None, verbose=1, wait=3):
-    driver = init_driver(headless=headless)
-    sleep(wait)
-    log_in(driver)
-    sleep(wait)
-    # log_user_page(user,driver)
-    driver.get('https://twitter.com/' + user)
+def get_users_follow(users, headless, follow=None, verbose=1, wait=2):
+	""" get the following or followers of a list of users """
 
-    sleep(wait)
+	# initiate the driver
+	driver = init_driver(headless=headless)
+	sleep(wait)
+	# log in (the .env file should contain the username and password)
+	log_in(driver)
+	sleep(wait)
+	# followers and following dict of each user
+	follows_users = {}
 
-    driver.find_element_by_xpath('//a[contains(@href,"/' + user + '/' + follow + '")]/span[1]/span[1]').click()
-    sleep(wait)
+	for user in users:
+	    # log user page
+	    print("Crawling @" + user + " "+ follow)
+	    driver.get('https://twitter.com/' + user)
+	    sleep(random.uniform(wait-0.5, wait+0.5))
+	    # find the following or followers button
+	    driver.find_element_by_xpath('//a[contains(@href,"/' + user + '/' + follow + '")]/span[1]/span[1]').click()
+	    sleep(random.uniform(wait-0.5, wait+0.5))
+	    # if the log in fails, find the new log in button and log in again.
+	    if check_exists_by_link_text("Log in", driver):
+	        login = driver.find_element_by_link_text("Log in")
+	        sleep(random.uniform(wait-0.5, wait+0.5))
+	        driver.execute_script("arguments[0].click();", login)
+	        sleep(random.uniform(wait-0.5, wait+0.5))
+	        driver.get('https://twitter.com/' + user)
+	        sleep(random.uniform(wait-0.5, wait+0.5))
+	        driver.find_element_by_xpath('//a[contains(@href,"/' + user + '/' + follow + '")]/span[1]/span[1]').click()
+	        sleep(random.uniform(wait-0.5, wait+0.5))
+	    # check if we must keep scrolling
+	    scrolling = True
+	    last_position = driver.execute_script("return window.pageYOffset;")
+	    follows_elem = []
+	    follow_ids = set()
 
-    if check_exists_by_link_text("Log in", driver):
-        login = driver.find_element_by_link_text("Log in")
-        sleep(wait)
-        driver.execute_script("arguments[0].click();", login)
-        sleep(wait)
-        driver.get('https://twitter.com/' + user)
-        sleep(wait)
-        driver.find_element_by_xpath('//a[contains(@href,"/' + user + '/' + follow + '")]/span[1]/span[1]').click()
-        sleep(wait)
+	    while scrolling:
+	        # get the card of following or followers
+	        page_cards = driver.find_elements_by_xpath('//div[contains(@data-testid,"UserCell")]')
+	        for card in page_cards:
+	        	# get the following or followers element
+	            element = card.find_element_by_xpath('.//div[1]/div[1]/div[1]//a[1]')
+	            follow_elem = element.get_attribute('href')
+	            # append to the list
+	            follow_id = str(follow_elem)
+	            follow_elem = '@' + str(follow_elem).split('/')[-1]
+	            if follow_id not in follow_ids:
+	            	follow_ids.add(follow_id)
+	            	follows_elem.append(follow_elem)
+	            if verbose:
+	                print(follow_elem)
+	        print("Found " + str(len(follows_elem)) + " " + follow)
+	        scroll_attempt = 0
+	        while True:
+	            sleep(random.uniform(wait-0.5, wait+0.5))
+	            driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+	            sleep(random.uniform(wait-0.5, wait+0.5))
+	            curr_position = driver.execute_script("return window.pageYOffset;")
+	            if last_position == curr_position:
+	                scroll_attempt += 1
 
-    scrolling = True
-    last_position = driver.execute_script("return window.pageYOffset;")
-    follows_elem = []
+	                # end of scroll region
+	                if scroll_attempt >= 3:
+	                    scrolling = False
+	                    break
+	                    #return follows_elem
+	                else:
+	                    sleep(random.uniform(wait-0.5, wait+0.5))  # attempt another scroll
+	            else:
+	                last_position = curr_position
+	                break
 
-    while scrolling:
-        # get the card of followings
-        page_cards = driver.find_elements_by_xpath('//div[contains(@data-testid,"UserCell")]')
-        for card in page_cards:
-            element = card.find_element_by_xpath('.//div[1]/div[1]/div[1]//a[1]')
-            follow_elem = element.get_attribute('href')
-            follows_elem.append(follow_elem)
-            if verbose:
-                print(follow_elem)
-        print("Found " + str(len(follows_elem)) + " " + follow)
-        scroll_attempt = 0
-        while True:
-            sleep(wait)
-            driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-            sleep(wait)
-            curr_position = driver.execute_script("return window.pageYOffset;")
-            if last_position == curr_position:
-                scroll_attempt += 1
+	    follows_users[user] = follows_elem
 
-                # end of scroll region
-                if scroll_attempt >= 3:
-                    scrolling = False
-                    return follows_elem
-                else:
-                    sleep(wait)  # attempt another scroll
-            else:
-                last_position = curr_position
-                break
+	return follows_users
+
 
 
 def check_exists_by_link_text(text, driver):
