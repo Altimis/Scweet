@@ -18,9 +18,9 @@ def get_user_information(users, driver=None, headless=True):
 
             try:
                 following = driver.find_element_by_xpath(
-                    '//a[contains(@href,"/' + user + '/following")]/span[1]/span[1]').text
+                    '//a[contains(@href,"/following")]/span[1]/span[1]').text
                 followers = driver.find_element_by_xpath(
-                    '//a[contains(@href,"/' + user + '/followers")]/span[1]/span[1]').text
+                    '//a[contains(@href,"/followers")]/span[1]/span[1]').text
             except Exception as e:
                 #print(e)
                 return
@@ -34,7 +34,7 @@ def get_user_information(users, driver=None, headless=True):
                 location = span1
 
             except Exception as e:
-                # print(e)
+                #print(e)
                 join_date = driver.find_element_by_xpath(
                     '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[1]').text
                 location = ""
@@ -78,3 +78,74 @@ def get_users_following(users, verbose=1, headless=True, wait=2):
     following = utils.get_users_follow(users, headless, "following", verbose, wait=wait)
 
     return following
+
+
+# Function to compare two strings 
+# ignoring their cases 
+def equalIgnoreCase(str1, str2): 
+    i = 0
+
+    # length of first string 
+    len1 = len(str1) 
+
+    # length of second string 
+    len2 = len(str2) 
+
+    # if length is not same 
+    # simply return false since both string 
+    # can not be same if length is not equal 
+    if (len1 != len2): 
+        return False
+
+    # loop to match one by one 
+    # all characters of both string 
+    while (i < len1): 
+        
+        # if current characters of both string are same, 
+        # increase value of i to compare next character 
+        if (str1[i] == str2[i]): 
+            i += 1
+
+        # if any character of first string 
+        # is some special character 
+        # or numeric character and 
+        # not same as corresponding character 
+        # of second string then return false 
+        elif (((str1[i] >= 'a' and str1[i] <= 'z') or
+            (str1[i] >= 'A' and str1[i] <= 'Z')) == False): 
+            return False
+
+        # do the same for second string 
+        elif (((str2[i] >= 'a' and str2[i] <= 'z') or
+            (str2[i] >= 'A' and str2[i] <= 'Z')) == False): 
+            return False
+
+        # this block of code will be executed 
+        # if characters of both strings 
+        # are of different cases 
+        else: 
+            
+            # compare characters by ASCII value 
+            if (str1[i] >= 'a' and str1[i] <= 'z'): 
+                if (ord(str1[i]) - 32 != ord(str2[i])): 
+                    return False
+
+            elif (str1[i] >= 'A' and str1[i] <= 'Z'): 
+                if (ord(str1[i]) + 32 != ord(str2[i])): 
+                    return False
+
+            # if characters matched, 
+            # increase the value of i 
+            # to compare next char 
+            i += 1
+
+        # end of outer else block 
+
+    # end of while loop 
+
+    # if all characters of the first string 
+    # are matched with corresponding 
+    # characters of the second string, 
+    # then return true 
+    return True
+
