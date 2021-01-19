@@ -17,12 +17,16 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import const
+import requests
+
 
 
 # current_dir = pathlib.Path(__file__).parent.absolute()
 
-def get_data(card):
+def get_data(card, save_images = False, save_dir = None):
     """Extract data from tweet card"""
+    image_links = []
+
     try:
         username = card.find_element_by_xpath('.//span').text
     except:
@@ -66,12 +70,17 @@ def get_data(card):
         like_cnt = 0
 
     try:
-        element = card.find_element_by_xpath('.//div[2]/div[2]//img[contains(@src, "twimg")]')
-        image_link = element.get_attribute('src')
+        elements = card.find_elements_by_xpath('.//div[2]/div[2]//img[contains(@src, "https://pbs.twimg.com/")]')
+        for element in elements:
+        	image_links.append(element.get_attribute('src'))
     except:
-        image_link = ""
+        image_links = []
 
+    if save_images == True:
+    	for image_url in image_links:
+    		save_image(image_url, image_url, save_dir)
     # handle promoted tweets
+
     try:
         promoted = card.find_element_by_xpath('.//div[2]/div[2]/[last()]//span').text == "Promoted"
     except:
@@ -102,8 +111,9 @@ def get_data(card):
     except:
         return
 
-    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_link, tweet_url)
+    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_links, tweet_url)
     return tweet
+
 
 
 def init_driver(headless=True, proxy=None):
@@ -192,18 +202,24 @@ def log_in(driver, timeout=10):
     password_el.send_keys(Keys.RETURN)
 
 
-def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position):
+def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position, save_images = False):
     """ scrolling function for tweets crawling"""
+
+    save_images_dir = "/images"
+
+    if save_images == True:
+    	if not os.path.exists(save_images_dir):
+    		os.mkdir(save_images_dir)
 
     while scrolling and tweet_parsed < limit:
         sleep(random.uniform(0.5, 1.5))
         # get the card of tweets
         page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
         for card in page_cards:
-            tweet = get_data(card)
+            tweet = get_data(card, save_images, save_images_dir)
             if tweet:
                 # check if the tweet is unique
-                tweet_id = ''.join(tweet[:-1])
+                tweet_id = ''.join(tweet[:-2])
                 if tweet_id not in tweet_ids:
                     tweet_ids.add(tweet_id)
                     data.append(tweet)
@@ -320,3 +336,17 @@ def check_exists_by_link_text(text, driver):
     except NoSuchElementException:
         return False
     return True
+
+def save_image(url, name, save_dir):
+
+	with open(save_dir + '/' + name + '.jpg', 'wb') as handle:
+	        response = requests.get(pic_url, stream=True)
+
+	        if not response.ok:
+	            print(response)
+
+	        for block in response.iter_content(1024):
+	            if not block:
+	                break
+
+	            handle.write(block)
