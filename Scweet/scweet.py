@@ -4,12 +4,12 @@ import datetime
 import argparse
 import pandas as pd
 
-from utils import init_driver, get_last_date_from_csv, log_search_page, keep_scroling, save_images
+from utils import init_driver, get_last_date_from_csv, log_search_page, keep_scroling, save_images_fct
 
 
 # class Scweet():
 def scrap(start_date, max_date, words=None, to_account=None, from_account=None, interval=5, lang=None,
-          headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None, is_save_images=False):
+          headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None, show_images=False, save_images=False):
     """
     scrap data from twitter using requests, starting from start_date until max_date. The bot make a search between each start_date and end_date
     (days_between) until it reaches the max_date.
@@ -20,7 +20,9 @@ def scrap(start_date, max_date, words=None, to_account=None, from_account=None, 
     """
 
     # initiate the driver
-    driver = init_driver(headless, proxy)
+    if save_images == True:
+        show_images = True
+    driver = init_driver(headless, proxy, show_images)
 
     data = []
     tweet_ids = set()
@@ -108,13 +110,13 @@ def scrap(start_date, max_date, words=None, to_account=None, from_account=None, 
                               'Comments', 'Likes', 'Retweets','Image link', 'Tweet URL'])
 
     # save images
-    if is_save_images==True:
+    if save_images==True:
         print("Saving images ...")
         save_images_dir = "images"
         if not os.path.exists(save_images_dir):
             os.makedirs(save_images_dir)
 
-        save_images(data["Image link"], save_images_dir)
+        save_images_fct(data["Image link"], save_images_dir)
 
     # close the web driver
     driver.close()

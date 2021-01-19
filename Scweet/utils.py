@@ -116,7 +116,7 @@ def get_data(card, save_images = False, save_dir = None):
 
 
 
-def init_driver(headless=True, proxy=None):
+def init_driver(headless=True, proxy=None, show_images=False):
     """ initiate a chromedriver instance """
 
     # create instance of web driver
@@ -132,8 +132,9 @@ def init_driver(headless=True, proxy=None):
     options.add_argument('log-level=3')
     if proxy is not None:
         options.add_argument('--proxy-server=%s' % proxy)
-    prefs = {"profile.managed_default_content_settings.images": 2}
-    options.add_experimental_option("prefs", prefs)
+    if show_images == False:
+    	prefs = {"profile.managed_default_content_settings.images": 2}
+    	options.add_experimental_option("prefs", prefs)
     driver = webdriver.Chrome(options=options, executable_path=chromedriver_path)
     driver.set_page_load_timeout(100)
     return driver
@@ -337,7 +338,7 @@ def check_exists_by_link_text(text, driver):
         return False
     return True
 
-def save_images(urls, save_dir):
+def save_images_fct(urls, save_dir):
 
 	for i, url_v in enumerate(urls):
 		for j, url in enumerate(url_v):
