@@ -152,16 +152,23 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
 
     # to_from = str('%20'.join([from_account,to_account]))+"%20"
 
-    driver.get(
-        'https://twitter.com/search?q=' + words + from_account + to_account + hash_tags + end_date + start_date + lang + '&src=typed_query')
+    if display_type == "Latest" or display_type == "latest":
+    	display_type = "f=live"
+    elif display_type == "Image" or display_type == "image":
+    	display_type = "f=image"
+    else:
+    	display_type = ""
 
-    sleep(random.uniform(0.5, 1.5))
+    driver.get(
+        'https://twitter.com/search?q=' + words + from_account + to_account + hash_tags + end_date + start_date + lang + '&src=typed_query' + display_type)
+
+    #sleep(random.uniform(0.5, 1.5))
 
     # navigate to historical 'Top' or 'Latest' tab
-    try:
-        driver.find_element_by_link_text(display_type).click()
-    except:
-        print("%s Button doesnt exist.", display_type)
+    #try:
+    #    driver.find_element_by_link_text(display_type).click()
+    #except:
+    #    print("%s Button doesnt exist.", display_type)
 
 
 def get_last_date_from_csv(path):
