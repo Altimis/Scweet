@@ -76,9 +76,9 @@ def get_data(card, save_images = False, save_dir = None):
     except:
         image_links = []
 
-    if save_images == True:
-    	for image_url in image_links:
-    		save_image(image_url, image_url, save_dir)
+    #if save_images == True:
+    #	for image_url in image_links:
+    #		save_image(image_url, image_url, save_dir)
     # handle promoted tweets
 
     try:
@@ -337,16 +337,15 @@ def check_exists_by_link_text(text, driver):
         return False
     return True
 
-def save_image(url, name, save_dir):
+def save_images(urls, save_dir):
 
-	with open(save_dir + '/' + name + '.jpg', 'wb') as handle:
-	        response = requests.get(pic_url, stream=True)
-
-	        if not response.ok:
-	            print(response)
-
-	        for block in response.iter_content(1024):
-	            if not block:
-	                break
-
-	            handle.write(block)
+	for i, url_v in enumerate(urls):
+		for j, url in enumerate(url_v):
+			with open(save_dir + '/' + str(i) + "_" + str(j) + '.jpg', 'wb') as handle:
+				response = requests.get(url, stream=True)
+				if not response.ok:
+					print(response)
+				for block in response.iter_content(1024):
+					if not block:
+						break
+				handle.write(block)
