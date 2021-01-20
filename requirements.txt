@@ -2,4 +2,4 @@ selenium
 pandas
 python-dotenv
 chromedriver-autoinstaller
-urllib
+urllib3
