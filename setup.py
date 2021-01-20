@@ -12,7 +12,7 @@ setup(
   url = 'https://github.com/Altimis/Scweet',
   download_url = 'https://github.com/Altimis/Scweet/archive/0.1.1.tar.gz',
   keywords = ['twitter', 'scraper', 'python', "crawl", "following", "followers", "twitter-scraper", "tweets"],
-  install_requires=['selenium', 'pandas', 'python-dotenv', 'chromedriver-autoinstaller'],
+  install_requires=['selenium', 'pandas', 'python-dotenv', 'chromedriver-autoinstaller', 'urllib'],
   classifiers=[
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
