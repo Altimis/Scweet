@@ -159,8 +159,6 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     end_date = "until%3A" + end_date + "%20"
     start_date = "since%3A" + start_date + "%20"
 
-    # to_from = str('%20'.join([from_account,to_account]))+"%20"
-
     if display_type == "Latest" or display_type == "latest":
     	display_type = "&f=live"
     elif display_type == "Image" or display_type == "image":
@@ -261,7 +259,7 @@ def get_users_follow(users, headless, follow=None, verbose=1, wait=2):
 	    driver.get('https://twitter.com/' + user)
 	    sleep(random.uniform(wait-0.5, wait+0.5))
 	    # find the following or followers button
-	    driver.find_element_by_xpath('//a[contains(@href,"/' + user + '/' + follow + '")]/span[1]/span[1]').click()
+	    driver.find_element_by_xpath('//a[contains(@href,"/' + follow + '")]/span[1]/span[1]').click()
 	    sleep(random.uniform(wait-0.5, wait+0.5))
 	    # if the log in fails, find the new log in button and log in again.
 	    if check_exists_by_link_text("Log in", driver):
@@ -271,7 +269,7 @@ def get_users_follow(users, headless, follow=None, verbose=1, wait=2):
 	        sleep(random.uniform(wait-0.5, wait+0.5))
 	        driver.get('https://twitter.com/' + user)
 	        sleep(random.uniform(wait-0.5, wait+0.5))
-	        driver.find_element_by_xpath('//a[contains(@href,"/' + user + '/' + follow + '")]/span[1]/span[1]').click()
+	        driver.find_element_by_xpath('//a[contains(@href,"/' + follow + '")]/span[1]/span[1]').click()
 	        sleep(random.uniform(wait-0.5, wait+0.5))
 	    # check if we must keep scrolling
 	    scrolling = True
