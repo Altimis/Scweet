@@ -1,6 +1,12 @@
 # A simple and unlimited twitter scraper with python and without authentification. 
 
-In the last days, Twitter banned almost every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of words or account name, and saves a csv file containing scraped data. It is also possible to scrape user profile information, including following and followers.
+In the last days, Twitter banned almost every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of words or account name, and saves a csv file containing scraped data :  
+
+``[UserScreenName,	UserName,	Timestamp,	Text,	Emojis,	Comments,	Likes,	Retweets,	Image link,	Tweet URL]``  
+
+It is also possible to download and save the images from ``Image link`` by passing the argument ``save_images = True``, If you only want to scrape images, I recommand to set the argument ``display_type = image`` to show only tweets that contain images.  
+
+You can scrape user profile information as well, including following and followers.  
 
 Scweet uses only selenium to scrape data. Authentification is required in the case of followers/following scraping. It is recommended to log in with a new account (if the list of followers is very long, it is possible that your account will be banned). To log in to your account, you need to enter your ``username`` and ``password`` in [env](https://github.com/Altimis/Scweet/blob/master/.env) file. You can controle the ``wait`` parameter in the ``get_users_followers`` and ``get_users_following`` functions. 
 
