@@ -34,7 +34,7 @@ The CSV file contains the following features (for each tweet) :
 - 'Comments' : number of comments
 - 'Likes' : number of likes
 - 'Retweets' : number of retweets
-- 'Image link' : Link of the image in the tweet (there will be an option to download images soon).
+- 'Image link' : Link of the image in the tweet
 - 'Tweet URL' : Tweet URL.
 
 ### Following / Followers :
