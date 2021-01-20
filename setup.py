@@ -8,7 +8,7 @@ setup(
   license='MIT',
   description = 'Tool for scraping Tweets',
   author = 'Yassine AIT JEDDI and Soufiane Bengadi ',
-  author_email = 'bengadisoufiane@gmail.com',
+  author_email = 'aitjeddiyassine@gmail.com',
   url = 'https://github.com/Altimis/Scweet',
   download_url = 'https://github.com/Altimis/Scweet/archive/v0.3.0.tar.gz',
   keywords = ['twitter', 'scraper', 'python', "crawl", "following", "followers", "twitter-scraper", "tweets"],
