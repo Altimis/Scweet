@@ -4,13 +4,13 @@ import setuptools
 setup(
   name = 'Scweet',
   packages = ['Scweet'],
-  version = '0.2.1',
+  version = '0.3.1',
   license='MIT',
   description = 'Tool for scraping Tweets',
   author = 'Yassine AIT JEDDI and Soufiane Bengadi ',
-  author_email = 'bokudakgainaimachi@gmail.com',
+  author_email = 'bengadisoufiane@gmail.com',
   url = 'https://github.com/Altimis/Scweet',
-  download_url = 'https://github.com/Altimis/Scweet/archive/0.1.1.tar.gz',
+  download_url = 'https://github.com/Altimis/Scweet/archive/v0.3.0.tar.gz',
   keywords = ['twitter', 'scraper', 'python', "crawl", "following", "followers", "twitter-scraper", "tweets"],
   install_requires=['selenium', 'pandas', 'python-dotenv', 'chromedriver-autoinstaller', 'urllib'],
   classifiers=[
