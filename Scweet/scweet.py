@@ -4,7 +4,7 @@ import datetime
 import argparse
 import pandas as pd
 
-from utils import init_driver, get_last_date_from_csv, log_search_page, keep_scroling, save_images_fct
+from utils import init_driver, get_last_date_from_csv, log_search_page, keep_scroling, dowload_images
 
 
 # class Scweet():
@@ -116,7 +116,7 @@ def scrap(start_date, max_date, words=None, to_account=None, from_account=None, 
         if not os.path.exists(save_images_dir):
             os.makedirs(save_images_dir)
 
-        save_images_fct(data["Image link"], save_images_dir)
+        dowload_images(data["Image link"], save_images_dir)
 
     # close the web driver
     driver.close()

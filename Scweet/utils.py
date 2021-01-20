@@ -17,9 +17,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import const
-import requests
-
-
+import urllib
 
 # current_dir = pathlib.Path(__file__).parent.absolute()
 
@@ -338,15 +336,10 @@ def check_exists_by_link_text(text, driver):
         return False
     return True
 
-def save_images_fct(urls, save_dir):
+
+def dowload_images(urls, save_dir):
 
 	for i, url_v in enumerate(urls):
 		for j, url in enumerate(url_v):
-			with open(save_dir + '/' + str(i) + "_" + str(j) + '.jpg', 'wb') as handle:
-				response = requests.get(url, stream=True)
-				if not response.ok:
-					print(response)
-				for block in response.iter_content(1024):
-					if not block:
-						break
-				handle.write(block)
+			urllib.request.urlretrieve(url, save_dir + '/' + str(i+1) + '_' + str(j+1) + ".jpg")
+
