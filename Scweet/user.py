@@ -40,17 +40,17 @@ def get_user_information(users, driver=None, headless=True):
             a=0
             try:
                 join_date = driver.find_element_by_xpath(
-                    '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[3]').text
+                    '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[3]').text
                 birthday = driver.find_element_by_xpath(
-                    '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[2]').text
+                    '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[2]').text
                 location = driver.find_element_by_xpath(
-                    '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[1]').text
+                    '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
             except : 
-                try : 
+                try :
                     join_date = driver.find_element_by_xpath(
-                        '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[2]').text
+                        '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[2]').text
                     span1 = driver.find_element_by_xpath(
-                        '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[1]').text
+                        '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
                     if hasNumbers(span1):
                         birthday = span1
                         location = ""
@@ -60,7 +60,7 @@ def get_user_information(users, driver=None, headless=True):
                 except :
                     try : 
                         join_date = driver.find_element_by_xpath(
-                            '//div[contains(@data-testid,"UserProfileHeader_Items")]//span[1]').text
+                            '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
                         birthday = ""
                         location = ""
                     except :
