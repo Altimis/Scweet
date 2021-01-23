@@ -146,7 +146,7 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     hash_tags = "(%23" + hashtag + ")%20" if hashtag is not None else ""
 
     if words is not None:
-        words = str(words).split("//")
+        #words = str(words).split("//")
         words = "(" + str('%20OR%20'.join(words)) + ")%20"
     else:
         words = ""
