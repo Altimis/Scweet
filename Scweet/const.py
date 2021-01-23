@@ -15,5 +15,5 @@ def load_env_variable(key, default_value=None, none_allowed=False):
     return v
 
 
-USERNAME = load_env_variable("SCWEET_USERNAME", none_allowed=False)
-PASSWORD = load_env_variable("SCWEET_PASSWORD", none_allowed=False)
+USERNAME = load_env_variable("SCWEET_USERNAME", none_allowed=True)
+PASSWORD = load_env_variable("SCWEET_PASSWORD", none_allowed=True)

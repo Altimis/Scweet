@@ -10,7 +10,7 @@ def get_user_information(users, driver=None, headless=True):
 
     users_info = {}
 
-    for user in users :
+    for i, user in enumerate(users) :
 
         log_user_page(user, driver)
 
@@ -45,7 +45,8 @@ def get_user_information(users, driver=None, headless=True):
                     '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[2]').text
                 location = driver.find_element_by_xpath(
                     '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
-            except : 
+            except Exception as e: 
+                #print(e)
                 try :
                     join_date = driver.find_element_by_xpath(
                         '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[2]').text
@@ -57,27 +58,40 @@ def get_user_information(users, driver=None, headless=True):
                     else : 
                         location = span1
                         birthday = ""
-                except :
+                except Exception as e: 
+                    #print(e)
                     try : 
                         join_date = driver.find_element_by_xpath(
                             '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
                         birthday = ""
                         location = ""
-                    except :
+                    except Exception as e: 
+                        #print(e)
                         join_date = ""
                         birthday = ""
                         location = ""
+            print("--------------- " + user + " information : ---------------")
+            print("Following : ", following)
+            print("Followers : ", followers)
+            print("Location : ", location)
+            print("Join date : ", join_date)
+            print("Birth date : ", birthday)
+            print("Description : ", desc)
+            print("Website : ", website)
             users_info[user] = [following, followers, join_date, birthday, location, website, desc]
+
+            if i == len(users)-1 :
+                driver.close()   
+                return users_info
         else:
             print("You must specify the user")
-            break
-            
-    return users_info
-
+            continue
+        
 
 def log_user_page(user, driver, headless=True):
+    sleep(random.uniform(1, 2))
     driver.get('https://twitter.com/' + user)
-    sleep(random.uniform(1.5, 2.5))
+    sleep(random.uniform(1, 2))
 
 
 def get_users_followers(users, verbose=1, headless=True, wait=2):
