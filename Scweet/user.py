@@ -1,4 +1,4 @@
-import utils
+from . import utils
 from time import sleep
 import random
 

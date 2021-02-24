@@ -16,7 +16,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-import const
+from . import const
 import urllib
 
 # current_dir = pathlib.Path(__file__).parent.absolute()
@@ -41,16 +41,16 @@ def get_data(card, save_images = False, save_dir = None):
         return
 
     try:
-        comment = card.find_element_by_xpath('.//div[2]/div[2]/div[1]').text
+        text = card.find_element_by_xpath('.//div[2]/div[2]/div[1]').text
     except:
-        comment = ""
+        text = ""
 
     try:
-        responding = card.find_element_by_xpath('.//div[2]/div[2]/div[2]').text
+        embedded = card.find_element_by_xpath('.//div[2]/div[2]/div[2]').text
     except:
-        responding = ""
+        embedded = ""
 
-    text = comment + responding
+    #text = comment + embedded
 
     try:
         reply_cnt = card.find_element_by_xpath('.//div[@data-testid="reply"]').text
@@ -109,7 +109,7 @@ def get_data(card, save_images = False, save_dir = None):
     except:
         return
 
-    tweet = (username, handle, postdate, text, emojis, reply_cnt, retweet_cnt, like_cnt, image_links, tweet_url)
+    tweet = (username, handle, postdate, text, embedded, emojis, reply_cnt, retweet_cnt, like_cnt, image_links, tweet_url)
     return tweet
 
 
@@ -138,16 +138,19 @@ def init_driver(headless=True, proxy=None, show_images=False):
     return driver
 
 
-def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, hashtag):
+def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, hashtag, filter_replies, proximity):
     """ Search for this query between start_date and end_date"""
 
+    # format the <from_account>, <to_account> and <hash_tags>
     from_account = "(from%3A" + from_account + ")%20" if from_account is not None else ""
     to_account = "(to%3A" + to_account + ")%20" if to_account is not None else ""
     hash_tags = "(%23" + hashtag + ")%20" if hashtag is not None else ""
 
     if words is not None:
-        #words = str(words).split("//")
-        words = "(" + str('%20OR%20'.join(words)) + ")%20"
+        if len(words)==1:
+            words = "(" +  str(''.join(words)) + ")%20"
+        else :
+            words = "(" + str('%20OR%20'.join(words)) + ")%20"
     else:
         words = ""
 
@@ -166,8 +169,20 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     else:
     	display_type = ""
 
-    driver.get(
-        'https://twitter.com/search?q=' + words + from_account + to_account + hash_tags + end_date + start_date + lang + '&src=typed_query' + display_type)
+    # filter replies 
+    if filter_replies == True:
+        filter_replies = "%20-filter%3Areplie"
+    else :
+        filter_replies = ""
+    # proximity
+    if proximity == True:
+        proximity = "&lf=on" # at the end
+    else : 
+        proximity = ""
+
+    path = 'https://twitter.com/search?q='+words+from_account+to_account+hash_tags+end_date+start_date+lang+filter_replies+'&src=typed_query'+display_type+proximity
+    driver.get(path)
+    return path
 
 
 def get_last_date_from_csv(path):
@@ -221,14 +236,13 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
         scroll_attempt = 0
         while tweet_parsed < limit:
             # check scroll position
-            print("scroll", scroll)
-            # sleep(1)
-            driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
             scroll += 1
+            print("scroll ", scroll)
+            sleep(random.uniform(0.5, 1.5))
+            driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
             curr_position = driver.execute_script("return window.pageYOffset;")
             if last_position == curr_position:
                 scroll_attempt += 1
-
                 # end of scroll region
                 if scroll_attempt >= 2:
                     scrolling = False
