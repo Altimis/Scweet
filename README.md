@@ -30,6 +30,7 @@ The CSV file contains the following features (for each tweet) :
 - 'UserName' : UserName 
 - 'Timestamp' : timestamp of the tweet
 - 'Text' : tweet text
+- 'Embedded_text' : embedded text written above the tweet. It could be an image, video or even another tweet if the tweet in question is a reply. 
 - 'Emojis' : emojis existing in tweet
 - 'Comments' : number of comments
 - 'Likes' : number of likes
