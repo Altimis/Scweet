@@ -2,7 +2,7 @@
 
 In the last days, Twitter banned almost every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of words or account name, and saves a csv file containing scraped data :  
 
-``[UserScreenName,	UserName,	Timestamp,	Text,	Emojis,	Comments,	Likes,	Retweets,	Image link,	Tweet URL]``  
+``[UserScreenName,	UserName,	Timestamp,	Text, Embedded_text, Emojis,	Comments,	Likes,	Retweets,	Image link,	Tweet URL]``  
 
 It is also possible to download and save the images from ``Image link`` by passing the argument ``save_images = True``, If you only want to scrape images, I recommand to set the argument ``display_type = image`` to show only tweets that contain images.  
 
