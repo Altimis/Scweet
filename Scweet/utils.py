@@ -171,7 +171,7 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
 
     # filter replies 
     if filter_replies == True:
-        filter_replies = "%20-filter%3Areplie"
+        filter_replies = "%20-filter%3Areplies"
     else :
         filter_replies = ""
     # proximity
