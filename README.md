@@ -48,7 +48,7 @@ The ``get_users_following`` and ``get_users_followers`` in [user](https://github
 
 ### Notebook example : 
 
-**You can check the example [here](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).**
+**You can check the example [here](https://github.com/Altimis/Scweet/blob/master/Example.ipynb).**
 
 ### Terminal :
 
