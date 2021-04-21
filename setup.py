@@ -4,10 +4,10 @@ import setuptools
 setup(
   name = 'Scweet',
   packages = ['Scweet'],
-  version = '0.3.1',
+  version = '1.0',
   license='MIT',
   description = 'Tool for scraping Tweets',
-  author = 'Yassine AIT JEDDI and Soufiane Bengadi ',
+  author = 'Yassine AIT JEDDI and Soufiane Bengadi',
   author_email = 'aitjeddiyassine@gmail.com',
   url = 'https://github.com/Altimis/Scweet',
   download_url = 'https://github.com/Altimis/Scweet/archive/v0.3.0.tar.gz',
