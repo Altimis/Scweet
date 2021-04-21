@@ -12,8 +12,6 @@ Scweet uses only selenium to scrape data. Authentification is required in the ca
 
 The [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) code allows you to get all information of a list of users, including location, join date and lists of **followers and following**. Check [this example](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.ipynb).
 
-**Note that all these functionalities will be added in the final version of the library**.
-
 ## Requierments : 
 
 ```pip install -r requirements.txt```
@@ -45,6 +43,14 @@ The ``get_users_following`` and ``get_users_followers`` in [user](https://github
 **More features will be added soon, such as "all reaplies of each tweet for a specific twitter account"**
 
 ## Usage :
+
+### Library :
+
+The library is now available. To install the library, run :
+
+``pip install Scweet==1.0``
+
+The [Python example file](https://github.com/Altimis/Scweet/blob/master/Example.py) contains an example for running the installed library.
 
 ### Notebook example : 
 
