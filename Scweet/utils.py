@@ -255,7 +255,7 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
     return driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
 
 
-def get_users_follow(users, headless, follow=None, verbose=1, wait=2):
+def get_users_follow(users, headless,limit, follow=None, verbose=1, wait=2):
 	""" get the following or followers of a list of users """
 
 	# initiate the driver
@@ -326,7 +326,8 @@ def get_users_follow(users, headless, follow=None, verbose=1, wait=2):
 	            else:
 	                last_position = curr_position
 	                break
-
+		if(limit < len(follows_elem)):
+                	scrolling = False
 	    follows_users[user] = follows_elem
 
 	return follows_users
