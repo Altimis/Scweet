@@ -33,6 +33,6 @@ users_info = get_user_information(users, headless=True)
 # Enter your username and password in .env file. I recommande you dont use your main account.
 # Increase wait argument to avoid banning your account and maximise the crawling process if the internet is slow. I used 1 and it's safe.
 
-following = get_users_following(users=users, verbose=0, headless = True, wait=1)
+following = get_users_following(users=users,limit=500, verbose=0, headless = True, wait=1)
 
-followers = get_users_followers(users=users, verbose=0, headless = True, wait=1)
+followers = get_users_followers(users=users,limit=500, verbose=0, headless = True, wait=1)
