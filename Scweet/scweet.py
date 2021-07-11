@@ -11,7 +11,7 @@ from .utils import init_driver, get_last_date_from_csv, log_search_page, keep_sc
 
 
 # class Scweet():
-def scrap(start_date, max_date, words=None, to_account=None, from_account=None, interval=5, lang=None,
+def scrap(start_date, max_date, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
           headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None, 
           show_images=False, save_images=False, save_dir="outputs", filter_replies=False, proximity=False):
     """
@@ -56,6 +56,9 @@ def scrap(start_date, max_date, words=None, to_account=None, from_account=None, 
     elif to_account:
         path = save_dir + "/" + to_account + '_' + str(init_date).split(' ')[0] + '_' + str(max_date).split(' ')[
             0] + '.csv'
+    elif mention_account:
+        path = save_dir + "/" + mention_account + '_' + str(init_date).split(' ')[0] + '_' + str(max_date).split(' ')[
+            0] + '.csv'
     elif hashtag:
         path = save_dir + "/" + hashtag + '_' + str(init_date).split(' ')[0] + '_' + str(max_date).split(' ')[
             0] + '.csv'
@@ -91,7 +94,7 @@ def scrap(start_date, max_date, words=None, to_account=None, from_account=None, 
             # log search page between <start_date> and <end_date>
             path = log_search_page(driver=driver, words=words, start_date=start_date,
                             end_date=end_date, to_account=to_account,
-                            from_account=from_account, hashtag=hashtag, lang=lang, 
+                            from_account=from_account, mention_account=mention_account, hashtag=hashtag, lang=lang, 
                             display_type=display_type, filter_replies=filter_replies, proximity=proximity)
             # number of logged pages (refresh each <interval>)
             refresh += 1
@@ -145,9 +148,11 @@ if __name__ == '__main__':
     parser.add_argument('--words', type=str,
                         help='Queries. they should be devided by "//" : Cat//Dog.', default=None)
     parser.add_argument('--from_account', type=str,
-                        help='Tweets from this account (axample : @Tesla).', default=None)
+                        help='Tweets from this account (example : @Tesla).', default=None)
     parser.add_argument('--to_account', type=str,
-                        help='Tweets replyed to this account (axample : @Tesla).', default=None)
+                        help='Tweets replyed to this account (example : @Tesla).', default=None)
+    parser.add_argument('--mention_account', type=str,
+                        help='Tweets mention a account (example : @Tesla).', default=None)
     parser.add_argument('--hashtag', type=str, 
                         help='Hashtag', default=None) 
     parser.add_argument('--max_date', type=str,
@@ -182,10 +187,11 @@ if __name__ == '__main__':
     display_type = args.display_type
     from_account = args.from_account
     to_account = args.to_account
+    mention_account = args.mention_account
     hashtag = args.hashtag
     resume = args.resume
     proxy = args.proxy
 
-    data = scrap(start_date=start_date, max_date=max_date, words=words, to_account=to_account, from_account=from_account, 
+    data = scrap(start_date=start_date, max_date=max_date, words=words, to_account=to_account, from_account=from_account, mention_account=mention_account,
                 hashtag=hashtag, interval=interval, lang=lang, headless=headless, limit=limit,
                 display_type=display_type, resume=resume, proxy=proxy, filter_replies=False, proximity=False)
