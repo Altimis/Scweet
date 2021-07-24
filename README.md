@@ -67,6 +67,8 @@ optional arguments:
                         Tweets posted by "from_account" account.
   --to_account TO_ACCOUNT
                         Tweets posted in response to "to_account" account.
+  --mention_account MENTION_ACCOUNT
+                        Tweets mention "mention_account" account.         
   --hashtag HASHTAG
                         Tweets containing #hashtag
   --max_date MAX_DATE   max date for search query. example : %Y-%m-%d.

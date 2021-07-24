@@ -140,12 +140,13 @@ def init_driver(headless=True, proxy=None, show_images=False):
     return driver
 
 
-def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, hashtag, filter_replies, proximity):
+def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, mention_account, hashtag, filter_replies, proximity):
     """ Search for this query between start_date and end_date"""
 
     # format the <from_account>, <to_account> and <hash_tags>
     from_account = "(from%3A" + from_account + ")%20" if from_account is not None else ""
     to_account = "(to%3A" + to_account + ")%20" if to_account is not None else ""
+    mention_account = "(%40" + mention_account + ")%20" if mention_account is not None else ""
     hash_tags = "(%23" + hashtag + ")%20" if hashtag is not None else ""
 
     if words is not None:
@@ -182,7 +183,7 @@ def log_search_page(driver, start_date, end_date, lang, display_type, words, to_
     else : 
         proximity = ""
 
-    path = 'https://twitter.com/search?q='+words+from_account+to_account+hash_tags+end_date+start_date+lang+filter_replies+'&src=typed_query'+display_type+proximity
+    path = 'https://twitter.com/search?q='+words+from_account+to_account+mention_account+hash_tags+end_date+start_date+lang+filter_replies+'&src=typed_query'+display_type+proximity
     driver.get(path)
     return path
 
