@@ -94,16 +94,16 @@ def log_user_page(user, driver, headless=True):
     sleep(random.uniform(1, 2))
 
 
-def get_users_followers(users, verbose=1, headless=True, wait=2):
+def get_users_followers(users, env, verbose=1, headless=True, wait=2):
 
-    followers = utils.get_users_follow(users, headless, "followers", verbose, wait=wait)
+    followers = utils.get_users_follow(users, headless, env, "followers", verbose, wait=wait)
 
     return followers
 
 
-def get_users_following(users, verbose=1, headless=True, wait=2):
+def get_users_following(users, env, verbose=1, headless=True, wait=2):
 
-    following = utils.get_users_follow(users, headless, "following", verbose, wait=wait)
+    following = utils.get_users_follow(users, headless, env, "following", verbose, wait=wait)
 
     return following
 

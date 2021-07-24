@@ -19,6 +19,8 @@ from selenium.webdriver.common.by import By
 from . import const
 import urllib
 
+from .const import get_username, get_password
+
 # current_dir = pathlib.Path(__file__).parent.absolute()
 
 def get_data(card, save_images = False, save_dir = None):
@@ -190,9 +192,9 @@ def get_last_date_from_csv(path):
     return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
 
 
-def log_in(driver, timeout=10):
-    username = const.USERNAME
-    password = const.PASSWORD
+def log_in(driver, env, timeout=10):
+    username = get_username(env) #const.USERNAME
+    password = get_password(env) #const.PASSWORD
 
     driver.get('https://www.twitter.com/login')
     username_xpath = '//input[@name="session[username_or_email]"]'
@@ -255,14 +257,14 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
     return driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
 
 
-def get_users_follow(users, headless, follow=None, verbose=1, wait=2):
+def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2):
 	""" get the following or followers of a list of users """
 
 	# initiate the driver
 	driver = init_driver(headless=headless)
 	sleep(wait)
 	# log in (the .env file should contain the username and password)
-	log_in(driver)
+	log_in(driver, env)
 	sleep(wait)
 	# followers and following dict of each user
 	follows_users = {}

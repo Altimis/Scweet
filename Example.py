@@ -5,14 +5,14 @@ from Scweet.user import get_user_information, get_users_following, get_users_fol
 # scrape top tweets with the words 'covid','covid19' in proximity and without replies.
 # the process is slower as the interval is smaller (choose an interval that can divide the period of time betwee, start and max date)
 
-data = scrap(words=['covid','covid19'], start_date="2020-04-01", max_date="2020-04-15", from_account = None,interval=1, 
+data = scrap(words=['covid','covid19'], start_date="2020-04-01", max_date="2020-04-15", from_account = None, interval=1, 
 	headless=True, display_type="Top", save_images=False, 
 	resume=False, filter_replies=True, proximity=True)
 
 # scrape top tweets of with the hashtag #covid19, in proximity and without replies.
 # the process is slower as the interval is smaller (choose an interval that can divide the period of time betwee, start and max date)
 
-data = scrap(hashtag="covid19", start_date="2020-04-01", max_date="2020-04-15", from_account = None,interval=1, 
+data = scrap(hashtag="covid19", start_date="2020-04-01", max_date="2020-04-15", from_account = None, interval=1, 
 	headless=True, display_type="Top", save_images=False, 
 	resume=False, filter_replies=True, proximity=True)
 
@@ -33,6 +33,9 @@ users_info = get_user_information(users, headless=True)
 # Enter your username and password in .env file. I recommande you dont use your main account.
 # Increase wait argument to avoid banning your account and maximise the crawling process if the internet is slow. I used 1 and it's safe.
 
-following = get_users_following(users=users, verbose=0, headless = True, wait=1)
+# set your .env file with SCWEET_USERNAME and SCWEET_PASSWORD variables and provide its path
+env_path = "****/****/****/.env"
 
-followers = get_users_followers(users=users, verbose=0, headless = True, wait=1)
+following = get_users_following(users=users, env=env_path, verbose=0, headless = True, wait=2)
+
+followers = get_users_followers(users=users, env=env_path, verbose=0, headless = True, wait=2)

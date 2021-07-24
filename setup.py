@@ -4,7 +4,7 @@ import setuptools
 setup(
   name = 'Scweet',
   packages = ['Scweet'],
-  version = '1.0',
+  version = '1.1',
   license='MIT',
   description = 'Tool for scraping Tweets',
   author = 'Yassine AIT JEDDI and Soufiane Bengadi',
