@@ -48,7 +48,7 @@ The ``get_users_following`` and ``get_users_followers`` in [user](https://github
 
 The library is now available. To install the library, run :
 
-``pip install Scweet==1.2``
+``pip install Scweet==1.3``
 
 The [Python example file](https://github.com/Altimis/Scweet/blob/master/Example.py) contains an example for running the installed library.
 
