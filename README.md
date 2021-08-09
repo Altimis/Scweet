@@ -38,7 +38,7 @@ The CSV file contains the following features (for each tweet) :
 
 ### Following / Followers :
 
-The ``get_users_following`` and ``get_users_followers`` in [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) give a list of following and followers for a given list of users. Note that each user should start with an uppercase letter. 
+The ``get_users_following`` and ``get_users_followers`` in [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) give a list of following and followers for a given list of users.
 
 **More features will be added soon, such as "all reaplies of each tweet for a specific twitter account"**
 
