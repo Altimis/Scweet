@@ -20,7 +20,7 @@ data = scrap(hashtag="bitcoin", since="2021-08-05", until=None, from_account = N
 # Get the main information of a given list of users
 # These users belongs to my following. 
 
-users = ['nagouzil', '@yassineaitjeddi',] 'TahaAlamIdrissi', 
+users = ['nagouzil', '@yassineaitjeddi', 'TahaAlamIdrissi', 
          '@Nabila_Gl', 'geceeekusuu', '@pabu232', '@av_ahmet', '@x_born_to_die_x']
 
 # this function return a list that contains : 

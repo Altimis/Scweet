@@ -46,8 +46,7 @@ def scrap(since, until=None, words=None, to_account=None, from_account=None, men
     if words:
         if type(words) == str : 
             words = words.split("//")
-        words = '_'.join(words)
-        path = save_dir + "/" + words + '_' + str(since).split(' ')[0] + '_' + \
+        path = save_dir + "/" + '_'.join(words) + '_' + str(since).split(' ')[0] + '_' + \
                str(until).split(' ')[0] + '.csv'
     elif from_account:
         path = save_dir + "/" + from_account + '_' + str(since).split(' ')[0] + '_' + str(until).split(' ')[
