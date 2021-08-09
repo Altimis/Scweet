@@ -140,14 +140,8 @@ def init_driver(headless=True, proxy=None, show_images=False):
     return driver
 
 
-<<<<<<< Updated upstream
-def log_search_page(driver, start_date, end_date, lang, display_type, words, to_account, from_account, mention_account, hashtag, filter_replies, proximity):
-    """ Search for this query between start_date and end_date"""
-=======
-def log_search_page(driver, since, until_local, lang, display_type, words, to_account, from_account, hashtag, filter_replies, proximity):
+def log_search_page(driver, since, until_local, lang, display_type, words, to_account, from_account, mention_account, hashtag, filter_replies, proximity):
     """ Search for this query between since and until_local"""
->>>>>>> Stashed changes
-
     # format the <from_account>, <to_account> and <hash_tags>
     from_account = "(from%3A" + from_account + ")%20" if from_account is not None else ""
     to_account = "(to%3A" + to_account + ")%20" if to_account is not None else ""
@@ -188,11 +182,7 @@ def log_search_page(driver, since, until_local, lang, display_type, words, to_ac
     else : 
         proximity = ""
 
-<<<<<<< Updated upstream
-    path = 'https://twitter.com/search?q='+words+from_account+to_account+mention_account+hash_tags+end_date+start_date+lang+filter_replies+'&src=typed_query'+display_type+proximity
-=======
-    path = 'https://twitter.com/search?q='+words+from_account+to_account+hash_tags+until_local+since+lang+filter_replies+'&src=typed_query'+display_type+proximity
->>>>>>> Stashed changes
+    path = 'https://twitter.com/search?q='+words+from_account+to_account+mention_account+hash_tags+until_local+since+lang+filter_replies+'&src=typed_query'+display_type+proximity
     driver.get(path)
     return path
 
@@ -267,7 +257,7 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
     return driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
 
 
-def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit=float("inf")):
+def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit=float('inf')):
     """ get the following or followers of a list of users """
 
     # initiate the driver
@@ -305,7 +295,8 @@ def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit
         last_position = driver.execute_script("return window.pageYOffset;")
         follows_elem = []
         follow_ids = set()
-        while scrolling:
+        is_limit=False
+        while scrolling and not is_limit:
             # get the card of following or followers
             # this is the primaryColumn attribute that contains both followings and followers
             primaryColumn = driver.find_element_by_xpath('//div[contains(@data-testid,"primaryColumn")]') 
@@ -321,11 +312,14 @@ def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit
                 if follow_id not in follow_ids:
                     follow_ids.add(follow_id)
                     follows_elem.append(follow_elem)
+                if len(follows_elem)>=limit:
+                    is_limit = True
+                    break
                 if verbose:
                     print(follow_elem)
             print("Found " + str(len(follows_elem)) + " " + follow)
             scroll_attempt = 0
-            while True:
+            while not is_limit:
                 sleep(random.uniform(wait-0.5, wait+0.5))
                 driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
                 sleep(random.uniform(wait-0.5, wait+0.5))

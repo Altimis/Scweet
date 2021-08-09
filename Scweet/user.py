@@ -1,6 +1,7 @@
 from . import utils
 from time import sleep
 import random
+import json
 
 
 def get_user_information(users, driver=None, headless=True):
@@ -94,17 +95,27 @@ def log_user_page(user, driver, headless=True):
     sleep(random.uniform(1, 2))
 
 
-def get_users_followers(users, env, verbose=1, headless=True, wait=2):
+def get_users_followers(users, env, verbose=1, headless=True, wait=2, limit=float('inf'), file_path=None):
 
-    followers = utils.get_users_follow(users, headless, env, "followers", verbose, wait=wait)
+    followers = utils.get_users_follow(users, headless, env, "followers", verbose, wait=wait, limit=limit)
 
+    if file_path == None:
+        file_path = 'outputs/' + str(users[0]) + '_' + str(users[-1]) + '_' + 'followers.json'
+    with open(file_path, 'w') as f:
+        json.dump(followers, f)    
+        print(f"file saved in {file_path}")
     return followers
 
 
-def get_users_following(users, env, verbose=1, headless=True, wait=2):
+def get_users_following(users, env, verbose=1, headless=True, wait=2, limit=float('inf'), file_path=None):
 
-    following = utils.get_users_follow(users, headless, env, "following", verbose, wait=wait)
+    following = utils.get_users_follow(users, headless, env, "following", verbose, wait=wait, limit=limit)
 
+    if file_path == None:
+        file_path = 'outputs/' + str(users[0]) + '_' + str(users[-1]) + '_' + 'following.json'
+    with open(file_path, 'w') as f:
+        json.dump(following, f)    
+        print(f"file saved in {file_path}")
     return following
 
 def hasNumbers(inputString):

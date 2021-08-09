@@ -1,6 +1,6 @@
 # A simple and unlimited twitter scraper with python and without authentification. 
 
-In the last days, Twitter banned almost every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (start_date and max_date), for a given language and list of words or account name, and saves a csv file containing scraped data :  
+In the last days, Twitter banned almost every twitter scrapers. This repository represent an alternative legal tool (depending on how many seconds we wait between each scrolling) to scrap tweets between two given dates (since and until), for a given language and list of words or account name, and saves a csv file containing scraped data :  
 
 ``[UserScreenName,	UserName,	Timestamp,	Text, Embedded_text, Emojis,	Comments,	Likes,	Retweets,	Image link,	Tweet URL]``  
 
@@ -71,8 +71,8 @@ optional arguments:
                         Tweets mention "mention_account" account.         
   --hashtag HASHTAG
                         Tweets containing #hashtag
-  --max_date MAX_DATE   max date for search query. example : %Y-%m-%d.
-  --start_date START_DATE
+  --until UNTIL   max date for search query. example : %Y-%m-%d.
+  --since SINCE
                         Start date for search query. example : %Y-%m-%d.
   --interval INTERVAL   Interval days between each start date and end date for
                         search queries. example : 5.
@@ -82,8 +82,8 @@ optional arguments:
   --limit LIMIT         Limit tweets per <interval>
   --display_type DISPLAY_TYPE
                         Display type of twitter page : Latest or Top tweets (
-  --resume RESUME       Resume the last scraping work. You need to pass the same arguments (<words>, <start_date>, <max_date>...)```
+  --resume RESUME       Resume the last scraping work. You need to pass the same arguments (<words>, <since>, <until>...)```
 
 ### To execute the script : 
-python scweet.py --words "excellente//car" --to_account "tesla"  --max_date 2020-01-05 --start_date 2020-01-01 --limit 10 --interval 1 --display_type Latest --lang="en" --headless True
+python scweet.py --words "excellente//car" --to_account "tesla"  --until 2020-01-05 --since 2020-01-01 --limit 10 --interval 1 --display_type Latest --lang="en" --headless True
 ```

@@ -10,12 +10,7 @@ from .utils import init_driver, get_last_date_from_csv, log_search_page, keep_sc
 
 
 
-# class Scweet():
-<<<<<<< Updated upstream
-def scrap(start_date, max_date, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
-=======
-def scrap(since, until=None, words=None, to_account=None, from_account=None, interval=5, lang=None,
->>>>>>> Stashed changes
+def scrap(since, until=None, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
           headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None, 
           show_images=False, save_images=False, save_dir="outputs", filter_replies=False, proximity=False):
     """
@@ -90,17 +85,6 @@ def scrap(since, until=None, words=None, to_account=None, from_account=None, int
         while until_local <= datetime.datetime.strptime(until, '%Y-%m-%d'):
             # number of scrolls
             scroll = 0
-<<<<<<< Updated upstream
-            # convert <start_date> and <end_date> to str
-            if type(start_date) != str :
-                start_date = datetime.datetime.strftime(start_date, '%Y-%m-%d')
-            if type(end_date) != str :
-                end_date = datetime.datetime.strftime(end_date, '%Y-%m-%d')
-            # log search page between <start_date> and <end_date>
-            path = log_search_page(driver=driver, words=words, start_date=start_date,
-                            end_date=end_date, to_account=to_account,
-                            from_account=from_account, mention_account=mention_account, hashtag=hashtag, lang=lang, 
-=======
             # convert <since> and <until_local> to str
             if type(since) != str :
                 since = datetime.datetime.strftime(since, '%Y-%m-%d')
@@ -109,8 +93,7 @@ def scrap(since, until=None, words=None, to_account=None, from_account=None, int
             # log search page between <since> and <until_local>
             path = log_search_page(driver=driver, words=words, since=since,
                             until_local=until_local, to_account=to_account,
-                            from_account=from_account, hashtag=hashtag, lang=lang, 
->>>>>>> Stashed changes
+                            from_account=from_account, mention_account=mention_account, hashtag=hashtag, lang=lang, 
                             display_type=display_type, filter_replies=filter_replies, proximity=proximity)
             # number of logged pages (refresh each <interval>)
             refresh += 1
@@ -208,10 +191,6 @@ if __name__ == '__main__':
     resume = args.resume
     proxy = args.proxy
 
-<<<<<<< Updated upstream
-    data = scrap(start_date=start_date, max_date=max_date, words=words, to_account=to_account, from_account=from_account, mention_account=mention_account,
-=======
-    data = scrap(since=since, until=until, words=words, to_account=to_account, from_account=from_account, 
->>>>>>> Stashed changes
+    data = scrap(since=since, until=until, words=words, to_account=to_account, from_account=from_account, mention_account=mention_account,
                 hashtag=hashtag, interval=interval, lang=lang, headless=headless, limit=limit,
                 display_type=display_type, resume=resume, proxy=proxy, filter_replies=False, proximity=False)
