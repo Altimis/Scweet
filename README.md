@@ -80,7 +80,7 @@ data = scrape(hashtag="bitcoin", since="2021-08-05", until=None, from_account = 
 
 ```
 users = ['nagouzil', '@yassineaitjeddi', 'TahaAlamIdrissi', 
-         '@Nabila_Gl', 'geceeekusuu', '@pabu232', '@av_ahmet', '@x_born_to_die_x']``
+         '@Nabila_Gl', 'geceeekusuu', '@pabu232', '@av_ahmet', '@x_born_to_die_x']
 ```
 
 **this function return a list that contains : **  
