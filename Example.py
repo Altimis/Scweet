@@ -1,5 +1,5 @@
-from Scweet.scweet import scrap
-from Scweet.user import get_user_information, get_users_following, get_users_followers
+from Scweet import scrap
+from Scweet import get_user_information, get_users_following, get_users_followers
 
 
 # scrape top tweets with the words 'covid','covid19' in proximity and without replies.

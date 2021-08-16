@@ -1,12 +1,33 @@
+#!/usr/bin/python3
 from distutils.core import setup
 import setuptools
+import io
+import os
+
+VERSION = None
+
+# Long description
+here = os.path.abspath(os.path.dirname(__file__))
+
+with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = '\n' + f.read()
+
+# Load the package's __version__.py
+about = {}
+if not VERSION:
+    with open(os.path.join(here, 'Scweet', '__version__.py')) as f:
+        exec(f.read(), about)
+else:
+    about['__version__'] = VERSION
 
 setup(
   name = 'Scweet',
   packages = ['Scweet'],
-  version = '1.4',
+  version = about['__version__'],
   license='MIT',
   description = 'Tool for scraping Tweets',
+  long_description = long_description,
+  long_description_content_type="text/markdown",
   author = 'Yassine AIT JEDDI and Soufiane Bengadi',
   author_email = 'aitjeddiyassine@gmail.com',
   url = 'https://github.com/Altimis/Scweet',

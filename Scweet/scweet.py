@@ -10,11 +10,11 @@ from .utils import init_driver, get_last_date_from_csv, log_search_page, keep_sc
 
 
 
-def scrap(since, until=None, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
+def scrape(since, until=None, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
           headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None, 
           show_images=False, save_images=False, save_dir="outputs", filter_replies=False, proximity=False):
     """
-    scrap data from twitter using requests, starting from <since> until <until>. The program make a search between each <since> and <until_local>
+    scrape data from twitter using requests, starting from <since> until <until>. The program make a search between each <since> and <until_local>
     until it reaches the <until> date if it's given, else it stops at the actual date.
 
     return:
@@ -141,7 +141,7 @@ def scrap(since, until=None, words=None, to_account=None, from_account=None, men
     return data
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Scrap tweets.')
+    parser = argparse.ArgumentParser(description='Scrape tweets.')
 
     parser.add_argument('--words', type=str,
                         help='Queries. they should be devided by "//" : Cat//Dog.', default=None)
@@ -190,6 +190,6 @@ if __name__ == '__main__':
     resume = args.resume
     proxy = args.proxy
 
-    data = scrap(since=since, until=until, words=words, to_account=to_account, from_account=from_account, mention_account=mention_account,
+    data = scrape(since=since, until=until, words=words, to_account=to_account, from_account=from_account, mention_account=mention_account,
                 hashtag=hashtag, interval=interval, lang=lang, headless=headless, limit=limit,
                 display_type=display_type, resume=resume, proxy=proxy, filter_replies=False, proximity=False)
