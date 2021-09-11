@@ -225,7 +225,7 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
     while scrolling and tweet_parsed < limit:
         sleep(random.uniform(0.5, 1.5))
         # get the card of tweets
-        page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
+        page_cards = driver.find_elements_by_xpath('//article[@data-testid="tweet"]') # changed div by article
         for card in page_cards:
             tweet = get_data(card, save_images, save_images_dir)
             if tweet:
