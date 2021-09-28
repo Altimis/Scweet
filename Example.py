@@ -8,7 +8,7 @@ from Scweet.user import get_user_information, get_users_following, get_users_fol
 data = scrape(words=['bitcoin','ethereum'], since="2015-04-01", until="2015-04-02", from_account = None, interval=1, 
 	headless=False, display_type="Top", save_images=False, 
 	resume=False, filter_replies=False, proximity=False)
-"""
+
 # scrape top tweets of with the hashtag #covid19, in proximity and without replies.
 # the process is slower as the interval is smaller (choose an interval that can divide the period of time betwee, start and max date)
 https://www.youtube.com/watch?v=ootQs7sVulY
