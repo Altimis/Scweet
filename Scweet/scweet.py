@@ -12,7 +12,8 @@ from .utils import init_driver, get_last_date_from_csv, log_search_page, keep_sc
 
 def scrape(since, until=None, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
           headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None, 
-          show_images=False, save_images=False, save_dir="outputs", filter_replies=False, proximity=False):
+          show_images=False, save_images=False, save_dir="outputs", filter_replies=False, proximity=False, 
+          geocode=None, minreplies=None, minlikes=None, minretweets=None):
     """
     scrape data from twitter using requests, starting from <since> until <until>. The program make a search between each <since> and <until_local>
     until it reaches the <until> date if it's given, else it stops at the actual date.
@@ -93,7 +94,8 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
             path = log_search_page(driver=driver, words=words, since=since,
                             until_local=until_local, to_account=to_account,
                             from_account=from_account, mention_account=mention_account, hashtag=hashtag, lang=lang, 
-                            display_type=display_type, filter_replies=filter_replies, proximity=proximity)
+                            display_type=display_type, filter_replies=filter_replies, proximity=proximity,
+                            geocode=geocode, minreplies=minreplies, minlikes=minlikes, minretweets=minretweets)
             # number of logged pages (refresh each <interval>)
             refresh += 1
             # number of days crossed
@@ -172,6 +174,17 @@ if __name__ == '__main__':
                         help='Resume the last scraping. specify the csv file path.', default=False)
     parser.add_argument('--proxy', type=str,
                         help='Proxy server', default=None)
+    parser.add_argument('--proximity', type=bool,
+                        help='Proximity', default=False)                        
+    parser.add_argument('--geocode', type=str,
+                        help='Geographical location coordinates to center the search, radius. No compatible with proximity', default=None)
+    parser.add_argument('--minreplies', type=int,
+                        help='Min. number of replies to the tweet', default=None)
+    parser.add_argument('--minlikes', type=int,
+                        help='Min. number of likes to the tweet', default=None)
+    parser.add_argument('--minretweets', type=int,
+                        help='Min. number of retweets to the tweet', default=None)
+                            
 
     args = parser.parse_args()
 
@@ -189,7 +202,13 @@ if __name__ == '__main__':
     hashtag = args.hashtag
     resume = args.resume
     proxy = args.proxy
+    proximity = args.proximity
+    geocode = args.geocode
+    minreplies = args.minreplies
+    minlikes = args.minlikes
+    minretweets = args.minlikes
 
     data = scrape(since=since, until=until, words=words, to_account=to_account, from_account=from_account, mention_account=mention_account,
                 hashtag=hashtag, interval=interval, lang=lang, headless=headless, limit=limit,
-                display_type=display_type, resume=resume, proxy=proxy, filter_replies=False, proximity=False)
+                display_type=display_type, resume=resume, proxy=proxy, filter_replies=False, proximity=proximity,
+                geocode=geocode, minreplies=minreplies, minlikes=minlikes, minretweets=minretweets)

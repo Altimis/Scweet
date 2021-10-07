@@ -57,16 +57,15 @@ from Scweet.scweet import scrape
 from Scweet.user import get_user_information, get_users_following, get_users_followers``
 ```
 
-**scrape top tweets with the words 'covid','covid19' in proximity and without replies.**  
+**scrape top tweets with the words 'bitcoin','ethereum'  geolocated less than 200 km from Alicante (Spain) Lat=38.3452, Long=-0.481006 and without replies.**  
 **the process is slower as the interval is smaller (choose an interval that can divide the period of time betwee, start and max date)**
 
 ```
-data = scrape(words=['bitcoin','ethereum'], since="2015-04-01", until="2015-04-15", from_account = None, interval=1, 
-              headless=True, display_type="Top", save_images=False, 
-              resume=False, filter_replies=False, proximity=False)
+data = scrape(words=['bitcoin','ethereum'], since="2021-10-01", until="2021-10-05", from_account = None,         interval=1, headless=False, display_type="Top", save_images=False, lang="en",
+	resume=False, filter_replies=False, proximity=False, geocode="38.3452,-0.481006,200km")
 ```
 
-**scrape top tweets of with the hashtag #covid19, in proximity and without replies.**  
+**scrape top tweets of with the hashtag #bitcoin, in proximity and without replies.**  
 **the process is slower as the interval is smaller (choose an interval that can divide the period of time betwee, start and max date)**
 
 ```
@@ -130,8 +129,17 @@ optional arguments:
   --headless HEADLESS   Headless webdrives or not. True or False
   --limit LIMIT         Limit tweets per <interval>
   --display_type DISPLAY_TYPE
-                        Display type of twitter page : Latest or Top tweets (
-  --resume RESUME       Resume the last scraping work. You need to pass the same arguments (<words>, <since>, <until>...)```
+                        Display type of twitter page : Latest or Top tweets
+  --resume RESUME       Resume the last scraping. specify the csv file path.
+  --proxy PROXY         Proxy server
+  --proximity PROXIMITY Proximity
+  --geocode GEOCODE     Geographical location coordinates to center the
+                        search (), radius. No compatible with proximity
+  --minreplies MINREPLIES
+                        Min. number of replies to the tweet
+  --minlikes MINLIKES   Min. number of likes to the tweet
+  --minretweets MINRETWEETS
+                        Min. number of retweets to the tweet
 
 ### To execute the script : 
 python scweet.py --words "excellente//car" --to_account "tesla"  --until 2020-01-05 --since 2020-01-01 --limit 10 --interval 1 --display_type Latest --lang="en" --headless True
