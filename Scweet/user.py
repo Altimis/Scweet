@@ -116,7 +116,7 @@ def get_users_following(users, env, verbose=1, headless=True, wait=2, limit=floa
     if file_path == None:
         file_path = 'outputs/' + str(users[0]) + '_' + str(users[-1]) + '_' + 'following.json'
     else:
-        file_path = file_path + str(users[0]) + '_' + str(users[-1]) + '_' + 'followers.json'
+        file_path = file_path + str(users[0]) + '_' + str(users[-1]) + '_' + 'following.json'
     with open(file_path, 'w') as f:
         json.dump(following, f)    
         print(f"file saved in {file_path}")
