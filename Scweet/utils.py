@@ -223,14 +223,20 @@ def log_in(driver, env, timeout=10):
     username = get_username(env) #const.USERNAME
     password = get_password(env) #const.PASSWORD
 
-    #driver.get('https://www.twitter.com/login')
-    username_xpath = '//input[@name="session[username_or_email]"]'
-    password_xpath = '//input[@name="session[password]"]'
+    driver.get('https://twitter.com/i/flow/login')
+    username_css = 'label input'
+    password_css = 'label input[type="password"]'
+    
+    
 
-    username_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, username_xpath)))
-    password_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, password_xpath)))
-
+    username_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.CSS_SELECTOR, username_css)))
+    sleep(1)
     username_el.send_keys(username)
+    sleep(1)
+    username_el.send_keys(Keys.RETURN)
+    sleep(1)
+    password_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.CSS_SELECTOR, password_css)))
+    sleep(1)
     password_el.send_keys(password)
     password_el.send_keys(Keys.RETURN)
 
