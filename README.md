@@ -93,7 +93,7 @@ users_info = get_user_information(users, headless=True)
 **Enter your username and password in .env file. I recommande you dont use your main account.**  
 **Increase wait argument to avoid banning your account and maximise the crawling process if the internet is slow. I used 1 and it's safe.**  
 
-**set your .env file with SCWEET_USERNAME and SCWEET_PASSWORD variables and provide its path**  
+**set your .env file with SCWEET_EMAIL, SCWEET_USERNAME and SCWEET_PASSWORD variables and provide its path**  
 
 ```
 env_path = ".env"

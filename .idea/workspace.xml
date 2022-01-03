@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ebeafb11-70f8-48c8-a753-08ca4641f6a5" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Example.py" beforeDir="false" afterPath="$PROJECT_DIR$/Example.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scweet/scweet.py" beforeDir="false" afterPath="$PROJECT_DIR$/Scweet/scweet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scweet/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/Scweet/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Scweet/const.py" beforeDir="false" afterPath="$PROJECT_DIR$/Scweet/const.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Scweet/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Scweet/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -15,6 +14,10 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectId" id="1wSo8bh6mkEcPmD6copMija6JR9" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -65,5 +68,16 @@
       <updated>1628461210353</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
