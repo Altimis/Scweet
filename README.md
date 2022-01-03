@@ -48,7 +48,7 @@ The ``get_users_following`` and ``get_users_followers`` in [user](https://github
 
 The library is now available. To install the library, run :
 
-``pip install Scweet==1.6``
+``pip install Scweet==1.7``
 
 After installing, you can use it as follow : 
 
