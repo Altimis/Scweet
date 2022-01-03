@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="ebeafb11-70f8-48c8-a753-08ca4641f6a5" name="Changes" comment="Fix login timeout error">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Example.py" beforeDir="false" afterPath="$PROJECT_DIR$/Example.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Scweet/__version__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Scweet/__version__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -79,7 +81,14 @@
       <option name="project" value="LOCAL" />
       <updated>1641221379276</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="V 1.7">
+      <created>1641221862491</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1641221862491</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -95,6 +104,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Fix login timeout error" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix login timeout error" />
+    <MESSAGE value="V 1.7" />
+    <option name="LAST_COMMIT_MESSAGE" value="V 1.7" />
   </component>
 </project>
