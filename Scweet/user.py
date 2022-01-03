@@ -11,7 +11,7 @@ def get_user_information(users, driver=None, headless=True):
 
     users_info = {}
 
-    for i, user in enumerate(users) :
+    for i, user in enumerate(users):
 
         log_user_page(user, driver)
 
@@ -23,22 +23,22 @@ def get_user_information(users, driver=None, headless=True):
                 followers = driver.find_element_by_xpath(
                     '//a[contains(@href,"/followers")]/span[1]/span[1]').text
             except Exception as e:
-                #print(e)
+                # print(e)
                 return
 
             try:
                 element = driver.find_element_by_xpath('//div[contains(@data-testid,"UserProfileHeader_Items")]//a[1]')
                 website = element.get_attribute("href")
             except Exception as e:
-                #print(e)
+                # print(e)
                 website = ""
 
             try:
                 desc = driver.find_element_by_xpath('//div[contains(@data-testid,"UserDescription")]').text
             except Exception as e:
-                #print(e)
+                # print(e)
                 desc = ""
-            a=0
+            a = 0
             try:
                 join_date = driver.find_element_by_xpath(
                     '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[3]').text
@@ -46,9 +46,9 @@ def get_user_information(users, driver=None, headless=True):
                     '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[2]').text
                 location = driver.find_element_by_xpath(
                     '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
-            except Exception as e: 
-                #print(e)
-                try :
+            except Exception as e:
+                # print(e)
+                try:
                     join_date = driver.find_element_by_xpath(
                         '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[2]').text
                     span1 = driver.find_element_by_xpath(
@@ -56,18 +56,18 @@ def get_user_information(users, driver=None, headless=True):
                     if hasNumbers(span1):
                         birthday = span1
                         location = ""
-                    else : 
+                    else:
                         location = span1
                         birthday = ""
-                except Exception as e: 
-                    #print(e)
-                    try : 
+                except Exception as e:
+                    # print(e)
+                    try:
                         join_date = driver.find_element_by_xpath(
                             '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
                         birthday = ""
                         location = ""
-                    except Exception as e: 
-                        #print(e)
+                    except Exception as e:
+                        # print(e)
                         join_date = ""
                         birthday = ""
                         location = ""
@@ -81,13 +81,13 @@ def get_user_information(users, driver=None, headless=True):
             print("Website : ", website)
             users_info[user] = [following, followers, join_date, birthday, location, website, desc]
 
-            if i == len(users)-1 :
-                driver.close()   
+            if i == len(users) - 1:
+                driver.close()
                 return users_info
         else:
             print("You must specify the user")
             continue
-        
+
 
 def log_user_page(user, driver, headless=True):
     sleep(random.uniform(1, 2))
@@ -96,7 +96,6 @@ def log_user_page(user, driver, headless=True):
 
 
 def get_users_followers(users, env, verbose=1, headless=True, wait=2, limit=float('inf'), file_path=None):
-
     followers = utils.get_users_follow(users, headless, env, "followers", verbose, wait=wait, limit=limit)
 
     if file_path == None:
@@ -104,13 +103,12 @@ def get_users_followers(users, env, verbose=1, headless=True, wait=2, limit=floa
     else:
         file_path = file_path + str(users[0]) + '_' + str(users[-1]) + '_' + 'followers.json'
     with open(file_path, 'w') as f:
-        json.dump(followers, f)    
+        json.dump(followers, f)
         print(f"file saved in {file_path}")
     return followers
 
 
 def get_users_following(users, env, verbose=1, headless=True, wait=2, limit=float('inf'), file_path=None):
-
     following = utils.get_users_follow(users, headless, env, "following", verbose, wait=wait, limit=limit)
 
     if file_path == None:
@@ -118,9 +116,10 @@ def get_users_following(users, env, verbose=1, headless=True, wait=2, limit=floa
     else:
         file_path = file_path + str(users[0]) + '_' + str(users[-1]) + '_' + 'following.json'
     with open(file_path, 'w') as f:
-        json.dump(following, f)    
+        json.dump(following, f)
         print(f"file saved in {file_path}")
     return following
+
 
 def hasNumbers(inputString):
     return any(char.isdigit() for char in inputString)

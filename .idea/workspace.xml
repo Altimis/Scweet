@@ -4,7 +4,6 @@
     <list default="true" id="ebeafb11-70f8-48c8-a753-08ca4641f6a5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Example.py" beforeDir="false" afterPath="$PROJECT_DIR$/Example.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scweet/const.py" beforeDir="false" afterPath="$PROJECT_DIR$/Scweet/const.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Scweet/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Scweet/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -67,6 +66,14 @@
       <option name="presentableId" value="Default" />
       <updated>1628461210353</updated>
     </task>
+    <task id="LOCAL-00001" summary="Fix login timeout error">
+      <created>1641220203456</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1641220203456</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -79,5 +86,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Fix login timeout error" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix login timeout error" />
   </component>
 </project>

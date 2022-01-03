@@ -221,10 +221,10 @@ def get_last_date_from_csv(path):
     return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
 
 
-def log_in(driver, env, timeout=20):
+def log_in(driver, env, timeout=20, wait=4):
     email = get_email(env)  # const.EMAIL
     password = get_password(env)  # const.PASSWORD
-    username = get_username(env) # const.USERNAME
+    username = get_username(env)  # const.USERNAME
 
     driver.get('https://twitter.com/i/flow/login')
 
@@ -232,29 +232,29 @@ def log_in(driver, env, timeout=20):
     password_xpath = '//input[@autocomplete="current-password"]'
     username_xpath = '//input[@data-testid="ocfEnterTextTextInput"]'
 
-    sleep(random.uniform(3, 3.5))
+    sleep(random.uniform(wait, wait + 1))
 
     # enter email
-    email_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, email_xpath)))
-    sleep(random.uniform(1, 2))
+    email_el = driver.find_element_by_xpath(email_xpath)
+    sleep(random.uniform(wait, wait + 1))
     email_el.send_keys(email)
-    sleep(random.uniform(1, 2))
+    sleep(random.uniform(wait, wait + 1))
     email_el.send_keys(Keys.RETURN)
-    sleep(random.uniform(3, 3.5))
+    sleep(random.uniform(wait, wait + 1))
     # in case twitter spotted unusual login activity : enter your username
     if check_exists_by_xpath(username_xpath, driver):
-        username_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, username_xpath)))
-        sleep(random.uniform(1, 2))
+        username_el = driver.find_element_by_xpath(username_xpath)
+        sleep(random.uniform(wait, wait + 1))
         username_el.send_keys(username)
-        sleep(random.uniform(1, 2))
+        sleep(random.uniform(wait, wait + 1))
         username_el.send_keys(Keys.RETURN)
-        sleep(random.uniform(3, 3.5))
+        sleep(random.uniform(wait, wait + 1))
     # enter password
-    password_el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, password_xpath)))
+    password_el = driver.find_element_by_xpath(password_xpath)
     password_el.send_keys(password)
-    sleep(random.uniform(1, 2))
+    sleep(random.uniform(wait, wait + 1))
     password_el.send_keys(Keys.RETURN)
-    sleep(random.uniform(3, 3.5))
+    sleep(random.uniform(wait, wait + 1))
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position,
@@ -314,8 +314,8 @@ def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit
     driver = init_driver(headless=headless)
     sleep(wait)
     # log in (the .env file should contain the username and password)
-    driver.get('https://www.twitter.com/login')
-    log_in(driver, env)
+    # driver.get('https://www.twitter.com/login')
+    log_in(driver, env, wait=wait)
     sleep(wait)
     # followers and following dict of each user
     follows_users = {}
