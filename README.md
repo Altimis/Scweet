@@ -1,22 +1,24 @@
-# A simple and unlimited twitter scraper with python.
 
-In the last days, Twitter banned almost every twitter scrapers. This repository represent an alternative tool to scrap tweets between two given dates (since and until), for a given language and list of words or account name, and saves a csv file containing retrieved data :  
 
-``[UserScreenName,	UserName,	Timestamp,	Text, Embedded_text, Emojis,	Comments,	Likes,	Retweets,	Image link,	Tweet URL]``  
+# A simple and unlimited Twitter scraper with python.
 
-It is also possible to download and save the images from ``Image link`` by passing the argument ``save_images = True``, If you only want to scrape images, I recommand to set the argument ``display_type = image`` to show only tweets that contain images.  
+Recently, Twitter has banned almost every Twitter scraper. This repository presents an alternative tool to scrape tweets between two given dates (since and until), for a given language and list of words or account name, and can save a csv file containing retrieved data :  
+
+`[UserScreenName, UserName,	Timestamp, Text, Embedded_text, Emojis,	Comments,	Likes,	Retweets,	Image link,	Tweet URL]`
+
+It is also possible to download images from `Image link` by passing the argument `save_images = True`. If you only want to scrape images, it is recommend to set the argument `display_type = image` to show only tweets that contain images. 
 
 You can scrape user profile information as well, including following and followers.  
 
-Authentification is required in the case of followers/following scraping. It is recommended to log in with a new account (if the list of followers is very long, it is possible that your account will be banned). To log in to your account, you need to enter your username ``SCWEET_USERNAME`` and password ``SCWEET_PASSWORD`` in [env](https://github.com/Altimis/Scweet/blob/master/.env) file. You can controle the ``wait`` parameter in the ``get_users_followers`` and ``get_users_following`` functions. 
+Authentication is required in for scraping followers/following,  It is recommended to log in with a new account, otherwise the account could be banned if the list of followers is very long). To log in to your account, you need to enter your username `SCWEET_USERNAME` and password `SCWEET_PASSWORD` in the [.env](https://github.com/Altimis/Scweet/blob/master/.env) file. You can control the `wait` parameter in the `get_users_followers` and `get_users_following` functions. 
 
-The [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) code allows you to get all information of a list of users, including location, join date and lists of **followers and following**. Check [this example](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.py).
+The [user.py](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) script allows you to get all information from a list of users, including location, join date and lists of **followers and following**. See [this example](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.py).
 
-## Requierments : 
+## Requirements : 
 
-```pip install -r requirements.txt```
+`pip install -r requirements.txt`
 
-Note : You need to have Chrome installed in your system
+Note : You will need to have Chrome installed in your system
 
 ## Results :
 
@@ -38,9 +40,9 @@ The CSV file contains the following features (for each tweet) :
 
 ### Following / Followers :
 
-The ``get_users_following`` and ``get_users_followers`` in [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) give a list of following and followers for a given list of users.
+The `get_users_following` and `get_users_followers` in [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) give a list of following and followers for a given list of users.
 
-**More features will be added soon, such as "all reaplies of each tweet for a specific twitter account"**
+**There are plans for even more features, such as "all of the replies for each tweet for a given Twitter account"**
 
 ## Usage :
 
@@ -48,25 +50,25 @@ The ``get_users_following`` and ``get_users_followers`` in [user](https://github
 
 The library is now available. To install the library, run :
 
-``pip install Scweet==1.8``
+`pip install Scweet==1.8`
 
-After installing, you can use it as follow : 
+After installing, you can use it like this :
 
 ```
 from Scweet.scweet import scrape
-from Scweet.user import get_user_information, get_users_following, get_users_followers``
+from Scweet.user import get_user_information, get_users_following, get_users_followers
 ```
 
-**scrape top tweets with the words 'bitcoin','ethereum'  geolocated less than 200 km from Alicante (Spain) Lat=38.3452, Long=-0.481006 and without replies.**  
-**the process is slower as the interval is smaller (choose an interval that can divide the period of time betwee, start and max date)**
+**Scrape top tweets with the words 'bitcoin', 'ethereum'  geolocated less than 200 km from Alicante (Spain) Lat=38.3452, Long=-0.481006 and without replies:**  
+**The process is slower as the interval is smaller (choose an interval that can divide the period of time between, start and max date)**
 
 ```
 data = scrape(words=['bitcoin','ethereum'], since="2021-10-01", until="2021-10-05", from_account = None,         interval=1, headless=False, display_type="Top", save_images=False, lang="en",
 	resume=False, filter_replies=False, proximity=False, geocode="38.3452,-0.481006,200km")
 ```
 
-**scrape top tweets of with the hashtag #bitcoin, in proximity and without replies.**  
-**the process is slower as the interval is smaller (choose an interval that can divide the period of time betwee, start and max date)**
+**Scrape top tweets of with the hashtag #bitcoin, in proximity and without replies:**  
+**The process is slower as the interval is smaller (choose an interval that can divide the period of time between, start and max date)**
 
 ```
 data = scrape(hashtag="bitcoin", since="2021-08-05", until=None, from_account = None, interval=1, 
@@ -74,26 +76,26 @@ data = scrape(hashtag="bitcoin", since="2021-08-05", until=None, from_account = 
               resume=False, filter_replies=True, proximity=True)
 ```
 
-**Get the main information of a given list of users**  
-**These users belongs to my following.**
+**Get the main information of a given list of users:**  
+**These users follow me on Twitter**
 
 ```
 users = ['nagouzil', '@yassineaitjeddi', 'TahaAlamIdrissi', 
          '@Nabila_Gl', 'geceeekusuu', '@pabu232', '@av_ahmet', '@x_born_to_die_x']
 ```
 
-**this function return a list that contains : **  
-**["nb of following","nb of followers", "join date", "birthdate", "location", "website", "description"]**
+**This function will return a list that contains : **  
+**["no. of following","no. of followers", "join date", "date of birth", "location", "website", "description"]**
 
 ```
 users_info = get_user_information(users, headless=True)
 ```
 
 **Get followers and following of a given list of users**
-**Enter your username and password in .env file. I recommande you dont use your main account.**  
-**Increase wait argument to avoid banning your account and maximise the crawling process if the internet is slow. I used 1 and it's safe.**  
+**Enter your username and password in .env file. I recommend you do not use your main account.**  
+**Increase wait argument to avoid banning your account and maximize the crawling process if the internet is slow. I used 1 and it's safe.**  
 
-**set your .env file with SCWEET_EMAIL, SCWEET_USERNAME and SCWEET_PASSWORD variables and provide its path**  
+**Set your .env file with `SCWEET_EMAIL` , `SCWEET_USERNAME`  and `SCWEET_PASSWORD` variables and provide its path**  
 
 ```
 env_path = ".env"
@@ -129,7 +131,7 @@ optional arguments:
   --headless HEADLESS   Headless webdrives or not. True or False
   --limit LIMIT         Limit tweets per <interval>
   --display_type DISPLAY_TYPE
-                        Display type of twitter page : Latest or Top tweets
+                        Display type of Twitter page : Latest or Top tweets
   --resume RESUME       Resume the last scraping. specify the csv file path.
   --proxy PROXY         Proxy server
   --proximity PROXIMITY Proximity
@@ -140,7 +142,7 @@ optional arguments:
   --minlikes MINLIKES   Min. number of likes to the tweet
   --minretweets MINRETWEETS
                         Min. number of retweets to the tweet
-
-### To execute the script : 
-python scweet.py --words "excellente//car" --to_account "tesla"  --until 2020-01-05 --since 2020-01-01 --limit 10 --interval 1 --display_type Latest --lang="en" --headless True
 ```
+
+### To run the script :
+`python scweet.py --words "excellente//car" --to_account "tesla"  --until 2020-01-05 --since 2020-01-01 --limit 10 --interval 1 --display_type Latest --lang="en" --headless True`
