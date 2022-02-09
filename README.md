@@ -10,7 +10,7 @@ It is also possible to download images from `Image link` by passing the argument
 
 You can scrape user profile information as well, including following and followers.  
 
-Authentication is required in for scraping followers/following,  It is recommended to log in with a new account, otherwise the account could be banned if the list of followers is very long). To log in to your account, you need to enter your username `SCWEET_USERNAME` and password `SCWEET_PASSWORD` in the [.env](https://github.com/Altimis/Scweet/blob/master/.env) file. You can control the `wait` parameter in the `get_users_followers` and `get_users_following` functions. 
+Authentication is required for scraping followers/following. It is recommended to log in with a new account, otherwise the account could be banned if the list of followers is very long). To log in to your account, you need to enter your username `SCWEET_USERNAME` and password `SCWEET_PASSWORD` in the [.env](https://github.com/Altimis/Scweet/blob/master/.env) file. You can control the `wait` parameter in the `get_users_followers` and `get_users_following` functions. 
 
 The [user.py](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) script allows you to get all information from a list of users, including location, join date and lists of **followers and following**. See [this example](https://github.com/Altimis/Scweet/blob/master/Scweet/Example.py).
 
