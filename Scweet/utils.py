@@ -4,9 +4,11 @@ import re
 from time import sleep
 import random
 import chromedriver_autoinstaller
+import geckodriver_autoinstaller
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import datetime
 import pandas as pd
 import platform
@@ -19,7 +21,7 @@ from selenium.webdriver.common.by import By
 from . import const
 import urllib
 
-from .const import get_username, get_password, get_email
+from .const import get_username, get_password, get_email, get_geckdriver_path
 
 
 # current_dir = pathlib.Path(__file__).parent.absolute()
@@ -117,15 +119,18 @@ def get_data(card, save_images=False, save_dir=None):
     return tweet
 
 
-def init_driver(headless=True, proxy=None, show_images=False, option=None):
-    """ initiate a chromedriver instance
+def init_driver(headless=True, proxy=None, show_images=False, option=None, firefox=False, env=None):
+    """ initiate a chromedriver or firefoxdriver instance
         --option : other option to add (str)
     """
 
-    # create instance of web driver
-    chromedriver_path = chromedriver_autoinstaller.install()
-    # options
-    options = Options()
+    if firefox:
+        options = FirefoxOptions()
+        driver_path = geckodriver_autoinstaller.install()
+    else:
+        options = ChromeOptions()
+        driver_path = chromedriver_autoinstaller.install()
+
     if headless is True:
         print("Scraping on headless mode.")
         options.add_argument('--disable-gpu')
@@ -136,12 +141,17 @@ def init_driver(headless=True, proxy=None, show_images=False, option=None):
     if proxy is not None:
         options.add_argument('--proxy-server=%s' % proxy)
         print("using proxy : ", proxy)
-    if show_images == False:
+    if show_images == False and firefox == False:
         prefs = {"profile.managed_default_content_settings.images": 2}
         options.add_experimental_option("prefs", prefs)
     if option is not None:
         options.add_argument(option)
-    driver = webdriver.Chrome(options=options, executable_path=chromedriver_path)
+
+    if firefox:
+        driver = webdriver.Firefox(options=options, executable_path=driver_path)
+    else:
+        driver = webdriver.Chrome(options=options, executable_path=driver_path)
+
     driver.set_page_load_timeout(100)
     return driver
 
@@ -311,7 +321,7 @@ def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit
     """ get the following or followers of a list of users """
 
     # initiate the driver
-    driver = init_driver(headless=headless)
+    driver = init_driver(headless=headless, env=env, firefox=True)
     sleep(wait)
     # log in (the .env file should contain the username and password)
     # driver.get('https://www.twitter.com/login')
