@@ -1,3 +1,4 @@
+certifi
 selenium
 pandas
 python-dotenv
