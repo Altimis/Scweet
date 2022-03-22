@@ -21,7 +21,7 @@ from selenium.webdriver.common.by import By
 from . import const
 import urllib
 
-from .const import get_username, get_password, get_email, get_geckdriver_path
+from .const import get_username, get_password, get_email
 
 
 # current_dir = pathlib.Path(__file__).parent.absolute()
