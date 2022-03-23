@@ -1,5 +1,7 @@
+certifi
 selenium
 pandas
 python-dotenv
 chromedriver-autoinstaller
+geckodriver-autoinstaller
 urllib3
