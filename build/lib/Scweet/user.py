@@ -8,6 +8,7 @@ def get_user_information(users, driver=None, headless=True):
     """ get user information if the "from_account" argument is specified """
 
     driver = utils.init_driver(headless=headless)
+    failed = []
 
     users_info = {}
 
@@ -24,7 +25,9 @@ def get_user_information(users, driver=None, headless=True):
                     '//a[contains(@href,"/followers")]/span[1]/span[1]').text
             except Exception as e:
                 # print(e)
-                return
+                failed.append(user)
+
+                continue
 
             try:
                 element = driver.find_element_by_xpath('//div[contains(@data-testid,"UserProfileHeader_Items")]//a[1]')
@@ -83,6 +86,10 @@ def get_user_information(users, driver=None, headless=True):
 
             if i == len(users) - 1:
                 driver.close()
+
+                if len(failed) != 0:
+                    print("Get information failed users: {}. ".format(failed))
+
                 return users_info
         else:
             print("You must specify the user")
