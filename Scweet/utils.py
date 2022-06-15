@@ -418,7 +418,14 @@ def check_exists_by_xpath(xpath, driver):
     return True
 
 
-def dowload_images(urls, save_dir):
+def download_images(urls, save_dir):
     for i, url_v in enumerate(urls):
         for j, url in enumerate(url_v):
             urllib.request.urlretrieve(url, save_dir + '/' + str(i + 1) + '_' + str(j + 1) + ".jpg")
+
+
+def dowload_images(*args):
+    """
+    Keep the old misspelled version in case someone relies upon it.
+    """
+    return download_images(*args)
