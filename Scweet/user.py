@@ -23,8 +23,7 @@ def get_user_information(users, driver=None, headless=True):
                 followers = driver.find_element_by_xpath(
                     '//a[contains(@href,"/followers")]/span[1]/span[1]').text
             except Exception as e:
-                # print(e)
-                return
+                following, followers = '', ''
 
             try:
                 element = driver.find_element_by_xpath('//div[contains(@data-testid,"UserProfileHeader_Items")]//a[1]')

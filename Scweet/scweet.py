@@ -25,7 +25,7 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
 
     # ------------------------- Variables : 
     # header of csv
-    header = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Embedded_text', 'Emojis', 'Comments', 'Likes', 'Retweets',
+    header = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Embedded_text', 'Emojis', 'Comments', 'Retweets', 'Likes',
                   'Image link', 'Tweet URL']
     # list that contains all data 
     data = []
@@ -88,7 +88,7 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
             # convert <since> and <until_local> to str
             if not isinstance(since, str):
                 since = datetime.datetime.strftime(since, '%Y-%m-%d')
-            if isinstance(until_local, str):
+            if not isinstance(until_local, str):
                 until_local = datetime.datetime.strftime(until_local, '%Y-%m-%d')
             # log search page between <since> and <until_local>
             path = log_search_page(driver=driver, words=words, since=since,
@@ -126,7 +126,7 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
                 until_local = until_local + datetime.timedelta(days=interval)
 
     data = pd.DataFrame(data, columns = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Embedded_text', 'Emojis', 
-                              'Comments', 'Likes', 'Retweets','Image link', 'Tweet URL'])
+                              'Comments', 'Retweets', 'Likes', 'Image link', 'Tweet URL'])
 
     # save images
     if save_images:
