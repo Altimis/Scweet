@@ -26,7 +26,7 @@ from .const import get_username, get_password, get_email
 
 # current_dir = pathlib.Path(__file__).parent.absolute()
 
-def get_data(card, save_images=False, save_dir=None):
+def get_data(card, save_images=False, save_dir=None, driver=None, get_agent=False):
     """Extract data from tweet card"""
     image_links = []
 
@@ -114,9 +114,35 @@ def get_data(card, save_images=False, save_dir=None):
     except:
         return
 
-    tweet = (
-        username, handle, postdate, text, embedded, emojis, reply_cnt, retweet_cnt, like_cnt, image_links, tweet_url)
-    return tweet
+    agent = None
+    if get_agent and driver is not None:
+        #  driver.execute_script(f'window.open("{tweet_url}","_blank");')
+        driver.execute_script('window.open("");')
+        driver.switch_to.window(driver.window_handles[1])
+        driver.get(tweet_url)
+        sleep(random.uniform(1.5, 3.5))
+        try:
+            agent_el = driver.find_element(by=By.XPATH, value='//a[contains(@href, "help.twitter.com/using-twitter/how-to-tweet")]//span')
+            print(f"{agent_el=}")
+            agent = agent_el.text
+            print(f"{agent=}")
+        except Exception as e:
+            agent = ''
+            print(e)
+        finally:
+            #  driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 'w') 
+            driver.close()
+            driver.switch_to.window(driver.window_handles[0])
+            sleep(random.uniform(1.5, 3.5))
+
+    tweet = [
+        username, handle, postdate, text, embedded, emojis,
+        reply_cnt, retweet_cnt, like_cnt, image_links, tweet_url
+    ]
+    if agent is not None:
+        tweet.append(agent)
+
+    return tuple(tweet)
 
 
 def init_driver(headless=True, proxy=None, show_images=False, option=None, firefox=False, env=None):
@@ -268,7 +294,7 @@ def log_in(driver, env, timeout=20, wait=4):
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position,
-                  save_images=False):
+                  save_images=False, get_agent=False):
     """ scrolling function for tweets crawling"""
 
     save_images_dir = "/images"
@@ -282,10 +308,10 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
         # get the card of tweets
         page_cards = driver.find_elements(by=By.XPATH, value='//article[@data-testid="tweet"]')  # changed div by article
         for card in page_cards:
-            tweet = get_data(card, save_images, save_images_dir)
+            tweet = get_data(card, save_images, save_images_dir, driver=driver, get_agent=get_agent)
             if tweet:
                 # check if the tweet is unique
-                tweet_id = ''.join(tweet[:-2])
+                tweet_id = ''.join(tweet[:-3])
                 if tweet_id not in tweet_ids:
                     tweet_ids.add(tweet_id)
                     data.append(tweet)
