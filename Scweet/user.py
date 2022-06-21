@@ -51,11 +51,8 @@ def get_user_information(users, driver=None, headless=True):
                 location_el = driver.find_element(By.XPATH, value="//span[contains(@data-testid,'UserLocation')]/span/span")
                 location = location_el.text
             except Exception as e:
-                join_date = ""
+                location = ""
 
-            _join_date = join_date
-            _birthday = birthday
-            _location = location
             prefixes = {
                 'Joined ': 'join_date',
                 'Born ': 'birthday',
