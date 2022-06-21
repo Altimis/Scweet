@@ -5,7 +5,7 @@ from time import sleep
 import random
 import chromedriver_autoinstaller
 import geckodriver_autoinstaller
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -20,6 +20,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from . import const
 import urllib
+from typing import Union
 
 from .const import get_username, get_password, get_email
 
@@ -116,24 +117,7 @@ def get_data(card, save_images=False, save_dir=None, driver=None, get_agent=Fals
 
     agent = None
     if get_agent and driver is not None:
-        #  driver.execute_script(f'window.open("{tweet_url}","_blank");')
-        driver.execute_script('window.open("");')
-        driver.switch_to.window(driver.window_handles[1])
-        driver.get(tweet_url)
-        sleep(random.uniform(1.5, 3.5))
-        try:
-            agent_el = driver.find_element(by=By.XPATH, value='//a[contains(@href, "help.twitter.com/using-twitter/how-to-tweet")]//span')
-            print(f"{agent_el=}")
-            agent = agent_el.text
-            print(f"{agent=}")
-        except Exception as e:
-            agent = ''
-            print(e)
-        finally:
-            #  driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 'w') 
-            driver.close()
-            driver.switch_to.window(driver.window_handles[0])
-            sleep(random.uniform(1.5, 3.5))
+        agent = get_agent_str(driver, tweet_url)
 
     tweet = [
         username, handle, postdate, text, embedded, emojis,
@@ -144,6 +128,51 @@ def get_data(card, save_images=False, save_dir=None, driver=None, get_agent=Fals
 
     return tuple(tweet)
 
+
+def get_agent_str(driver, tweet_url: str) -> str:
+    """
+    Get the agent string (e.g. "Twitter for Android").
+    Returns an empty string if the agent can't be extracted.
+    """
+    driver.execute_script('window.open("");')
+    driver.switch_to.window(driver.window_handles[1])
+    driver.set_page_load_timeout(5)
+    try:
+        driver.get(tweet_url)
+    except TimeoutException as te:
+        print("Failed to get tweet")
+        print(te)
+        if len(driver.window_handles) > 1:
+            driver.close()
+        return ''
+
+    agent_xpath = '//a[contains(@href, "help.twitter.com/using-twitter/how-to-tweet")]//span'
+    try:
+        agent_el = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, agent_xpath))
+        )
+        agent = agent_el.text
+    except TimeoutException as te:
+        print("Timeout!")
+        print(te)
+        agent = ''
+    except Exception as e:
+        print("Encountered exception!")
+        print(e)
+        agent = ''
+    finally:
+        #  driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 'w') 
+        try:
+            if len(driver.window_handles) > 1:
+                driver.close()
+        except Exception as e:
+            print("Cannot close tab!")
+        try:
+            driver.switch_to.window(driver.window_handles[0])
+        except Exception as e:
+            print("Cannot change focus!")
+        #  sleep(random.uniform(1.5, 3.5))
+    return agent
 
 def init_driver(headless=True, proxy=None, show_images=False, option=None, firefox=False, env=None):
     """ initiate a chromedriver or firefoxdriver instance
