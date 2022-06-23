@@ -83,7 +83,8 @@ def get_replies(tweet_url: str, driver):
         close_tab(driver)
         return []
 
-    while True:
+    show_more_tries, show_more_max = 0, 20
+    while show_more_tries < show_more_max:
         try:
             show_els = driver.find_elements(By.XPATH, "//span[contains(text(), 'Show')]")
             if not show_els:
@@ -93,6 +94,7 @@ def get_replies(tweet_url: str, driver):
             time.sleep(random.uniform(0.5, 1.5))
             show_more_button.click()
             time.sleep(random.uniform(0.5, 1.5))
+            show_more_tries += 1
         except NoSuchElementException:
             print("Loaded all tweets.")
             break
