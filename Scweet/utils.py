@@ -36,10 +36,6 @@ def get_data(card, save_images=False, save_dir=None, driver=None, get_agent=Fals
     except:
         return
 
-    try:
-        handle = card.find_element(by=By.XPATH, value='.//span[contains(text(), "@")]').text
-    except:
-        return
 
     try:
         postdate = card.find_element(by=By.XPATH, value='.//time').get_attribute('datetime')
@@ -114,6 +110,8 @@ def get_data(card, save_images=False, save_dir=None, driver=None, get_agent=Fals
         tweet_url = element.get_attribute('href')
     except:
         return
+
+    handle = '@' + tweet_url.split('twitter.com/')[1].split('/status/')[0]
 
     agent = None
     if get_agent and driver is not None:
