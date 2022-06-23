@@ -55,7 +55,7 @@ def get_user_information(users, driver=None, headless=True, with_extras: bool=Fa
         except Exception as e:
             location = ""
         try:
-            profile_photo_link = driver.find_element(By.XPATH, "//img[contains(@src, 'profile_banners')]").get_attribute('src')
+            profile_photo_link = driver.find_element(By.XPATH, "//img[contains(@src, 'profile_images')]").get_attribute('src')
         except Exception as e:
             profile_photo_link = ''
         try:
