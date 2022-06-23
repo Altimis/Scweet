@@ -95,6 +95,8 @@ def get_replies(tweet_url: str, driver):
             show_more_button.click()
             time.sleep(random.uniform(0.5, 1.5))
             show_more_tries += 1
+            if show_more_tries >= show_more_max:
+                raise NoSuchElementException
         except NoSuchElementException:
             print("Loaded all tweets.")
             break
@@ -104,6 +106,8 @@ def get_replies(tweet_url: str, driver):
 
 
     cards = driver.find_elements(by=By.XPATH, value=tweets_xpath)
+    if len(cards) == 0:
+        return []
     print(f"Found {len(cards)} tweets.")
     infos = []
     for card in cards:
