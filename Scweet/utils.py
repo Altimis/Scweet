@@ -5,7 +5,7 @@ from time import sleep
 import random
 import chromedriver_autoinstaller
 import geckodriver_autoinstaller
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -20,13 +20,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from . import const
 import urllib
+from typing import Union
 
 from .const import get_username, get_password, get_email
 
 
 # current_dir = pathlib.Path(__file__).parent.absolute()
 
-def get_data(card, save_images=False, save_dir=None):
+def get_data(card, save_images=False, save_dir=None, driver=None, get_agent=False):
     """Extract data from tweet card"""
     image_links = []
 
@@ -35,10 +36,6 @@ def get_data(card, save_images=False, save_dir=None):
     except:
         return
 
-    try:
-        handle = card.find_element(by=By.XPATH, value='.//span[contains(text(), "@")]').text
-    except:
-        return
 
     try:
         postdate = card.find_element(by=By.XPATH, value='.//time').get_attribute('datetime')
@@ -114,10 +111,66 @@ def get_data(card, save_images=False, save_dir=None):
     except:
         return
 
-    tweet = (
-        username, handle, postdate, text, embedded, emojis, reply_cnt, retweet_cnt, like_cnt, image_links, tweet_url)
-    return tweet
+    handle = '@' + tweet_url.split('twitter.com/')[1].split('/status/')[0]
 
+    agent = None
+    if get_agent and driver is not None:
+        agent = get_agent_str(driver, tweet_url)
+
+    tweet = [
+        username, handle, postdate, text, embedded, emojis,
+        reply_cnt, retweet_cnt, like_cnt, image_links, tweet_url
+    ]
+    if agent is not None:
+        tweet.append(agent)
+
+    return tuple(tweet)
+
+
+def get_agent_str(driver, tweet_url: str) -> str:
+    """
+    Get the agent string (e.g. "Twitter for Android").
+    Returns an empty string if the agent can't be extracted.
+    """
+    driver.execute_script('window.open("");')
+    driver.switch_to.window(driver.window_handles[1])
+    driver.set_page_load_timeout(5)
+    try:
+        driver.get(tweet_url)
+    except TimeoutException as te:
+        print("Failed to get tweet")
+        print(te)
+        if len(driver.window_handles) > 1:
+            driver.close()
+        return ''
+
+    agent_xpath = '//a[contains(@href, "help.twitter.com/using-twitter/how-to-tweet")]//span'
+    try:
+        agent_el = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, agent_xpath))
+        )
+        agent = agent_el.text
+    except TimeoutException as te:
+        print("Timeout!")
+        print(te)
+        agent = ''
+    except Exception as e:
+        print("Encountered exception!")
+        print(e)
+        agent = ''
+    finally:
+        #  driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 'w') 
+        try:
+            if len(driver.window_handles) > 1:
+                driver.close()
+        except Exception as e:
+            print("Cannot close tab!")
+        try:
+            driver.switch_to.window(driver.window_handles[0])
+        except Exception as e:
+            print("Cannot change focus!")
+        #  sleep(random.uniform(1.5, 3.5))
+    return agent
 
 def init_driver(headless=True, proxy=None, show_images=False, option=None, firefox=False, env=None):
     """ initiate a chromedriver or firefoxdriver instance
@@ -268,7 +321,7 @@ def log_in(driver, env, timeout=20, wait=4):
 
 
 def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position,
-                  save_images=False):
+                  save_images=False, get_agent=False):
     """ scrolling function for tweets crawling"""
 
     save_images_dir = "/images"
@@ -282,10 +335,10 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
         # get the card of tweets
         page_cards = driver.find_elements(by=By.XPATH, value='//article[@data-testid="tweet"]')  # changed div by article
         for card in page_cards:
-            tweet = get_data(card, save_images, save_images_dir)
+            tweet = get_data(card, save_images, save_images_dir, driver=driver, get_agent=get_agent)
             if tweet:
                 # check if the tweet is unique
-                tweet_id = ''.join(tweet[:-2])
+                tweet_id = ''.join(tweet[:-3])
                 if tweet_id not in tweet_ids:
                     tweet_ids.add(tweet_id)
                     data.append(tweet)
@@ -418,7 +471,14 @@ def check_exists_by_xpath(xpath, driver):
     return True
 
 
-def dowload_images(urls, save_dir):
+def download_images(urls, save_dir):
     for i, url_v in enumerate(urls):
         for j, url in enumerate(url_v):
             urllib.request.urlretrieve(url, save_dir + '/' + str(i + 1) + '_' + str(j + 1) + ".jpg")
+
+
+def dowload_images(*args):
+    """
+    Keep the old misspelled version in case someone relies upon it.
+    """
+    return download_images(*args)

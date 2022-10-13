@@ -6,14 +6,14 @@ from time import sleep
 import random
 import pandas as pd
 
-from .utils import init_driver, get_last_date_from_csv, log_search_page, keep_scroling, dowload_images
+from .utils import init_driver, get_last_date_from_csv, log_search_page, keep_scroling, download_images
 
 
 
 def scrape(since, until=None, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
           headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None, 
           show_images=False, save_images=False, save_dir="outputs", filter_replies=False, proximity=False, 
-          geocode=None, minreplies=None, minlikes=None, minretweets=None):
+          geocode=None, minreplies=None, minlikes=None, minretweets=None, get_agent=False):
     """
     scrape data from twitter using requests, starting from <since> until <until>. The program make a search between each <since> and <until_local>
     until it reaches the <until> date if it's given, else it stops at the actual date.
@@ -25,7 +25,7 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
 
     # ------------------------- Variables : 
     # header of csv
-    header = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Embedded_text', 'Emojis', 'Comments', 'Likes', 'Retweets',
+    header = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Embedded_text', 'Emojis', 'Comments', 'Retweets', 'Likes',
                   'Image link', 'Tweet URL']
     # list that contains all data 
     data = []
@@ -65,7 +65,7 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     # show images during scraping (for saving purpose)
-    if save_images == True:
+    if save_images:
         show_images = True
     # initiate the driver
     driver = init_driver(headless, proxy, show_images)
@@ -86,9 +86,9 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
             # number of scrolls
             scroll = 0
             # convert <since> and <until_local> to str
-            if type(since) != str :
+            if not isinstance(since, str):
                 since = datetime.datetime.strftime(since, '%Y-%m-%d')
-            if type(until_local) != str :
+            if not isinstance(until_local, str):
                 until_local = datetime.datetime.strftime(until_local, '%Y-%m-%d')
             # log search page between <since> and <until_local>
             path = log_search_page(driver=driver, words=words, since=since,
@@ -112,30 +112,37 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
             # sleep 
             sleep(random.uniform(0.5, 1.5))
             # start scrolling and get tweets
-            driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position = \
-                keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll, last_position)
+            (
+                driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
+            ) = keep_scroling(
+                driver, data, writer, tweet_ids, scrolling, tweet_parsed, limit, scroll,
+                last_position, get_agent=get_agent
+            )
 
             # keep updating <start date> and <end date> for every search
-            if type(since) == str:
+            if isinstance(since, str):
                 since = datetime.datetime.strptime(since, '%Y-%m-%d') + datetime.timedelta(days=interval)
             else:
                 since = since + datetime.timedelta(days=interval)
-            if type(since) != str:
+            if isinstance(until_local, str):
                 until_local = datetime.datetime.strptime(until_local, '%Y-%m-%d') + datetime.timedelta(days=interval)
             else:
                 until_local = until_local + datetime.timedelta(days=interval)
 
-    data = pd.DataFrame(data, columns = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Embedded_text', 'Emojis', 
-                              'Comments', 'Likes', 'Retweets','Image link', 'Tweet URL'])
+    columns = ['UserScreenName', 'UserName', 'Timestamp', 'Text', 'Embedded_text', 'Emojis', 
+                              'Comments', 'Retweets', 'Likes', 'Image link', 'Tweet URL']
+    if get_agent:
+        columns.append('Agent')
+    data = pd.DataFrame(data, columns=columns)
 
     # save images
-    if save_images==True:
+    if save_images:
         print("Saving images ...")
         save_images_dir = "images"
         if not os.path.exists(save_images_dir):
             os.makedirs(save_images_dir)
 
-        dowload_images(data["Image link"], save_images_dir)
+        download_images(data["Image link"], save_images_dir)
 
     # close the web driver
     driver.close()
@@ -206,7 +213,7 @@ if __name__ == '__main__':
     geocode = args.geocode
     minreplies = args.minreplies
     minlikes = args.minlikes
-    minretweets = args.minlikes
+    minretweets = args.minretweets
 
     data = scrape(since=since, until=until, words=words, to_account=to_account, from_account=from_account, mention_account=mention_account,
                 hashtag=hashtag, interval=interval, lang=lang, headless=headless, limit=limit,

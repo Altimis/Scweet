@@ -2,9 +2,10 @@ from . import utils
 from time import sleep
 import random
 import json
+from selenium.webdriver.common.by import By
 
 
-def get_user_information(users, driver=None, headless=True):
+def get_user_information(users, driver=None, headless=True, with_extras: bool=False):
     """ get user information if the "from_account" argument is specified """
 
     driver = utils.init_driver(headless=headless)
@@ -15,78 +16,93 @@ def get_user_information(users, driver=None, headless=True):
 
         log_user_page(user, driver)
 
-        if user is not None:
-
-            try:
-                following = driver.find_element_by_xpath(
-                    '//a[contains(@href,"/following")]/span[1]/span[1]').text
-                followers = driver.find_element_by_xpath(
-                    '//a[contains(@href,"/followers")]/span[1]/span[1]').text
-            except Exception as e:
-                # print(e)
-                return
-
-            try:
-                element = driver.find_element_by_xpath('//div[contains(@data-testid,"UserProfileHeader_Items")]//a[1]')
-                website = element.get_attribute("href")
-            except Exception as e:
-                # print(e)
-                website = ""
-
-            try:
-                desc = driver.find_element_by_xpath('//div[contains(@data-testid,"UserDescription")]').text
-            except Exception as e:
-                # print(e)
-                desc = ""
-            a = 0
-            try:
-                join_date = driver.find_element_by_xpath(
-                    '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[3]').text
-                birthday = driver.find_element_by_xpath(
-                    '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[2]').text
-                location = driver.find_element_by_xpath(
-                    '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
-            except Exception as e:
-                # print(e)
-                try:
-                    join_date = driver.find_element_by_xpath(
-                        '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[2]').text
-                    span1 = driver.find_element_by_xpath(
-                        '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
-                    if hasNumbers(span1):
-                        birthday = span1
-                        location = ""
-                    else:
-                        location = span1
-                        birthday = ""
-                except Exception as e:
-                    # print(e)
-                    try:
-                        join_date = driver.find_element_by_xpath(
-                            '//div[contains(@data-testid,"UserProfileHeader_Items")]/span[1]').text
-                        birthday = ""
-                        location = ""
-                    except Exception as e:
-                        # print(e)
-                        join_date = ""
-                        birthday = ""
-                        location = ""
-            print("--------------- " + user + " information : ---------------")
-            print("Following : ", following)
-            print("Followers : ", followers)
-            print("Location : ", location)
-            print("Join date : ", join_date)
-            print("Birth date : ", birthday)
-            print("Description : ", desc)
-            print("Website : ", website)
-            users_info[user] = [following, followers, join_date, birthday, location, website, desc]
-
-            if i == len(users) - 1:
-                driver.close()
-                return users_info
-        else:
-            print("You must specify the user")
+        if user is None:
+            print('You must specify a user.')
             continue
+
+        try:
+            following = driver.find_element_by_xpath(
+                '//a[contains(@href,"/following")]/span[1]/span[1]').text
+            followers = driver.find_element_by_xpath(
+                '//a[contains(@href,"/followers")]/span[1]/span[1]').text
+        except Exception as e:
+            following, followers = '', ''
+
+        try:
+            website_el = driver.find_element(By.XPATH, value="//a[contains(@data-testid,'UserUrl')]/span")
+            website = website_el.text
+        except Exception as e:
+            website = ""
+
+        try:
+            desc = driver.find_element_by_xpath('//div[contains(@data-testid,"UserDescription")]').text
+        except Exception as e:
+            desc = ""
+        a = 0
+        try:
+            join_date_el = driver.find_element(By.XPATH, value="//span[contains(@data-testid,'UserJoinDate')]/span[contains(.,'Joined ')]")
+            join_date = join_date_el.text
+        except Exception as e:
+            join_date = ""
+        try:
+            birthday_el = driver.find_element(By.XPATH, value="//span[contains(@data-testid,'UserBirthdate') and contains(.,'Born ')]")
+            birthday = birthday_el.text
+        except Exception as e:
+            birthday = ""
+        try:
+            location_el = driver.find_element(By.XPATH, value="//span[contains(@data-testid,'UserLocation')]/span/span")
+            location = location_el.text
+        except Exception as e:
+            location = ""
+        try:
+            profile_photo_link = driver.find_element(By.XPATH, "//img[contains(@src, 'profile_images')]").get_attribute('src')
+        except Exception as e:
+            profile_photo_link = ''
+        try:
+            banner_photo_link = driver.find_element(By.XPATH, "//img[contains(@src, 'profile_banners')]").get_attribute('src')
+        except Exception as e:
+            banner_photo_link = ''
+
+
+        prefixes = {
+            'Joined ': 'join_date',
+            'Born ': 'birthday',
+        }
+        fields = {
+            'join_date': join_date, 'birthday': birthday, 'location': location,
+            'desc': desc, 'website': website, 'profile_photo_link': profile_photo_link,
+            'banner_photo_link': banner_photo_link,
+        }
+        swapped_fields = {}
+        for field, val in fields.items():
+            for prefix, true_field in prefixes.items():
+                if val.startswith(prefix):
+                    swapped_fields[field] = fields[true_field]
+        for field, val in swapped_fields.items():
+            #  old_val = fields[field]
+            fields[field] = val
+
+        join_date, birthday, location, desc, website = (
+            fields['join_date'], fields['birthday'], fields['location'],
+            fields['desc'], fields['website'],
+        )
+
+
+        print("--------------- " + user + " information : ---------------")
+        print("Following : ", following)
+        print("Followers : ", followers)
+        print("Location : ", location)
+        print("Join date : ", join_date)
+        print("Birth date : ", birthday)
+        print("Description : ", desc)
+        print("Website : ", website)
+        users_info[user] = [following, followers, join_date, birthday, location, website, desc]
+        if with_extras:
+            users_info[user] += [profile_photo_link, banner_photo_link]
+
+        if i == len(users) - 1:
+            driver.close()
+            return users_info
 
 
 def log_user_page(user, driver, headless=True):
