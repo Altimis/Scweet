@@ -15,12 +15,35 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
           show_images=False, save_images=False, save_dir="outputs", filter_replies=False, proximity=False, 
           geocode=None, minreplies=None, minlikes=None, minretweets=None):
     """
-    scrape data from twitter using requests, starting from <since> until <until>. The program make a search between each <since> and <until_local>
-    until it reaches the <until> date if it's given, else it stops at the actual date.
+    Scrape data from twitter using requests, starting from <since> until <until>. The program make a search between each <since> and <until_local> until it reaches the <until> date if it's given, else it stops at today's date.
 
-    return:
-    data : df containing all tweets scraped with the associated features.
-    save a csv file containing all tweets scraped with the associated features.
+    Parameters:
+        since (str) : Start date for search query. Format : %%Y-%%m-%%d.
+        until (str) : Max date for search query. Format : %%Y-%%m-%%d.
+        words (str or list): Search query. If str, separate words with //. Accepts list of words.
+        to_account (str): Search tweets sent as a reply to this account (Example : @Tesla)
+        from_account (str): Search tweets from this account (Example : @Tesla)
+        mention_account (str): Search tweets mentioning this account (Example : @Tesla)
+        interval (int): Interval of days to separate searches.
+        lang (str) : Language code to search tweets with (example : 'en' for English)
+        headless (bool) : Headless webdrives or not.
+        limit (int) : Limit of tweets per <interval>
+        display_type : Display type of twitter page : Latest or Top
+        resume (bool) : Resume the last scraping. specify the csv file path.
+        proxy (str) : Proxy server.
+        hashtag (str) : Search for hashtag
+        show_images (bool) : Show images during scraping
+        save_images (bool) : Save images to directory "images"
+        save_dir (str) : Directory for scraped tweets file (the .csv file)
+        filter_replies (bool) : Only search tweets that are replies
+        proximity (bool) : Search tweets from near you
+        geocode (str) : Geographical location coordinates to center the search, radius. Not compatible with proximity
+        minreplies (int) : Min. number of replies to the tweet
+        minlikes (int) : Min. number of the likes of the tweet
+        minretweets (int) : Min. number of the retweets of the tweet
+
+    Return:
+        data : df containing all tweets scraped with the associated features. Save a csv file containing all tweets scraped with the associated features.
     """
 
     # ------------------------- Variables : 
@@ -56,7 +79,7 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
         path = save_dir + "/" + to_account + '_' + str(since).split(' ')[0] + '_' + str(until).split(' ')[
             0] + '.csv'
     elif mention_account:
-        path = save_dir + "/" + mention_account + '_' + str(init_date).split(' ')[0] + '_' + str(max_date).split(' ')[
+        path = save_dir + "/" + mention_account + '_' + str(since).split(' ')[0] + '_' + str(until).split(' ')[
             0] + '.csv'
     elif hashtag:
         path = save_dir + "/" + hashtag + '_' + str(since).split(' ')[0] + '_' + str(until).split(' ')[
