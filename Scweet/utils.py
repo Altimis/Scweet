@@ -398,6 +398,8 @@ def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit
 
         follows_users[user] = follows_elem
 
+    driver.close()
+
     return follows_users
 
 
