@@ -9,6 +9,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.common.exceptions import StaleElementReferenceException
 import datetime
 import pandas as pd
 import platform
@@ -119,7 +120,7 @@ def get_data(card, save_images=False, save_dir=None):
     return tweet
 
 
-def init_driver(headless=True, proxy=None, show_images=False, option=None, firefox=False, env=None):
+def init_driver(headless=True, proxy=None, show_images=False, option=None, firefox=True, env=None):
     """ initiate a chromedriver or firefoxdriver instance
         --option : other option to add (str)
     """
@@ -134,17 +135,28 @@ def init_driver(headless=True, proxy=None, show_images=False, option=None, firef
     if headless is True:
         print("Scraping on headless mode.")
         options.add_argument('--disable-gpu')
+        options.add_argument('--disable-dev-shm-usage') 
+        options.add_argument('--no-sandbox')
         options.headless = True
     else:
         options.headless = False
     options.add_argument('log-level=3')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--disable-dev-shm-usage') 
+    options.add_argument('--no-sandbox')   
     if proxy is not None:
         options.add_argument('--proxy-server=%s' % proxy)
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-dev-shm-usage') 
+        options.add_argument('--no-sandbox')   
         print("using proxy : ", proxy)
     if show_images == False and firefox == False:
         prefs = {"profile.managed_default_content_settings.images": 2}
         options.add_experimental_option("prefs", prefs)
     if option is not None:
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-dev-shm-usage') 
+        options.add_argument('--no-sandbox')   
         options.add_argument(option)
 
     if firefox:
@@ -152,7 +164,7 @@ def init_driver(headless=True, proxy=None, show_images=False, option=None, firef
     else:
         driver = webdriver.Chrome(options=options, executable_path=driver_path)
 
-    driver.set_page_load_timeout(100)
+    driver.set_page_load_timeout(1000)
     return driver
 
 
@@ -229,7 +241,6 @@ def log_search_page(driver, since, until_local, lang, display_type, words, to_ac
 def get_last_date_from_csv(path):
     df = pd.read_csv(path)
     return datetime.datetime.strftime(max(pd.to_datetime(df["Timestamp"])), '%Y-%m-%dT%H:%M:%S.000Z')
-
 
 def log_in(driver, env, timeout=20, wait=4):
     email = get_email(env)  # const.EMAIL
@@ -317,7 +328,7 @@ def keep_scroling(driver, data, writer, tweet_ids, scrolling, tweet_parsed, limi
     return driver, data, writer, tweet_ids, scrolling, tweet_parsed, scroll, last_position
 
 
-def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit=float('inf')):
+def get_users_follow(users, headless, env, follow=None, verbose=1, wait=5, limit=float('inf')):
     """ get the following or followers of a list of users """
 
     # initiate the driver
@@ -331,74 +342,116 @@ def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit
     follows_users = {}
 
     for user in users:
-        # if the login fails, find the new log in button and log in again.
-        if check_exists_by_link_text("Log in", driver):
-            print("Login failed. Retry...")
-            login = driver.find_element_by_link_text("Log in")
-            sleep(random.uniform(wait - 0.5, wait + 0.5))
-            driver.execute_script("arguments[0].click();", login)
-            sleep(random.uniform(wait - 0.5, wait + 0.5))
-            sleep(wait)
-            log_in(driver, env)
-            sleep(wait)
-        # case 2
-        if check_exists_by_xpath('//input[@name="session[username_or_email]"]', driver):
-            print("Login failed. Retry...")
-            sleep(wait)
-            log_in(driver, env)
-            sleep(wait)
-        print("Crawling " + user + " " + follow)
-        driver.get('https://twitter.com/' + user + '/' + follow)
-        sleep(random.uniform(wait - 0.5, wait + 0.5))
-        # check if we must keep scrolling
-        scrolling = True
-        last_position = driver.execute_script("return window.pageYOffset;")
-        follows_elem = []
-        follow_ids = set()
-        is_limit = False
-        while scrolling and not is_limit:
-            # get the card of following or followers
-            # this is the primaryColumn attribute that contains both followings and followers
-            primaryColumn = driver.find_element(by=By.XPATH, value='//div[contains(@data-testid,"primaryColumn")]')
-            # extract only the Usercell
-            page_cards = primaryColumn.find_elements(by=By.XPATH, value='//div[contains(@data-testid,"UserCell")]')
-            for card in page_cards:
-                # get the following or followers element
-                element = card.find_element(by=By.XPATH, value='.//div[1]/div[1]/div[1]//a[1]')
-                follow_elem = element.get_attribute('href')
-                # append to the list
-                follow_id = str(follow_elem)
-                follow_elem = '@' + str(follow_elem).split('/')[-1]
-                if follow_id not in follow_ids:
-                    follow_ids.add(follow_id)
-                    follows_elem.append(follow_elem)
-                if len(follows_elem) >= limit:
-                    is_limit = True
-                    break
-                if verbose:
-                    print(follow_elem)
-            print("Found " + str(len(follows_elem)) + " " + follow)
-            scroll_attempt = 0
-            while not is_limit:
-                sleep(random.uniform(wait - 0.5, wait + 0.5))
-                driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-                sleep(random.uniform(wait - 0.5, wait + 0.5))
-                curr_position = driver.execute_script("return window.pageYOffset;")
-                if last_position == curr_position:
-                    scroll_attempt += 1
-                    # end of scroll region
-                    if scroll_attempt >= 2:
-                        scrolling = False
-                        break
-                    else:
-                        sleep(random.uniform(wait - 0.5, wait + 0.5))  # attempt another scroll
-                else:
-                    last_position = curr_position
-                    break
+        try: 
+            # if the login fails, find the new log in button and log in again.
+            if check_exists_by_link_text("Log in", driver):
+                print("Login failed. Retry...")
+                login = driver.find_element_by_link_text("Log in")
+                sleep(random.uniform(wait - 1, wait + 1))
+                driver.execute_script("arguments[0].click();", login)
+                sleep(random.uniform(wait - 1, wait + 1))
+                sleep(wait)
+                log_in(driver, env)
+                sleep(wait)
+            # case 2
+            if check_exists_by_xpath('//input[@name="session[username_or_email]"]', driver):
+                print("Login failed. Retry...")
+                sleep(wait)
+                log_in(driver, env)
+                sleep(wait)
+            print("Crawling " + user + " " + follow)
+            driver.get('https://twitter.com/' + user + '/' + follow)
+            sleep(random.uniform(wait - 1, wait + 1))
+            # check if we must keep scrolling
+            scrolling = True
+            last_position = driver.execute_script("return window.pageYOffset;")
+            follows_elem = []
+            follow_ids = set()
+            is_limit = False
+            is_limit = False
+            while scrolling and not is_limit:
+                try:
+                    primaryColumn = driver.find_element(by=By.XPATH, value='//div[contains(@data-testid,"primaryColumn")]')
+                    # extract only the Usercell
+                    page_cards = primaryColumn.find_elements(by=By.XPATH, value='//div[contains(@data-testid,"UserCell")]')
+                except StaleElementReferenceException:
+                    # If the element is stale, wait for a moment and try to find it again
+                    sleep(random.uniform(wait, wait + 1))
+                    primaryColumn = driver.find_element(by=By.XPATH, value='//div[contains(@data-testid,"primaryColumn")]')
+                    # extract only the Usercell
+                    page_cards = primaryColumn.find_elements(by=By.XPATH, value='//div[contains(@data-testid,"UserCell")]')
+                for card in page_cards:
+                    try:
+                        # get the following or followers element
+                        element = card.find_element(by=By.XPATH, value='.//div[1]/div[1]/div[1]//a[1]')
+                        follow_elem = element.get_attribute('href')
+                        # append to the list
+                        follow_id = str(follow_elem)
+                        follow_elem = '@' + str(follow_elem).split('/')[-1]
+                        if follow_id not in follow_ids:
+                            follow_ids.add(follow_id)
+                            follows_elem.append(follow_elem)
+                        if len(follows_elem) >= limit:
+                            is_limit = True
+                            break
+                        if verbose:
+                            print(follow_elem)
+                    except StaleElementReferenceException:
+                        sleep(random.uniform(wait, wait + 1))
+                        try:
+                            element = card.find_element(by=By.XPATH, value='.//div[1]/div[1]/div[1]//a[1]')
+                            follow_elem = element.get_attribute('href')
+                            # append to the list
+                            follow_id = str(follow_elem)
+                            follow_elem = '@' + str(follow_elem).split('/')[-1]
+                            if follow_id not in follow_ids:
+                                follow_ids.add(follow_id)
+                                follows_elem.append(follow_elem)
+                            if len(follows_elem) >= limit:
+                                is_limit = True
+                                break
+                            if verbose:
+                                print(follow_elem)
+                        except NoSuchElementException:
+                            # the element is not found, continue to the next iteration
+                            continue
+                print("Found " + str(len(follows_elem)) + " " + follow)
+                scroll_attempt = 0
+                while not is_limit:
+                    try: 
+                        sleep(random.uniform(wait - 0.5, wait + 0.5))
+                        driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+                        sleep(random.uniform(wait - 0.5, wait + 0.5))
+                        curr_position = driver.execute_script("return window.pageYOffset;")
+                        if last_position == curr_position:
+                            scroll_attempt += 1
+                            # end of scroll region
+                            if scroll_attempt >= 2:
+                                scrolling = False
+                                break
+                            else:
+                                sleep(random.uniform(wait - 0.5, wait + 0.5))  # attempt another scroll
+                        else:
+                            last_position = curr_position
+                            break
+                    except Exception as e:
+                        print(f"An exception occurred while trying to scroll the page: {e}")
+                        continue
 
-        follows_users[user] = follows_elem
+            follows_users[user] = follows_elem
+        except Exception as e:
+            print(f"An exception occurred while crawling {user}: {e}")
 
+    # Call the function inside a try-except block
+    try:
+        results = get_users_follow(users, headless, env, follow, verbose, wait, limit)
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+        results = follows_users
+        
     return follows_users
+
+
 
 
 def check_exists_by_link_text(text, driver):
@@ -410,7 +463,7 @@ def check_exists_by_link_text(text, driver):
 
 
 def check_exists_by_xpath(xpath, driver):
-    timeout = 3
+    timeout = 10
     try:
         driver.find_element(by=By.XPATH, value=xpath)
     except NoSuchElementException:
