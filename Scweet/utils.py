@@ -3,7 +3,7 @@ import os
 import re
 from time import sleep
 import random
-import chromedriver_autoinstaller
+import chromedriver_autoinstaller_fix
 import geckodriver_autoinstaller
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
@@ -129,7 +129,7 @@ def init_driver(headless=True, proxy=None, show_images=False, option=None, firef
         driver_path = geckodriver_autoinstaller.install()
     else:
         options = ChromeOptions()
-        driver_path = chromedriver_autoinstaller.install()
+        driver_path = chromedriver_autoinstaller_fix.install()
 
     if headless is True:
         print("Scraping on headless mode.")

@@ -6,11 +6,11 @@ from time import sleep
 import random
 import pandas as pd
 
-from .utils import init_driver, get_last_date_from_csv, log_search_page, keep_scroling, dowload_images
+from .utils import init_driver, get_last_date_from_csv, log_search_page, keep_scroling, dowload_images, log_in
 
 
 
-def scrape(since, until=None, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
+def scrape(env, since, until=None, words=None, to_account=None, from_account=None, mention_account=None, interval=5, lang=None,
           headless=True, limit=float("inf"), display_type="Top", resume=False, proxy=None, hashtag=None, 
           show_images=False, save_images=False, save_dir="outputs", filter_replies=False, proximity=False, 
           geocode=None, minreplies=None, minlikes=None, minretweets=None):
@@ -69,6 +69,8 @@ def scrape(since, until=None, words=None, to_account=None, from_account=None, me
         show_images = True
     # initiate the driver
     driver = init_driver(headless, proxy, show_images)
+    # logs in since X now requires an account to view
+    log_in(driver, env)
     # resume scraping from previous work
     if resume:
         since = str(get_last_date_from_csv(path))[:10]
