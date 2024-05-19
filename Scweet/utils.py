@@ -361,7 +361,7 @@ def get_users_follow(users, headless, env, follow=None, verbose=1, wait=2, limit
             # this is the primaryColumn attribute that contains both followings and followers
             primaryColumn = driver.find_element(by=By.XPATH, value='//div[contains(@data-testid,"primaryColumn")]')
             # extract only the Usercell
-            page_cards = primaryColumn.find_elements(by=By.XPATH, value='//div[contains(@data-testid,"UserCell")]')
+            page_cards = primaryColumn.find_elements(by=By.XPATH, value='//button[contains(@data-testid,"UserCell")]')
             for card in page_cards:
                 # get the following or followers element
                 element = card.find_element(by=By.XPATH, value='.//div[1]/div[1]/div[1]//a[1]')
