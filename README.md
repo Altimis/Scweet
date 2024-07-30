@@ -1,4 +1,5 @@
-
+# Important Note for the community : 
+## We are aware of the latest changes on X.com platform. We are working on a robust version of Scweet where the existing functionalities will be fixed and additional ones will be added. 
 
 # A simple and unlimited Twitter scraper with python.
 
