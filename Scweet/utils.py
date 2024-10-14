@@ -58,17 +58,17 @@ def get_data(card, save_images=False, save_dir=None):
     # text = comment + embedded
 
     try:
-        reply_cnt = card.find_element(by=By.XPATH, value='.//div[@data-testid="reply"]').text
+        reply_cnt = card.find_element(by=By.XPATH, value='.//button[@data-testid="reply"]').text
     except:
         reply_cnt = 0
 
     try:
-        retweet_cnt = card.find_element(by=By.XPATH, value='.//div[@data-testid="retweet"]').text
+        retweet_cnt = card.find_element(by=By.XPATH, value='.//button[@data-testid="retweet"]').text
     except:
         retweet_cnt = 0
 
     try:
-        like_cnt = card.find_element(by=By.XPATH, value='.//div[@data-testid="like"]').text
+        like_cnt = card.find_element(by=By.XPATH, value='.//button[@data-testid="like"]').text
     except:
         like_cnt = 0
 
