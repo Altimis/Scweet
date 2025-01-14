@@ -1,5 +1,10 @@
-# Important Note for the community : 
-## We are aware of the latest changes on X.com platform. We are working on a robust version of Scweet where the existing functionalities will be fixed and additional ones will be added. 
+# Recent X Platform Changes & Scweet Updates
+
+**Note:** Scweet has recently encountered issues due to changes on X (formerly Twitter). We’re committed to updating the library so it continues working for smaller or personal scraping tasks. However, keeping Scweet fully operational at large scale now requires near-daily maintenance, given X’s frequent policy and technical shifts.
+
+For those needing robust, continuous, or high-volume scraping, consider using Scweet on Apify. It automatically handles the scaling and infrastructure behind the scenes—fetching up to 1000 tweets per minute and storing results in a neat dataset. It’s still the Scweet experience you know, just supercharged in the cloud.
+
+**(Responsible Use Reminder: Whether local or cloud-based, please scrape tweets ethically, lawfully, and respectfully.)**
 
 # A simple and unlimited Twitter scraper with python.
 
