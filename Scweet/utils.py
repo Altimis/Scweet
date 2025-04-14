@@ -1,7 +1,12 @@
-import logging
+"""
+Scweet - Twitter Scraping Tool
+Author: Yassine Ait Jeddi (@altimis)
+License: MIT
+Repository: https://github.com/Altimis/scweet
+"""
+
 import re
 import random
-import datetime
 import string
 from .mailtm import *
 import urllib
