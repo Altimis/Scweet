@@ -123,6 +123,13 @@ For custom email providers, pass your own `code_callback`.
 
 ---
 
+## 🔧 Installation
+
+```bash
+pip install Scweet==3.0
+```
+Make sure your environment is set up with Python 3.7+, chrome browser and pip is available.
+
 ## 💡 Example Usage
 
 ### 🐍 Python Script
