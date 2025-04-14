@@ -1,6 +1,8 @@
 
 # 🐦 Scweet: A Simple and Unlimited Twitter Scraper in Python
 
+[![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
+
 > **Note:** Scweet is **not affiliated with Twitter/X**. Use responsibly and lawfully.
 
 ---
