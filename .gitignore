@@ -6,8 +6,10 @@ build/
 # Ignore IDE settings
 .idea/
 
+# Ignore images if not used in README
+images/
+
 # Ignore specific files inside Scweet/
 Scweet/debug.log
 Scweet/scweet_v1.8.py
 Scweet/user.py
-/images/

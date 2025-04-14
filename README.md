@@ -5,7 +5,6 @@
 [![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
 [![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
 [![License](https://img.shields.io/github/license/Altimis/scweet)](https://github.com/Altimis/scweet/blob/main/LICENSE)
-[![Python Versions](https://img.shields.io/pypi/pyversions/scweet)](https://pypi.org/project/scweet/)
 
 > **Note:** Scweet is **not affiliated with Twitter/X**. Use responsibly and lawfully.
 
