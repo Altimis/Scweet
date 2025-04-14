@@ -5,7 +5,9 @@ setup.py
 Scweet/__init__.py
 Scweet/__version__.py
 Scweet/const.py
+Scweet/mailtm.py
 Scweet/scweet.py
+Scweet/scweet_v1.8.py
 Scweet/user.py
 Scweet/utils.py
 Scweet.egg-info/PKG-INFO

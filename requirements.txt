@@ -1,7 +1,7 @@
 certifi
-selenium==4.2.0
-pandas
 python-dotenv
-chromedriver-autoinstaller
-geckodriver-autoinstaller
 urllib3
+PyVirtualDisplay
+requests
+beautifulsoup4==4.12.3
+nodriver==0.38.post1

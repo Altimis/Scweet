@@ -17,15 +17,20 @@ def load_env_variable(key, default_value=None, none_allowed=False):
 
 
 def get_email(env):
-    dotenv.load_dotenv(env, verbose=True)
-    return load_env_variable("SCWEET_EMAIL", none_allowed=True)
+    dotenv.load_dotenv(env, verbose=True, override=True)
+    return load_env_variable("EMAIL", none_allowed=False)
+
+
+def get_email_password(env):
+    dotenv.load_dotenv(env, verbose=True, override=True)
+    return load_env_variable("EMAIL_PASSWORD", none_allowed=True)
 
 
 def get_password(env):
-    dotenv.load_dotenv(env, verbose=True)
-    return load_env_variable("SCWEET_PASSWORD", none_allowed=True)
+    dotenv.load_dotenv(env, verbose=True, override=True)
+    return load_env_variable("PASSWORD", none_allowed=False)
 
 
 def get_username(env):
-    dotenv.load_dotenv(env, verbose=True)
-    return load_env_variable("SCWEET_USERNAME", none_allowed=True)
+    dotenv.load_dotenv(env, verbose=True, override=True)
+    return load_env_variable("USERNAME", none_allowed=False)

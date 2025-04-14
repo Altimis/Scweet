@@ -1,149 +1,209 @@
-# Recent X Platform Changes & Scweet Updates
 
-**Note:** Scweet has recently encountered issues due to changes on X (formerly Twitter). We’re committed to updating the library so it continues working for smaller or personal scraping tasks. However, keeping Scweet fully operational at large scale now requires near-daily maintenance, given X’s frequent policy and technical shifts.
+# 🐦 Scweet: A Simple and Unlimited Twitter Scraper in Python
 
-For those needing robust, continuous, or high-volume scraping, consider using [Scweet on Apify](https://apify.com/altimis/scweet). It automatically handles the scaling and infrastructure behind the scenes—fetching up to 1000 tweets per minute and storing results in a neat dataset. It’s still the Scweet experience you know, just supercharged in the cloud.
+> **Note:** Scweet is **not affiliated with Twitter/X**. Use responsibly and lawfully.
 
-**(Responsible Use Reminder: Whether local or cloud-based, please scrape tweets ethically, lawfully, and respectfully.)**
+---
 
-# A simple and unlimited Twitter scraper with python.
+## 🚀 Recent X Platform Changes & Scweet v3.0 Update
 
-Recently, Twitter has banned almost every Twitter scraper. This repository presents an alternative tool to scrape Twitter based on 3 functions:  
-- [scrape](https://github.com/Altimis/Scweet/blob/master/Scweet/scweet.py): Scrapes all the information regarding tweets between two given dates, for a given language and list of words or account name, in the form of a csv file containing retrieved data (more storage methods will be added). 
-- [get_user_information](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py): Scrapes users information, incluing number of following and followers, location and description.
-- [get_users_followers and get_users_following](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py): Scrapes followers and following accounts for a given list of users.  
+Scweet has recently encountered challenges due to major changes on **X (formerly Twitter)**. In response, we’re excited to announce the new **Scweet v3.0** release!
 
-It is also possible to download the images showed in tweets by passing the argument `save_images = True`. If you only want to scrape images, it is recommended to set the argument `display_type = image` to show only tweets that contain images. 
+### ✨ What’s New in v3.0:
+- ✅ Fully **asynchronous architecture** for faster, smoother scraping
+- 🧠 **No more manual Chromedriver setup** – Scweet handles Chromium internally
+- 🚀 Enhanced for **personal and research-level scraping**
+- ⚠️ **Follower/following scraping temporarily disabled** (to return in future updates)
 
-Authentication is required for scraping followers/following. It is recommended to log in with a new account, otherwise the account could be banned if the list of followers is very long. To log in to your account, you need to enter your username `SCWEET_USERNAME` and password `SCWEET_PASSWORD` in the [.env](https://github.com/Altimis/Scweet/blob/master/.env) file. You can control the `wait` parameter in the `get_users_followers` and `get_users_following` functions according to you internet speed. 
+> 🔧 For heavy-duty scraping, we recommend using **[Scweet on Apify](https://apify.com/altimis/scweet)** – a cloud-based solution offering higher throughput and stability (up to **1000 tweets/minute**), no infrastructure setup needed.
 
-## Requirements : 
+⚠️ **Responsible Use Reminder**  
+Whether running locally or in the cloud, **always scrape tweets ethically, lawfully, and respectfully**.
 
-`pip install -r requirements.txt`
+---
 
-Note : You must have Chrome installed on your system. 
+## 📌 What is Scweet?
 
-## Results :
+Scweet is a Python-based scraping tool designed to fetch tweets and user data **without relying on traditional Twitter APIs**, which have become increasingly restricted.
 
-### Tweets :
+With Scweet, you can:
+- Scrape tweets by keywords, hashtags, mentions, accounts, or timeframes
+- Get detailed user profile information
+- (Coming soon) Retrieve followers/following lists again!
 
-The CSV file contains the following features (for each tweet) :
+---
 
-- 'UserScreenName' : 
-- 'UserName' : UserName 
-- 'Timestamp' : timestamp of the tweet
-- 'Text' : tweet text
-- 'Embedded_text' : embedded text written above the tweet. This can be an image, a video or even another tweet if the tweet in question is a reply
-- 'Emojis' : emojis in the tweet
-- 'Comments' : number of comments
-- 'Likes' : number of likes
-- 'Retweets' : number of retweets
-- 'Image link' : link of the image in the tweet
-- 'Tweet URL' : tweet URL
+## 🔧 Key Features
 
-### Following / Followers :
+### 🐤 `scrape()` – Tweet Scraper
 
-The `get_users_following` and `get_users_followers` in [user](https://github.com/Altimis/Scweet/blob/master/Scweet/user.py) file give a list of following and followers for a given list of users.
+Scrape tweets between two dates using keywords, hashtags, mentions, or specific accounts.
 
-## Usage :
-
-### Library :
-
-The library is now available. To install the library, run :
-
-`pip install Scweet==1.8`
-
-After the installation, you can import and use the functions as follows:
-
+**✅ Available arguments include:**
+```python
+- since, until            # Date range (format: YYYY-MM-DD)
+- words                   # Keywords (string or list, use "//" separator for strings)
+- from_account            # Tweets from a user
+- to_account              # Tweets to a user
+- mention_account         # Tweets mentioning a user
+- hashtag                 # Search by hashtag
+- lang                    # Language code (e.g. "en")
+- limit                   # Max number of tweets
+- display_type            # "Top" or "Latest"
+- resume                  # Resume from previous CSV
+- filter_replies          # Include/exclude replies
+- proximity               # Local tweet filtering
+- geocode                 # Geolocation filtering
+- minlikes, minretweets, minreplies
+- save_dir, custom_csv_name
 ```
-from Scweet.scweet import scrape
-from Scweet.user import get_user_information, get_users_following, get_users_followers
-```
+---
 
-**Scrape top tweets with the words 'bitcoin', 'ethereum'  geolocated less than 200 km from Alicante (Spain) Lat=38.3452, Long=-0.481006 and without replies:**  
-**The process is slower as the interval is smaller (choose an interval that can divide the period of time between, start and max date)**
+### 👤 `get_user_information()` – User Info Scraper
 
-```
-data = scrape(words=['bitcoin','ethereum'], since="2021-10-01", until="2021-10-05", from_account = None,         interval=1, headless=False, display_type="Top", save_images=False, lang="en",
-	resume=False, filter_replies=False, proximity=False, geocode="38.3452,-0.481006,200km")
-```
+Fetch profile details for a list of handles. Returns a dictionary with:
+- `username` (display name)
+- `following` (number of accounts they follow)
+- `verified_followers` (number of verified followers)
+- `location`, `website`, `join_date`, `description`
 
-**Scrape top tweets of with the hashtag #bitcoin, in proximity and without replies:**  
-**The process is slower as the interval is smaller (choose an interval that can divide the period of time between, start and max date)**
-
-```
-data = scrape(hashtag="bitcoin", since="2021-08-05", until=None, from_account = None, interval=1, 
-              headless=True, display_type="Top", save_images=False, 
-              resume=False, filter_replies=True, proximity=True)
+**🧩 Arguments:**
+```python
+- handles        # List of Twitter/X handles
+- login (bool)   # Set True to login and access full data
 ```
 
-**Get the main information of a given list of users:**  
-**These users follow me on Twitter**
+---
 
-```
-users = ['nagouzil', '@yassineaitjeddi', 'TahaAlamIdrissi', 
-         '@Nabila_Gl', 'geceeekusuu', '@pabu232', '@av_ahmet', '@x_born_to_die_x']
-```
+### 🔒 `get_users_followers()` & `get_users_following()`  
+⚠️ **Currently Disabled due to platform changes**  
+These will be re-enabled in future versions as we work around new limitations.
 
-**This function will return a list that contains : **  
-**["no. of following","no. of followers", "join date", "date of birth", "location", "website", "description"]**
+---
 
-```
-users_info = get_user_information(users, headless=True)
-```
+## 🛠️ Class Initialization & Configuration
 
-**Get followers and following of a given list of users**
-**Enter your username and password in .env file. I recommend you do not use your main account.**  
-**Increase wait argument to avoid banning your account and maximize the crawling process if the internet is slow. I used 1 and it's safe.**  
+You can customize Scweet’s behavior during initialization:
 
-**Set your .env file with `SCWEET_EMAIL` , `SCWEET_USERNAME`  and `SCWEET_PASSWORD` variables and provide its path**  
-
-```
-env_path = ".env"
-
-following = get_users_following(users=users, env=env_path, verbose=0, headless=True, wait=2, limit=50, file_path=None)
-
-followers = get_users_followers(users=users, env=env_path, verbose=0, headless=True, wait=2, limit=50, file_path=None)
+```python
+scweet = Scweet(
+  proxy=None,                              # Dict or None {host, post, username, pasword}
+  cookies=None,                            # Use saved cookies file
+  cookies_path='cookies',                  # Folder path where cookies will be saved/loaded in future usage
+  user_agent=None,                         # Custom user agent string
+  env_path='.env',                         # Environment variables
+  n_splits=-1,                             # Split date interval (-1 for daily)
+  concurrency=5,                           # Concurrent tabs
+  headless=True,                           # Run headlessly
+  scroll_ratio=100,                        # Adjust scroll behavior
+  code_callback=None                       # Optional custom login code handler. Scweet only handles MailTM emails to get the code if X asks for it.
+)
 ```
 
-### Terminal :
+---
 
-```
-Scrape tweets.
+## 🔐 Authentication
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --words WORDS         Words to search for. they should be separated by "//" : Cat//Dog.
-  --from_account FROM_ACCOUNT
-                        Tweets posted by "from_account" account.
-  --to_account TO_ACCOUNT
-                        Tweets posted in response to "to_account" account.
-  --mention_account MENTION_ACCOUNT
-                        Tweets that mention "mention_account" account.         
-  --hashtag HASHTAG
-                        Tweets containing #hashtag
-  --until UNTIL         End date for search query. example : %Y-%m-%d.
-  --since SINCE
-                        Start date for search query. example : %Y-%m-%d.
-  --interval INTERVAL   Interval days between each start date and end date for
-                        search queries. example : 5.
-  --lang LANG           Tweets language. Example : "en" for english and "fr"
-                        for french.
-  --headless HEADLESS   Headless webdrives or not. True or False
-  --limit LIMIT         Limit tweets to be scraped.
-  --display_type DISPLAY_TYPE
-                        Display type of Twitter page : Latest or Top tweets
-  --resume RESUME       Resume the last scraping. specify the csv file path.
-  --proxy PROXY         Proxy server
-  --proximity PROXIMITY Proximity
-  --geocode GEOCODE     Geographical location coordinates to center the
-                        search (), radius. No compatible with proximity
-  --minreplies MINREPLIES
-                        Min. number of replies to the tweet
-  --minlikes MINLIKES   Min. number of likes to the tweet
-  --minretweets MINRETWEETS
-                        Min. number of retweets to the tweet
+Scweet requires login to fetch tweets. Set up your `.env` file like this:
+
+```env
+EMAIL=your_email@example.com
+EMAIL_PASSWORD
+USERNAME=your_username
+PASSWORD=your_password
 ```
 
-### To run the script :
-`python scweet.py --words "excellente//car" --to_account "tesla"  --until 2020-01-05 --since 2020-01-01 --limit 10 --interval 1 --display_type Latest --lang="en" --headless True`
+Use the built-in helper to create disposable login emails:
+
+```python
+from Scweet.utils import create_mailtm_email
+```
+
+For custom email providers, pass your own `code_callback`.
+
+---
+
+## 💡 Example Usage
+
+### 🐍 Python Script
+
+```python
+from Scweet.scweet import Scweet
+from Scweet.user import get_user_information
+
+scweet = Scweet(proxy=None, cookies=None, cookies_path='cookies',
+                user_agent=None, disable_images=True, env_path='.env',
+                n_splits=-1, concurrency=5, headless=True, scroll_ratio=100)
+
+# Get user profile info
+handles = ['nagouzil', 'yassineaitjeddi', 'TahaAlamIdrissi']
+infos = scweet.get_user_information(handles=handles, login=True)
+print(infos)
+
+# Scrape tweets with keywords
+results = scweet.scrape(
+  since="2022-10-01",
+  until="2022-10-06",
+  words=['bitcoin', 'ethereum'],
+  lang="en",
+  limit=20,
+  display_type="Top",
+  resume=False,
+  filter_replies=False,
+  minlikes=10,
+  minretweets=10,
+  save_dir='outputs',
+  custom_csv_name='crypto.csv'
+)
+print(len(results))
+scweet.close()
+```
+
+---
+
+### 🖥️ Terminal Usage
+
+```bash
+python scweet.py --words "excellent//car" --to_account "tesla" \
+  --until 2020-01-05 --since 2020-01-01 --limit 10 \
+  --interval 1 --display_type Latest --lang "en" --headless True
+```
+
+---
+
+## ☁️ Scweet on Apify (Cloud)
+
+Need powerful, scalable, high-volume scraping?  
+Try [**Scweet on Apify**](https://apify.com/altimis/scweet) – a no-setup cloud solution:
+
+- 🚀 Up to **1000 tweets/minute**
+- 📦 Exports to datasets or files
+- 🔒 Secure, isolated runs
+- 🔁 Ideal for automation, long-term projects
+
+---
+
+## 🙏 Responsible Use
+
+We care deeply about ethical scraping.
+
+> **Please:** Use Scweet for research, archiving, and lawful purposes only.  
+
+---
+
+## 📎 Resources
+
+- 📄 [Example Script](https://github.com/Altimis/Scweet/blob/master/example.py)
+- 🐞 [Issues / Bugs](https://github.com/Altimis/Scweet/issues)
+- 🌐 [Scweet on Apify](https://apify.com/altimis/scweet)
+
+---
+
+## ⭐ Star & Contribute
+
+If you find Scweet useful, consider **starring** the repo ⭐  
+We welcome **PRs**, bug reports, and ideas for new features!
+
+---
+
+MIT License • © 2020–2025 Altimis
