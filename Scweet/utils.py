@@ -1,3 +1,4 @@
+import logging
 import re
 import random
 import datetime
@@ -29,6 +30,7 @@ async def get_code_from_email(email_address, email_password):
             mailclient = MailTMClient()
             resp_code, token = mailclient.login(email_address, email_password)
             if 'Invalid' in token:
+                print("couldn't login to email")
                 return "code_not_found"
             r = requests.get(
                 "https://api.mail.tm/messages",
@@ -40,18 +42,15 @@ async def get_code_from_email(email_address, email_password):
             inbox = []
             for emailJson in r.json()["hydra:member"]:
                 inbox.append(Mail(emailJson, token))
-            # print(f"all emails : {[mss.read() for mss in inbox]}")
             ig_messages = [mss.read() for mss in inbox] # if mss.read()['from']['name'] == "Instagram"]
             message = ig_messages[0]
-            created_at = datetime.strptime(message['createdAt'], "%Y-%m-%dT%H:%M:%S+00:00")
-            now = datetime.now()
-            # time_diff = (now - created_at).seconds + (now - created_at).days * 24 * 3600
-            # if time_diff < 3900:
             text = message['subject']
+            print(text)
             match = re.search(r'Your X confirmation code is (.+)\b', text)
             if match:
                 verif_code = match.group(1)  # Access the first capturing group
                 log = f"Verification code found: {verif_code}"
+                print(log)
                 return verif_code
             else:
                 retries += 1
@@ -60,6 +59,7 @@ async def get_code_from_email(email_address, email_password):
         return "code_not_found"
     except Exception as e:
         log = f"An error occurred while fetching email: {e}"
+        print(log)
         return "code_not_found"
 
 

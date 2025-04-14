@@ -12,6 +12,8 @@ Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: Topic :: Software Development :: Build Tools
 Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
@@ -40,6 +42,8 @@ Dynamic: summary
 
 
 # 🐦 Scweet: A Simple and Unlimited Twitter Scraper in Python
+
+[![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
 
 > **Note:** Scweet is **not affiliated with Twitter/X**. Use responsibly and lawfully.
 
@@ -162,6 +166,13 @@ from Scweet.utils import create_mailtm_email
 For custom email providers, pass your own `code_callback`.
 
 ---
+
+## 🔧 Installation
+
+```bash
+pip install Scweet==3.0
+```
+Make sure your environment is set up with Python 3.7+, chrome browser and pip is available.
 
 ## 💡 Example Usage
 
