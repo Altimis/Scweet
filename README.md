@@ -2,6 +2,10 @@
 # 🐦 Scweet: A Simple and Unlimited Twitter Scraper in Python
 
 [![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
+[![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
+[![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
+[![License](https://img.shields.io/github/license/Altimis/scweet)](https://github.com/Altimis/scweet/blob/main/LICENSE)
+[![Python Versions](https://img.shields.io/pypi/pyversions/scweet)](https://pypi.org/project/scweet/)
 
 > **Note:** Scweet is **not affiliated with Twitter/X**. Use responsibly and lawfully.
 
@@ -56,8 +60,11 @@ Scrape tweets between two dates using keywords, hashtags, mentions, or specific 
 - filter_replies          # Include/exclude replies
 - proximity               # Local tweet filtering
 - geocode                 # Geolocation filtering
-- minlikes, minretweets, minreplies
-- save_dir, custom_csv_name
+- minlikes                # Tweets with minimum likes count
+- minretweets             # Tweets with minimum retweets count
+- minreplies              # Tweets with minimum replies count
+- save_dir                # Output directory
+- custom_csv_name         # Output csv name 
 ```
 ---
 
