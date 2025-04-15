@@ -16,6 +16,8 @@ import math
 from datetime import datetime, timedelta, date
 from typing import Awaitable, Callable, Optional, Union, List
 
+import platform
+
 import nodriver as uc
 from requests.cookies import create_cookie
 from bs4 import BeautifulSoup
@@ -30,7 +32,7 @@ logging.getLogger('seleniumwire').setLevel(logging.ERROR)
 logging.getLogger('selenium').setLevel(logging.ERROR)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(message)s')
 
-display = Display(visible=0, size=(1024, 768))
+# display = Display(visible=0, size=(1024, 768))
 
 
 def parse_followers(text):
@@ -63,12 +65,21 @@ class Scweet:
         self.scroll_ratio = scroll_ratio
         # If no custom code callback is provided, use the default get_code_from_email for mailtm
         self.code_callback = code_callback or get_code_from_email
+        self.display = None
         if self.headless:
-            display.start()
+            if self.headless and platform.system() in ["Linux"]:
+                logging.info("Starting pyvirtualdisplay for Linux headless mode")
+                self.display = Display(visible=0, size=(1024, 768))
+                self.display.start()
 
     async def init_nodriver(self):
         config = uc.Config()
         config.lang = "en-US"
+        # Enable built-in headless mode for Windows and macOS
+        if self.headless and platform.system() in ["Windows", "Darwin"]:
+            logging.info("Using nodriver's headless mode for Windows/macOS")
+            config.headless = True
+
         if self.proxy:
             logging.info(f"setting proxy : {self.proxy['host']}:{self.proxy['port']}")
             config.add_argument(f"--proxy-server={self.proxy['host']}:{self.proxy['port']}")
@@ -1002,6 +1013,9 @@ class Scweet:
         return consolidated_results
 
     async def close(self):
+        if self.display:
+            logging.info("Stopping virtual display")
+            self.display.stop()
         if self.driver:
             self.driver.stop()
             self.driver = None
