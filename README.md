@@ -16,7 +16,7 @@ Scweet has recently encountered challenges due to major changes on **X (formerly
 
 ### ✨ What’s New in v3:
 - ✅ Fully **asynchronous architecture** for faster, smoother scraping
-- 🧠 **No more manual Chromedriver setup** – Scweet handles Chromium internally
+- 🧠 **No more manual Chromedriver setup** – Scweet handles Chromium internally with **[Nodriver](https://github.com/ultrafunkamsterdam/nodriver)**
 - 🚀 Enhanced for **personal and research-level scraping**
 - ⚠️ **Follower/following scraping temporarily disabled** (to return in future updates)
 
