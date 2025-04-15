@@ -261,6 +261,9 @@ class Scweet:
             "username": get_username(self.env_path),
             "email_password": get_email_password(self.env_path)
         }
+        if not account.get('email_address') or not account.get('password') or not account.get('username'):
+            logging.info(f"Provide twitter account credentials to login.")
+            return self.main_tab, False, "Account_creds_required", None
         self.main_tab = await self.driver.get("https://x.com/login")
         await self.main_tab.sleep(2)
         if os.path.exists(f"{self.cookies_path}/{account['username']}_cookies.dat"):
@@ -988,7 +991,9 @@ class Scweet:
             await self.init_nodriver()
 
         if login:
-            await self.login()
+            _, logged_in, reason, _= await self.login()
+            if not logged_in:
+                return {}
         chunk_size = math.ceil(len(handles) / self.concurrency)
         tasks = []
 
