@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: Scweet
-Version: 3.0
+Version: 3.1
 Summary: Tool for scraping Tweets
 Home-page: https://github.com/Altimis/Scweet
 Download-URL: https://github.com/Altimis/Scweet/archive/v3.0.tar.gz
@@ -44,6 +44,9 @@ Dynamic: summary
 # 🐦 Scweet: A Simple and Unlimited Twitter Scraper in Python
 
 [![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
+[![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
+[![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
+[![License](https://img.shields.io/github/license/Altimis/scweet)](https://github.com/Altimis/scweet/blob/main/LICENSE)
 
 > **Note:** Scweet is **not affiliated with Twitter/X**. Use responsibly and lawfully.
 
@@ -98,8 +101,11 @@ Scrape tweets between two dates using keywords, hashtags, mentions, or specific 
 - filter_replies          # Include/exclude replies
 - proximity               # Local tweet filtering
 - geocode                 # Geolocation filtering
-- minlikes, minretweets, minreplies
-- save_dir, custom_csv_name
+- minlikes                # Tweets with minimum likes count
+- minretweets             # Tweets with minimum retweets count
+- minreplies              # Tweets with minimum replies count
+- save_dir                # Output directory
+- custom_csv_name         # Output csv name 
 ```
 ---
 
@@ -152,7 +158,7 @@ Scweet requires login to fetch tweets. Set up your `.env` file like this:
 
 ```env
 EMAIL=your_email@example.com
-EMAIL_PASSWORD
+EMAIL_PASSWORD=your_email_password
 USERNAME=your_username
 PASSWORD=your_password
 ```
@@ -210,15 +216,33 @@ print(len(results))
 scweet.close()
 ```
 
----
+### 📝 Example Output 
 
-### 🖥️ Terminal Usage
+When you scrape tweets using the scrape() function, the results will be written to a CSV file, with each row representing a tweet. Here’s an example of what the output might look like:
 
-```bash
-python scweet.py --words "excellent//car" --to_account "tesla" \
-  --until 2020-01-05 --since 2020-01-01 --limit 10 \
-  --interval 1 --display_type Latest --lang "en" --headless True
-```
+
+| tweetId            | UserScreenName | UserName  | Timestamp               | Text                                                                                     | Embedded_text            | Emojis | Comments | Likes | Retweets | Image link                                                                                     | Tweet URL                                         |
+|--------------------|----------------|-----------|--------------------------|-------------------------------------------------------------------------------------------|--------------------------|--------|----------|-------|----------|--------------------------------------------------------------------------------------------------|--------------------------------------------------|
+| 1577716440299442187 | @elonmusk      | Elon Musk | 2022-10-05T17:44:46.000Z | 10.69.3 will actually be a major upgrade. We’re keeping .69 just because haha.            | Replying to@WholeMarsBlog |        | 1256     | 18787 | 1000     | https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs_bigger.jpg | /elonmusk/status/1577716440299442187             |
+| 1577737664689848326 | @elonmusk      | Elon Musk | 2022-10-05T19:09:06.000Z | Twitter is an accelerant to fulfilling the original http://X.com vision                  | Replying to@TEDchris      |        | 967      | 10967 | 931      | https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs_bigger.jpg | /elonmusk/status/1577737664689848326             |
+| 1577747565533069312 | @elonmusk      | Elon Musk | 2022-10-05T19:48:27.000Z | That wouldn’t be hard to do                                                                | Replying to@ashleevance   |        | 1326     | 31734 | 1011     | https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs_bigger.jpg | /elonmusk/status/1577747565533069312             |
+| 1577732106784051214 | @elonmusk      | Elon Musk | 2022-10-05T18:47:01.000Z | *"I do not think it is simple at all, but I have yet to hear any realistic path to peace.* |                          |        | –        | –     | –        | –                                                                                                | /elonmusk/status/1577732106784051214             |
+
+
+**Columns description**:
+
+- **tweetId**: The unique identifier for the tweet.
+- **UserScreenName**: The Twitter/X handle of the user who posted the tweet.
+- **UserName**: The display name of the user.
+- **Timestamp**: The date and time the tweet was posted.
+- **Text**: The content of the tweet.
+- **Embedded_text**: If the tweet is a reply, this will show the user being replied to.
+- **Emojis**: Any emojis used in the tweet.
+- **Comments**: Number of replies to the tweet.
+- **Likes**: Number of likes the tweet received.
+- **Retweets**: Number of retweets the tweet received.
+- **Image link**: A link to the image(s) attached to the tweet, if any.
+- **Tweet URL**: Direct URL to the tweet.
 
 ---
 

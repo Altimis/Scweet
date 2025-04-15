@@ -10,11 +10,11 @@
 
 ---
 
-## 🚀 Recent X Platform Changes & Scweet v3.0 Update
+## 🚀 Recent X Platform Changes & Scweet v3 Update
 
-Scweet has recently encountered challenges due to major changes on **X (formerly Twitter)**. In response, we’re excited to announce the new **Scweet v3.0** release!
+Scweet has recently encountered challenges due to major changes on **X (formerly Twitter)**. In response, we’re excited to announce the new **Scweet v3** release!
 
-### ✨ What’s New in v3.0:
+### ✨ What’s New in v3:
 - ✅ Fully **asynchronous architecture** for faster, smoother scraping
 - 🧠 **No more manual Chromedriver setup** – Scweet handles Chromium internally
 - 🚀 Enhanced for **personal and research-level scraping**
@@ -134,7 +134,7 @@ For custom email providers, pass your own `code_callback`.
 ## 🔧 Installation
 
 ```bash
-pip install Scweet==3.0
+pip install Scweet
 ```
 Make sure your environment is set up with Python 3.7+, chrome browser and pip is available.
 
