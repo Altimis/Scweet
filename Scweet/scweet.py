@@ -63,6 +63,8 @@ class Scweet:
         self.concurrency = concurrency
         self.headless = headless
         self.scroll_ratio = scroll_ratio
+        self.logged_in = False
+        self.suspended = False
         # If no custom code callback is provided, use the default get_code_from_email for mailtm
         self.code_callback = code_callback or get_code_from_email
         self.display = None
@@ -255,6 +257,8 @@ class Scweet:
 
     async def login(self):
         # await self.init_nodriver()
+        if self.logged_in:
+            return self.main_tab, True, "", self.cookies
         account = {
             "email_address": get_email(self.env_path),
             "password": get_password(self.env_path),
@@ -291,6 +295,7 @@ class Scweet:
     async def _is_logged_in(self):
         try:
             home = await self.main_tab.select("a[href='/home']")
+            self.logged_in = True
             return True
         except Exception as e:
             return False
@@ -386,42 +391,78 @@ class Scweet:
 
         return tweet
 
-    async def get_follows(self, username, type="following"):
+    def get_follows(self, **scrape_kwargs):
+        return asyncio.run(self.aget_follows(**scrape_kwargs))
+
+    def get_followers(self, **scrape_kwargs):
+        return asyncio.run(self.aget_followers(**scrape_kwargs))
+
+    def get_following(self, **scrape_kwargs):
+        return asyncio.run(self.aget_following(**scrape_kwargs))
+
+    def get_verified_followers(self, **scrape_kwargs):
+        return asyncio.run(self.aget_verified_followers(**scrape_kwargs))
+
+    async def aget_followers(self, handle, login=True, stay_logged_in=True, sleep=2):
+        return await self.aget_follows(handle=handle, type="followers",
+                                       login=login, stay_logged_in=stay_logged_in, sleep=sleep)
+
+    async def aget_following(self, handle, login=True, stay_logged_in=True, sleep=2):
+        return await self.aget_follows(handle=handle, type="following",
+                                       login=login, stay_logged_in=stay_logged_in, sleep=sleep)
+
+    async def aget_verified_followers(self, handle, login=True, stay_logged_in=True, sleep=2):
+        return await self.aget_follows(handle=handle, type="verified_followers",
+                                       login=login, stay_logged_in=stay_logged_in, sleep=sleep)
+
+    async def aget_follows(self, handle, type="following", login=True, stay_logged_in=True, sleep=2):
         assert type in ["followers", "verified_followers", "following"]
-        tab = await self.driver.get(f"https://x.com/{username}/{type}")
-        await tab.sleep(3)
+        if self.suspended:
+            logging.info(f"Account suspended. Use another one.")
+            return {}
+        if not self.driver:
+            await self.init_nodriver()
+        if login:
+            _, logged_in, reason, _ = await self.login()
+            if not logged_in:
+                return {}
+        tab = await self.driver.get(f"https://x.com/{handle}/{type}")
+        await tab.sleep(sleep)
 
         num_scrolls = 0
         follow_ids = set()
-        follow_urls = set()
         previous_len = 0
         while True:
-            await tab.scroll_down(150)
-            await tab.sleep(2)
+            await tab.scroll_down(self.scroll_ratio)
+            await tab.sleep(sleep)
             # count the number of li elements if they keep increase
             html_el = await tab.get_content()
-            # Parse the entire HTML of the page with BeautifulSoup
+            if 'Your account is suspended' in html_el:
+                logging.info(f"Account suspended. Use another one.")
+                self.suspended = True
+                if not stay_logged_in:
+                    await self.close()
+                return list(follow_ids)
             soup = BeautifulSoup(html_el, 'html.parser')
-            # Find all tweet posts
             page_cards = soup.select('button[data-testid*="UserCell"]')
             for card in page_cards:
-                # Get all text within the card
                 card_text = card.get_text(separator=' ', strip=True)
-                # print(card_text)
-                # Find the first occurrence of @username using regex
                 match = re.search(r'(@\w+)', card_text)
                 if match:
                     username = match.group(1)
                     if username not in follow_ids:
-                        follow_ids.add("@"+username)
-                        follow_urls.add("/"+username)
-                        print(f"got username {username}")
+                        follow_ids.add(username)
             if len(follow_ids) == previous_len:
                 break
             previous_len = len(follow_ids)
             num_scrolls += 1
-            print(f"num scrolls : {num_scrolls}")
-            print(f"num usernames : {len(follow_ids)}")
+            logging.info(f"Fetched {len(follow_ids)} in scroll {num_scrolls}")
+
+        if not stay_logged_in:
+            await self.close()
+        return list(follow_ids)
+
+
 
     async def consume_html(self, html_queue, index, all_posts_data):
         """
@@ -641,7 +682,7 @@ class Scweet:
             main_tab, logged_in, reason, new_cookies = await self.login()
             if not logged_in:
                 logging.info(f"Couldn't login due to {reason}")
-                return
+                return {}
 
             # 7) Concurrency loop: fetch each chunk
             # -----------------------------------------

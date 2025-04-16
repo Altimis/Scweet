@@ -22,7 +22,7 @@ disable_images = True # disable loading images while fetching
 env_path = '.env' # .env path where twitter account credentials are
 n_splits = -1 # set the number of splits that you want to perform on the date interval (the bigger the interval and the splits, the bigger the scraped tweets)
 concurrency = 5 # tweets and profiles fetching run in parallel (on multiple browser tabs at the same time). Adjust depending on ressources.
-headless = True
+headless = False
 scroll_ratio = 100 # scrolling ratio while fetching tweets. adjust between 30 to 200 to optimize tweets fetching.
 login = True # this is used for get_user_information method. X asks for login sometimes to display user profile.
 # You are always required to login for tweets fetching.
@@ -33,16 +33,24 @@ login = True # this is used for get_user_information method. X asks for login so
 # Use case :
 
 # create email :
-email_address, email_password = create_mailtm_email()
-print(email_address, email_password)
+# email_address, email_password = create_mailtm_email()
+# print(email_address, email_password)
 
 # init the scweet class
 scweet = Scweet(proxy, cookies, cookies_directory, user_agent, disable_images, env_path,
                 n_splits=n_splits, concurrency=concurrency, headless=headless, scroll_ratio=scroll_ratio)
 
+# get followers, following, verified_followers (login required)
+# fetching followers and following is limited on the browser. Be cautious as accounts are more susceptible to get suspended this way.
+handle = "x_born_to_die_x"
+
+following = scweet.get_followers(handle=handle, login=True, stay_logged_in=True, sleep=1)
+# scweet.get_following
+# scweet.get_verified_followers
+print(following)
+
 # get users profile data using handles (usernames)
-handles = ['nagouzil', 'yassineaitjeddi', 'TahaAlamIdrissi',
-         'Nabila_Gl', 'geceeekusuu', 'pabu232', 'av_ahmet', 'x_born_to_die_x']
+handles = ['Nabila_Gl', 'geceeekusuu', 'pabu232', 'av_ahmet', 'x_born_to_die_x']
 infos = scweet.get_user_information(handles=handles, login=True)
 print(infos)
 
@@ -59,3 +67,5 @@ all_results = scweet.scrape(since="2022-10-01", until="2022-10-06", words=None, 
                               display_type="Top", resume=False, filter_replies=False, proximity=False,
                               geocode=None, minreplies=10, minlikes=10, minretweets=10, save_dir='outputs',
                             custom_csv_name='elonmusk.csv')
+
+print(len(all_results))
