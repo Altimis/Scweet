@@ -10,6 +10,18 @@
 
 ---
 
+## 🚀 Scweet on Apify: Cloud-Powered Scraping
+
+For heavy-duty scraping, we recommend using [**Scweet on Apify**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) – a cloud-based solution that offers:
+- **Zero setup:** No need to install or maintain infrastructure.
+- **Incredible Speed:** Up to **1000 tweets per minute**.
+- **High Reliability:** Managed and isolated runs for consistent performance.
+- **Free Usage Tier:** Get started for free with a generous quota—perfect for experiments, small projects, or learning how Scweet works. Once you exceed the free quota, you'll pay only **$0.30 per 1,000 tweets**.
+
+[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
+
+---
+
 ## 🚀 Recent X Platform Changes & Scweet v3 Update
 
 Scweet has recently encountered challenges due to major changes on **X (formerly Twitter)**. In response, we’re excited to announce the new **Scweet v3** release!
