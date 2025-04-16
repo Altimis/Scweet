@@ -32,11 +32,6 @@ Scweet has recently encountered challenges due to major changes on **X (formerly
 - 🚀 Enhanced for **personal and research-level scraping**
 - ⚠️ **Follower/following scraping temporarily disabled** (to return in future updates)
 
-> 🔧 For heavy-duty scraping, we recommend using **[Scweet on Apify](https://apify.com/altimis/scweet)** – a cloud-based solution offering higher throughput and stability (up to **1000 tweets/minute**), no infrastructure setup needed.
-
-⚠️ **Responsible Use Reminder**  
-Whether running locally or in the cloud, **always scrape tweets ethically, lawfully, and respectfully**.
-
 ---
 
 ## 📌 What is Scweet?
