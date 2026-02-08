@@ -2,6 +2,10 @@ certifi
 python-dotenv
 urllib3
 PyVirtualDisplay
+requests
 beautifulsoup4==4.12.3
 nodriver==0.38.post1
-requests
+sqlmodel>=0.0.22
+SQLAlchemy>=2.0
+curl_cffi
+XClientTransaction

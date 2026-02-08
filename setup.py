@@ -1,54 +1,68 @@
-#!/usr/bin/python3
-from distutils.core import setup
-import setuptools
+#!/usr/bin/env python3
+from __future__ import annotations
+
 import io
 import os
+from pathlib import Path
 
-VERSION = None
+from setuptools import find_packages, setup
 
-here = os.path.abspath(os.path.dirname(__file__))
 
-with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = '\n' + f.read()
+ROOT = Path(__file__).resolve().parent
 
-about = {}
-if not VERSION:
-    with open(os.path.join(here, 'Scweet', '__version__.py')) as f:
-        exec(f.read(), about)
-else:
-    about['__version__'] = VERSION
+
+def read_text(path: Path) -> str:
+    with io.open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+def read_requirements(path: Path) -> list[str]:
+    reqs: list[str] = []
+    for raw in read_text(path).splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        # Keep environment markers/version pins; drop inline comments.
+        reqs.append(line.split("#", 1)[0].strip())
+    return reqs
+
+
+about: dict[str, str] = {}
+exec(read_text(ROOT / "Scweet" / "__version__.py"), about)
 
 setup(
-  name='Scweet',
-  packages=['Scweet'],
-  version=about['__version__'],
-  license='MIT',
-  description='Tool for scraping Tweets',
-  long_description=long_description,
-  long_description_content_type="text/markdown",
-  author='Yassine AIT JEDDI',
-  author_email='aitjeddiyassine@gmail.com',
-  url='https://github.com/Altimis/Scweet',
-  download_url='https://github.com/Altimis/Scweet/archive/v3.0.tar.gz',
-  keywords=['twitter', 'scraper', 'python', "crawl", "following", "followers", "twitter-scraper", "tweets"],
-  install_requires=[
-      'certifi',
-      'python-dotenv',
-      'urllib3',
-      'PyVirtualDisplay',
-      'beautifulsoup4==4.12.3',
-      'nodriver==0.38.post1',
-      'requests'
-  ],
-  classifiers=[
-    'Development Status :: 4 - Beta',
-    'Intended Audience :: Developers',
-    'Topic :: Software Development :: Build Tools',
-    'License :: OSI Approved :: MIT License',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-  ],
+    name="Scweet",
+    version=about["__version__"],
+    license="MIT",
+    description="Tool for scraping Tweets",
+    long_description=read_text(ROOT / "README.md"),
+    long_description_content_type="text/markdown",
+    author="Yassine AIT JEDDI",
+    author_email="aitjeddiyassine@gmail.com",
+    url="https://github.com/Altimis/Scweet",
+    download_url="https://github.com/Altimis/Scweet/archive/v3.0.tar.gz",
+    keywords=[
+        "twitter",
+        "scraper",
+        "python",
+        "crawl",
+        "following",
+        "followers",
+        "twitter-scraper",
+        "tweets",
+    ],
+    packages=find_packages(include=("Scweet", "Scweet.*")),
+    include_package_data=True,
+    install_requires=read_requirements(ROOT / "requirements.txt"),
+    python_requires=">=3.9",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Build Tools",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+    ],
 )

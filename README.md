@@ -1,237 +1,175 @@
-# 🐦 Scweet: A Simple and Unlimited Twitter Scraper in Python
+# Scweet v4
 
-[![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
-[![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
-[![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
-[![License](https://img.shields.io/github/license/Altimis/scweet)](https://github.com/Altimis/scweet/blob/main/LICENSE)
+Scweet v4 keeps the familiar public API while moving internals to a modern async architecture with account pooling and SQLite state.
 
-> **Note:** Scweet is **not affiliated with Twitter/X**. Use responsibly and lawfully.
+## v4 status
 
----
+- v4 facade routing is active.
+- Legacy public signatures remain callable.
+- Preferred path: `from Scweet import Scweet`.
+- Legacy path remains supported in v4.x but is deprecated: `from Scweet.scweet import Scweet`.
 
-## 🚀 Scweet on Apify: Cloud-Powered Scraping
+## Architecture summary
 
-For heavy-duty scraping, we recommend using [**Scweet on Apify**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) – a cloud-based solution that offers:
-- **Zero setup:** No need to install or maintain infrastructure.
-- **Incredible Speed:** Up to **1000 tweets per minute**.
-- **High Reliability:** Managed and isolated runs for consistent performance.
-- **Free Usage Tier:** Get started for free with a generous quota—perfect for experiments, small projects, or learning how Scweet works. Once you exceed the free quota, you'll pay only **$0.30 per 1,000 tweets**.
+- Compatibility facade in `Scweet/Scweet/scweet.py` keeps legacy method signatures and return shapes.
+- New core modules live in `Scweet/Scweet/v4/`.
+- Stateful components use local SQLite (`runs`, `accounts`, `resume_state`, manifest cache).
+- Internal runtime uses async runner + in-memory task queue + account leasing.
+- Engines are selectable (`browser`, `api`, `auto`) through config.
 
-[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
-
----
-
-## 🚀 Recent X Platform Changes & Scweet v3 Update
-
-Scweet has recently encountered challenges due to major changes on **X (formerly Twitter)**. In response, we’re excited to announce the new **Scweet v3** release!
-
-### ✨ What’s New in v3:
-- ✅ Fully **asynchronous architecture** for faster, smoother scraping
-- 🧠 **No more manual Chromedriver setup** – Scweet handles Chromium internally with **[Nodriver](https://github.com/ultrafunkamsterdam/nodriver)**
-- 🚀 Enhanced for **personal and research-level scraping**
-- 🧑‍🤝‍🧑 **Follower & following scraping is back!** (see below 👇)
-
----
-
-## 📌 What is Scweet?
-
-Scweet is a Python-based scraping tool designed to fetch tweets and user data **without relying on traditional Twitter APIs**, which have become increasingly restricted.
-
-With Scweet, you can:
-- Scrape tweets by keywords, hashtags, mentions, accounts, or timeframes
-- Get detailed user profile information
-- ✅ Retrieve followers, following, and verified followers!
-
----
-
-## 🔧 Key Features
-
-### 🐤 `scrape()` – Tweet Scraper
-
-Scrape tweets between two dates using keywords, hashtags, mentions, or specific accounts.
-
-**✅ Available arguments include:**
-```python
-- since, until
-- words
-- from_account, to_account, mention_account
-- hashtag, lang
-- limit, display_type, resume
-- filter_replies, proximity, geocode
-- minlikes, minretweets, minreplies
-- save_dir, custom_csv_name
-```
-
----
-
-### 👤 `get_user_information()` – User Info Scraper
-
-Fetch profile details for a list of handles. Returns a dictionary with:
-- `username`, `verified_followers`
-- `following`, `location`, `website`, `join_date`, `description`
-
-**🧩 Arguments:**
-```python
-- handles        # List of Twitter/X handles
-- login (bool)   # Required for complete data
-```
-
----
-
-### 🧑‍🤝‍🧑 `get_followers()`, `get_following()`, `get_verified_followers()` – NEW! 🎉
-
-Scweet now supports scraping followers and followings again!
-
-> ⚠️ **Important Note:** This functionality relies on browser rendering and may trigger rate-limiting or account lockouts. Use with caution and always stay logged in during scraping.
-
-**🧩 Example Usage:**
-```python
-handle = "x_born_to_die_x"
-
-# Get followers
-followers = scweet.get_followers(handle=handle, login=True, stay_logged_in=True, sleep=1)
-
-# Get following
-following = scweet.get_following(handle=handle, login=True, stay_logged_in=True, sleep=1)
-
-# Get only verified followers
-verified = scweet.get_verified_followers(handle=handle, login=True, stay_logged_in=True, sleep=1)
-```
-
----
-
-## 🛠️ Class Initialization & Configuration
-
-Customize Scweet’s behavior during setup:
-
-```python
-scweet = Scweet(
-  proxy=None,                 # Dict or None
-  cookies=None,               # Nodriver-based cookie handling
-  cookies_path='cookies',     # Folder for saving/loading cookies
-  user_agent=None,            # Optional custom user agent
-  disable_images=True,        # Speeds up scraping
-  env_path='.env',            # Path to your .env file
-  n_splits=-1,                # Date range splitting
-  concurrency=5,              # Number of concurrent tabs
-  headless=True,              # Headless scraping
-  scroll_ratio=100            # Adjust for scroll depth/speed
-)
-```
-
----
-
-## 🔐 Authentication
-
-Scweet requires login for tweets, user info, and followers/following.
-
-Set up your `.env` file like this:
-
-```env
-EMAIL=your_email@example.com
-EMAIL_PASSWORD=your_email_password
-USERNAME=your_username
-PASSWORD=your_password
-```
-
-Need a temp email? Use built-in MailTM integration:
-
-```python
-from Scweet.utils import create_mailtm_email
-email, password = create_mailtm_email()
-```
-
----
-
-## 🔧 Installation
+## Installation
 
 ```bash
 pip install Scweet
 ```
-Requires **Python 3.7+** and a Chromium-based browser.
 
----
+## Import policy
 
-## 💡 Example Usage
+Preferred import (recommended for v4 usage):
 
-### 🐍 Python Script
+```python
+from Scweet import Scweet
+```
+
+Legacy import (supported in v4.x, deprecated):
 
 ```python
 from Scweet.scweet import Scweet
-from Scweet.utils import create_mailtm_email
-
-scweet = Scweet(proxy=None, cookies=None, cookies_path='cookies',
-                user_agent=None, disable_images=True, env_path='.env',
-                n_splits=-1, concurrency=5, headless=False, scroll_ratio=100)
-
-# Get followers (⚠️ requires login)
-followers = scweet.get_followers(handle="x_born_to_die_x", login=True, stay_logged_in=True, sleep=1)
-print(followers)
-
-# Get user profile data
-infos = scweet.get_user_information(handles=["x_born_to_die_x", "Nabila_Gl"], login=True)
-print(infos)
-
-# Scrape tweets
-results = scweet.scrape(
-  since="2022-10-01",
-  until="2022-10-06",
-  words=["bitcoin", "ethereum"],
-  lang="en",
-  limit=20,
-  minlikes=10,
-  minretweets=10,
-  save_dir='outputs',
-  custom_csv_name='crypto.csv'
-)
-print(len(results))
 ```
 
----
+## Deprecation policy (v4.x -> v5.0)
 
-## 📝 Example Output 
+The following are still supported in v4.x but emit `FutureWarning` and are planned for removal in v5.0:
 
-| tweetId | UserScreenName | Text | Likes | Retweets | Timestamp |
-|--------|----------------|------|-------|----------|-----------|
-| ...    | @elonmusk      | ...  | 18787 | 1000     | 2022-10-05T17:44:46.000Z |
+- Legacy import path: `Scweet.scweet`
+- Constructor arg `mode` -> use `engine`
+- Constructor arg `env_path` -> use `accounts_file` / `cookies_file`
+- Constructor arg `n_splits` -> use `config.pool.n_splits`
+- Constructor arg `concurrency` -> use `config.pool.concurrency`
 
-> Full CSV output includes user info, tweet text, stats, embedded replies, media, and more.
+## Resume modes
 
----
+Scweet v4 supports three resume modes under `config.resume.mode`:
 
-## ☁️ Scweet on Apify (Cloud)
+- `legacy_csv`: v3-compatible resume using max CSV `Timestamp` to override `since`.
+- `db_cursor`: resume from SQLite checkpoint (`since` + `cursor`) only.
+- `hybrid_safe`: try DB checkpoint first, then fallback to CSV timestamp behavior.
 
-Need powerful, scalable, high-volume scraping?  
-Try [**Scweet on Apify**](https://apify.com/altimis/scweet):
+Important compatibility rule:
 
-- 🚀 Up to **1000 tweets/minute**
-- 📦 Export to datasets
-- 🔒 Secure, isolated browser instances
-- 🔁 Ideal for automation & research projects
+- If you instantiate through the legacy facade path (`from Scweet.scweet import Scweet`), resume is forced to `legacy_csv` behavior for compatibility.
 
----
+## Account source formats
 
-## 🙏 Responsible Use
+### `accounts.txt`
 
-We care deeply about ethical scraping.
+One account per line (colon-separated):
 
-> **Please:** Use Scweet for research, education, and lawful purposes only. Respect platform terms and user privacy.
+```text
+username:password:email:email_password:2fa:auth_token
+```
 
----
+Notes:
 
-## 📎 Resources
+- Blank lines and lines starting with `#` are ignored.
+- Missing trailing fields are accepted.
+- The auth token segment may include additional colons; parser keeps the rest as token.
 
-- 📄 [Example Script](https://github.com/Altimis/Scweet/blob/master/example.py)
-- 🐞 [Issues / Bugs](https://github.com/Altimis/Scweet/issues)
-- 🌐 [Scweet on Apify](https://apify.com/altimis/scweet)
+### `cookies.json`
 
----
+Accepted forms include:
 
-## ⭐ Star & Contribute
+1. List of account records.
+2. Object with `accounts: [...]`.
+3. Single account object.
+4. Object mapping username -> cookies/account payload.
 
-If you find Scweet useful, consider **starring** the repo ⭐  
-We welcome **PRs**, bug reports, and feature suggestions!
+Minimal example:
 
----
+```json
+[
+  {
+    "username": "acct1",
+    "cookies": {
+      "auth_token": "...",
+      "ct0": "..."
+    }
+  }
+]
+```
 
-MIT License • © 2020–2025 Altimis
+## Modern v4 usage (recommended)
+
+### Example: API engine + SQLite + hybrid resume
+
+```python
+from Scweet import Scweet
+
+scweet = Scweet(
+    engine="api",
+    db_path="scweet_state.db",
+    accounts_file="accounts.txt",
+    manifest_url="https://example.com/manifest.json",
+    config={
+        "resume": {"mode": "hybrid_safe"},
+        "pool": {"n_splits": 8, "concurrency": 4},
+    },
+)
+
+tweets = scweet.scrape(
+    since="2026-02-01",
+    until="2026-02-07",
+    words=["bitcoin", "ethereum"],
+    limit=200,
+    save_dir="outputs",
+    custom_csv_name="crypto.csv",
+    resume=True,
+)
+```
+
+### Example: browser engine + cookies file
+
+```python
+from Scweet import Scweet
+
+scweet = Scweet(
+    engine="browser",
+    db_path="scweet_state.db",
+    cookies_file="cookies.json",
+    config={
+        "resume": {"mode": "legacy_csv"},
+    },
+)
+
+profiles = scweet.get_user_information(handles=["x_born_to_die_x"], login=True)
+```
+
+## Backward-compatible usage example
+
+```python
+from Scweet.scweet import Scweet
+
+# Deprecated import path, still supported in v4.x.
+scweet = Scweet(
+    env_path=".env",
+    n_splits=5,
+    concurrency=5,
+    headless=True,
+)
+
+results = scweet.scrape(
+    since="2025-01-01",
+    until="2025-01-07",
+    words=["scweet"],
+    resume=True,
+)
+```
+
+## Migration and release notes
+
+- Migration guide: `Scweet/MIGRATION_V3_TO_V4.md`
+- Changelog: `Scweet/CHANGELOG.md`
+
+## Responsible use
+
+Scweet is not affiliated with Twitter/X. Use lawfully, respect platform terms, and avoid misuse.

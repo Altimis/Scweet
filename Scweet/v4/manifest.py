@@ -1,0 +1,166 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+from typing import Any, Optional, Tuple
+
+import requests
+from pydantic import BaseModel, Field, ValidationError, model_validator
+
+from .repos import ManifestRepo
+
+_DEFAULT_MANIFEST = {
+    "version": "v4-default-1",
+    "query_ids": {"search_timeline": "f_A-Gyo204PRxixpkrchJg"},
+    "endpoints": {
+        "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline",
+    },
+    "features": {
+        "rweb_video_screen_enabled": False,
+        "profile_label_improvements_pcf_label_in_post_enabled": True,
+        "responsive_web_profile_redirect_enabled": False,
+        "rweb_tipjar_consumption_enabled": False,
+        "verified_phone_label_enabled": False,
+        "creator_subscriptions_tweet_preview_api_enabled": True,
+        "responsive_web_graphql_timeline_navigation_enabled": True,
+        "responsive_web_graphql_skip_user_profile_image_extensions_enabled": False,
+        "premium_content_api_read_enabled": False,
+        "communities_web_enable_tweet_community_results_fetch": True,
+        "c9s_tweet_anatomy_moderator_badge_enabled": True,
+        "responsive_web_grok_analyze_button_fetch_trends_enabled": False,
+        "responsive_web_grok_analyze_post_followups_enabled": True,
+        "responsive_web_jetfuel_frame": True,
+        "responsive_web_grok_share_attachment_enabled": True,
+        "responsive_web_grok_annotations_enabled": False,
+        "articles_preview_enabled": True,
+        "responsive_web_edit_tweet_api_enabled": True,
+        "graphql_is_translatable_rweb_tweet_is_translatable_enabled": True,
+        "view_counts_everywhere_api_enabled": True,
+        "longform_notetweets_consumption_enabled": True,
+        "responsive_web_twitter_article_tweet_consumption_enabled": True,
+        "tweet_awards_web_tipping_enabled": False,
+        "responsive_web_grok_show_grok_translated_post": False,
+        "responsive_web_grok_analysis_button_from_backend": True,
+        "post_ctas_fetch_enabled": True,
+        "creator_subscriptions_quote_tweet_preview_enabled": False,
+        "freedom_of_speech_not_reach_fetch_enabled": True,
+        "standardized_nudges_misinfo": True,
+        "tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": True,
+        "longform_notetweets_rich_text_read_enabled": True,
+        "longform_notetweets_inline_media_enabled": True,
+        "responsive_web_grok_image_annotation_enabled": True,
+        "responsive_web_grok_imagine_annotation_enabled": True,
+        "responsive_web_grok_community_note_auto_translation_is_enabled": False,
+        "responsive_web_enhance_cards_enabled": False,
+    },
+}
+
+
+class ManifestModel(BaseModel):
+    version: str = "v4-default-1"
+    fingerprint: Optional[str] = None
+    query_ids: dict[str, str] = Field(default_factory=dict)
+    endpoints: dict[str, str] = Field(default_factory=dict)
+    features: dict[str, Any] = Field(default_factory=dict)
+    timeout_s: int = 20
+
+    @model_validator(mode="after")
+    def _validate_required_fields(self):
+        if "search_timeline" not in self.query_ids:
+            raise ValueError("manifest requires query_ids.search_timeline")
+        if "search_timeline" not in self.endpoints:
+            raise ValueError("manifest requires endpoints.search_timeline")
+
+        if not self.fingerprint:
+            payload = {
+                "version": self.version,
+                "query_ids": self.query_ids,
+                "endpoints": self.endpoints,
+                "features": self.features,
+            }
+            self.fingerprint = hashlib.sha1(
+                json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            ).hexdigest()
+        return self
+
+
+class ManifestProvider:
+    def __init__(self, db_path: str, manifest_url: Optional[str], ttl_s: int):
+        self.db_path = db_path
+        self.manifest_url = manifest_url
+        self.ttl_s = max(int(ttl_s), 1)
+        self.repo = ManifestRepo(db_path)
+        self.local_manifest_path = Path(__file__).with_name("default_manifest.json")
+
+    def _coerce_manifest(self, payload: Optional[dict[str, Any]]) -> Optional[ManifestModel]:
+        if not isinstance(payload, dict):
+            return None
+        try:
+            return ManifestModel.model_validate(payload)
+        except ValidationError:
+            return None
+
+    def _load_local_manifest(self) -> ManifestModel:
+        file_payload: Optional[dict[str, Any]] = None
+        if self.local_manifest_path.exists():
+            try:
+                file_payload = json.loads(self.local_manifest_path.read_text(encoding="utf-8"))
+            except Exception:
+                file_payload = None
+
+        manifest = self._coerce_manifest(file_payload)
+        if manifest is not None:
+            return manifest
+
+        # Always keep a built-in fallback so this provider is fail-open.
+        fallback = self._coerce_manifest(_DEFAULT_MANIFEST)
+        assert fallback is not None
+        return fallback
+
+    def _fetch_remote_manifest_sync(self) -> Tuple[Optional[dict[str, Any]], Optional[str]]:
+        if not self.manifest_url:
+            return None, None
+
+        response = requests.get(self.manifest_url, timeout=10)
+        if int(getattr(response, "status_code", 0) or 0) != 200:
+            raise RuntimeError(f"manifest fetch failed with status={getattr(response, 'status_code', None)}")
+
+        payload = response.json()
+        etag = None
+        headers = getattr(response, "headers", None)
+        if isinstance(headers, dict):
+            etag = headers.get("ETag") or headers.get("etag")
+        return payload, etag
+
+    async def get_manifest(self) -> ManifestModel:
+        local_manifest = self._load_local_manifest()
+
+        if not self.manifest_url:
+            return local_manifest
+
+        remote_manifest: Optional[ManifestModel] = None
+        remote_etag: Optional[str] = None
+
+        try:
+            payload, remote_etag = self._fetch_remote_manifest_sync()
+            remote_manifest = self._coerce_manifest(payload)
+        except Exception:
+            remote_manifest = None
+
+        if remote_manifest is not None:
+            self.repo.set_cached(
+                self.manifest_url,
+                remote_manifest.model_dump(mode="json"),
+                ttl_s=self.ttl_s,
+                etag=remote_etag,
+            )
+            return remote_manifest
+
+        cached_manifest = self.repo.get_cached(self.manifest_url)
+        if cached_manifest and isinstance(cached_manifest.get("manifest"), dict):
+            parsed_cached = self._coerce_manifest(cached_manifest["manifest"])
+            if parsed_cached is not None:
+                return parsed_cached
+
+        return local_manifest
