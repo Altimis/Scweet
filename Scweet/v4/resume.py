@@ -8,6 +8,21 @@ from pathlib import Path
 from typing import Any, Optional, Tuple
 
 _DATE_FMT = "%Y-%m-%d"
+_TWITTER_CREATED_AT_FMT = "%a %b %d %H:%M:%S %z %Y"
+
+
+def _parse_timestamp(value: str) -> Optional[datetime]:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text.replace("Z", ""))
+    except Exception:
+        pass
+    try:
+        return datetime.strptime(text, _TWITTER_CREATED_AT_FMT)
+    except Exception:
+        return None
 
 
 def _max_csv_timestamp(csv_path: str) -> Optional[datetime]:
@@ -15,9 +30,16 @@ def _max_csv_timestamp(csv_path: str) -> Optional[datetime]:
     with open(csv_path, "r", encoding="utf-8") as handle:
         reader = csv.reader(handle)
         header = next(reader, None)
-        if not header or "Timestamp" not in header:
+        if not header:
             return None
-        ts_idx = header.index("Timestamp")
+        candidates = ["Timestamp", "legacy.created_at", "created_at", "legacy.createdAt", "legacyCreatedAt"]
+        ts_idx = None
+        for name in candidates:
+            if name in header:
+                ts_idx = header.index(name)
+                break
+        if ts_idx is None:
+            return None
 
         for row in reader:
             if len(row) <= ts_idx:
@@ -25,10 +47,7 @@ def _max_csv_timestamp(csv_path: str) -> Optional[datetime]:
             timestamp_str = (row[ts_idx] or "").strip()
             if not timestamp_str:
                 continue
-            try:
-                parsed = datetime.fromisoformat(timestamp_str.replace("Z", ""))
-            except Exception:
-                parsed = None
+            parsed = _parse_timestamp(timestamp_str)
             if parsed and (max_dt is None or parsed > max_dt):
                 max_dt = parsed
     return max_dt

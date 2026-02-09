@@ -5,6 +5,8 @@ import logging
 import platform
 from typing import Any, Awaitable, Callable, Mapping, Optional
 
+from .http_utils import extract_proxy_server
+
 logger = logging.getLogger(__name__)
 
 
@@ -143,11 +145,9 @@ async def alogin_and_get_cookies(
             if headless and platform.system() in {"Windows", "Darwin"}:
                 config.headless = True
 
-            if isinstance(proxy, dict):
-                host = _as_str(proxy.get("host"))
-                port = _as_str(proxy.get("port"))
-                if host and port:
-                    config.add_argument(f"--proxy-server={host}:{port}")
+            proxy_server = extract_proxy_server(proxy)
+            if proxy_server:
+                config.add_argument(f"--proxy-server={proxy_server}")
             if user_agent:
                 config.add_argument(f"--user-agent={user_agent}")
             if disable_images:
@@ -298,4 +298,3 @@ async def alogin_and_get_cookies(
             logger.warning("Nodriver login timed out timeout_s=%s", timeout)
             return None
     return await _inner()
-

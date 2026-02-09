@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import logging
 import time
@@ -11,6 +12,7 @@ from typing import Any, Optional
 import requests
 
 from .account_session import DEFAULT_X_BEARER_TOKEN, prepare_account_auth_material
+from .http_utils import apply_proxies_to_session, normalize_http_proxies
 from .repos import AccountsRepo
 
 logger = logging.getLogger(__name__)
@@ -668,7 +670,7 @@ def load_cookies_json(path: str) -> list[dict]:
     return records
 
 
-def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30) -> Optional[dict]:
+def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30, *, proxy: Any = None) -> Optional[dict]:
     token = _as_str(auth_token)
     if not token:
         logger.warning("Auth bootstrap skipped: missing auth_token")
@@ -676,6 +678,7 @@ def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30) -> O
 
     session = None
     token_fp = _token_fingerprint(token)
+    proxies = normalize_http_proxies(proxy)
     try:
         session = _SESSION_FACTORY()
         if session is None:
@@ -689,6 +692,7 @@ def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30) -> O
             except Exception:
                 session.cookies.set("auth_token", token)
 
+        apply_proxies_to_session(session, proxies)
         response = session.get(
             "https://x.com/home",
             headers={"User-Agent": _DEFAULT_USER_AGENT},
@@ -765,6 +769,21 @@ def import_accounts_to_db(
     allow_token_bootstrap = strategy in {"auto", "token_only"}
     allow_creds_bootstrap = strategy in {"auto", "nodriver_only"}
 
+    def _call_token_bootstrap(auth_token: str) -> Optional[dict]:
+        if effective_bootstrap is None:
+            return None
+        try:
+            params = inspect.signature(effective_bootstrap).parameters
+            if "proxy" in params:
+                return effective_bootstrap(
+                    auth_token,
+                    timeout_s=bootstrap_timeout_s,
+                    proxy=runtime_options.get("proxy"),
+                )
+        except Exception:
+            pass
+        return effective_bootstrap(auth_token, timeout_s=bootstrap_timeout_s)
+
     def _db_has_usable_auth(username: Optional[str], token: Optional[str]) -> bool:
         existing = repo.get_by_username(username or "") if username else None
         if existing is None and token:
@@ -798,7 +817,7 @@ def import_accounts_to_db(
                 token_fp,
                 reason,
             )
-            bootstrapped = effective_bootstrap(token, timeout_s=bootstrap_timeout_s)
+            bootstrapped = _call_token_bootstrap(token)
             if bootstrapped:
                 cookies_dict = _cookies_to_dict(_normalize_cookies_payload(bootstrapped))
                 if cookies_dict:

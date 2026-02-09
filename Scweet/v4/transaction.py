@@ -9,8 +9,16 @@ import requests
 from bs4 import BeautifulSoup
 
 from .account_session import DEFAULT_HTTP_TIMEOUT, DEFAULT_IMPERSONATE, DEFAULT_USER_AGENT
+from .http_utils import apply_proxies_to_session, is_curl_cffi_session, normalize_http_proxies
 
 logger = logging.getLogger(__name__)
+
+
+def _as_str(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text if text else None
 
 
 class TransactionIdProvider:
@@ -21,7 +29,8 @@ class TransactionIdProvider:
         refresh_ttl_s: int = 15 * 60,
         home_url: str = "https://x.com",
         session_factory=None,
-        user_agent: str = DEFAULT_USER_AGENT,
+        user_agent: Optional[str] = None,
+        proxy: Any = None,
         prefer_curl_cffi: bool = True,
         impersonate: str = DEFAULT_IMPERSONATE,
         timeout=DEFAULT_HTTP_TIMEOUT,
@@ -32,8 +41,10 @@ class TransactionIdProvider:
         self.prefer_curl_cffi = bool(prefer_curl_cffi)
         self.impersonate = impersonate
         self.timeout = timeout
+        self.proxy = proxy
+        self._http_proxies = normalize_http_proxies(proxy)
         self.session_factory = session_factory or self._build_default_session_factory()
-        self.user_agent = user_agent
+        self.user_agent_override = _as_str(user_agent)
 
         self._static_tx_id = os.getenv("SCWEET_X_CLIENT_TRANSACTION_ID")
         self._client_transaction = None
@@ -50,7 +61,14 @@ class TransactionIdProvider:
                 from curl_cffi.requests import Session as CurlSession
 
                 def _factory():
-                    return CurlSession(impersonate=self.impersonate, timeout=self.timeout)
+                    kwargs = {"impersonate": self.impersonate, "timeout": self.timeout}
+                    if self._http_proxies:
+                        kwargs["proxies"] = self._http_proxies
+                    try:
+                        return CurlSession(**kwargs)
+                    except TypeError:
+                        kwargs.pop("proxies", None)
+                        return CurlSession(**kwargs)
 
                 return _factory
             except Exception:
@@ -84,12 +102,17 @@ class TransactionIdProvider:
                 return None
 
             headers = {
-                "User-Agent": self.user_agent,
                 "Referer": "https://x.com/",
                 "Origin": "https://x.com",
                 "X-Twitter-Active-User": "yes",
                 "X-Twitter-Client-Language": "en",
             }
+            if self.user_agent_override is not None:
+                headers["User-Agent"] = self.user_agent_override
+            elif not is_curl_cffi_session(session):
+                headers["User-Agent"] = DEFAULT_USER_AGENT
+
+            apply_proxies_to_session(session, self._http_proxies)
             session_headers = getattr(session, "headers", None)
             if session_headers is not None and hasattr(session_headers, "update"):
                 session_headers.update(headers)
@@ -102,7 +125,7 @@ class TransactionIdProvider:
                 logger.warning("Transaction-id bootstrap failed: ondemand URL not found")
                 return None
 
-            od_response = session.get(ondemand_url, headers=headers, timeout=20, allow_redirects=True)
+            od_response = session.get(ondemand_url, timeout=20, allow_redirects=True)
             if int(getattr(od_response, "status_code", 0) or 0) >= 400:
                 logger.warning(
                     "Transaction-id bootstrap failed: ondemand status=%s",

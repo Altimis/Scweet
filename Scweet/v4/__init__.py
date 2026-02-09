@@ -3,6 +3,7 @@
 from .config import (
     AccountsConfig,
     ApiHttpMode,
+    BootstrapStrategy,
     EngineConfig,
     EngineKind,
     ManifestConfig,
@@ -33,6 +34,7 @@ __all__ = [
     "EngineKind",
     "ApiHttpMode",
     "ResumeMode",
+    "BootstrapStrategy",
     "EngineConfig",
     "StorageConfig",
     "AccountsConfig",

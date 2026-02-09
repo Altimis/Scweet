@@ -34,6 +34,9 @@ class BootstrapStrategy(str, Enum):
 class EngineConfig(BaseModel):
     kind: EngineKind = EngineKind.BROWSER
     api_http_mode: ApiHttpMode = ApiHttpMode.AUTO
+    # curl_cffi "impersonate" value for API HTTP sessions (and transaction-id bootstrap).
+    # If unset, curl_cffi defaults (or SCWEET_HTTP_IMPERSONATE env) are used.
+    api_http_impersonate: Optional[str] = None
 
     @field_validator("kind", mode="before")
     @classmethod
@@ -48,6 +51,14 @@ class EngineConfig(BaseModel):
         if isinstance(value, str):
             return value.lower()
         return value
+
+    @field_validator("api_http_impersonate", mode="before")
+    @classmethod
+    def _normalize_http_impersonate(cls, value: Any) -> Any:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text if text else None
 
 
 class StorageConfig(BaseModel):
@@ -81,8 +92,14 @@ class PoolConfig(BaseModel):
 
 
 class RuntimeConfig(BaseModel):
-    proxy: Optional[dict[str, Any]] = None
+    # Used for:
+    # - nodriver bootstrap (dict host/port[/username/password])
+    # - API HTTP proxying (string URL or requests-style proxies dict)
+    proxy: Optional[dict[str, Any] | str] = None
+    # Used by nodriver bootstrap/login only.
     user_agent: Optional[str] = None
+    # Used by API HTTP requests. If unset, curl_cffi uses its built-in UA/impersonation defaults.
+    api_user_agent: Optional[str] = None
     disable_images: bool = False
     headless: bool = True
     scroll_ratio: int = Field(default=30, ge=1)
@@ -97,7 +114,7 @@ class OperationalConfig(BaseModel):
     transient_cooldown_s: float = Field(default=120.0, ge=0.0)
     auth_cooldown_s: float = Field(default=30 * 24 * 60 * 60, ge=0.0)
     cooldown_jitter_s: float = Field(default=10.0, ge=0.0)
-    account_requests_per_min: int = Field(default=60, ge=1)
+    account_requests_per_min: int = Field(default=30, ge=1)
     account_min_delay_s: float = Field(default=0.0, ge=0.0)
     api_page_size: int = Field(default=20, ge=1, le=100)
     task_retry_base_s: int = Field(default=1, ge=0)
@@ -140,6 +157,110 @@ class ScweetConfig(BaseModel):
     resume: ResumeConfig = Field(default_factory=ResumeConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     manifest: ManifestConfig = Field(default_factory=ManifestConfig)
+
+    @classmethod
+    def from_sources(
+        cls,
+        *,
+        db_path: str = "scweet_state.db",
+        accounts_file: Optional[str] = None,
+        cookies_file: Optional[str] = None,
+        env_path: Optional[str] = None,
+        cookies: Any = None,
+        manifest_url: Optional[str] = None,
+        bootstrap_strategy: BootstrapStrategy | str = BootstrapStrategy.AUTO,
+        provision_on_init: bool = True,
+        strict: bool = False,
+        proxy: Any = None,
+        user_agent: Optional[str] = None,
+        api_user_agent: Optional[str] = None,
+        resume_mode: ResumeMode | str = ResumeMode.HYBRID_SAFE,
+        api_http_mode: ApiHttpMode | str = ApiHttpMode.AUTO,
+        api_http_impersonate: Optional[str] = None,
+        n_splits: Optional[int] = None,
+        concurrency: Optional[int] = None,
+        overrides: Any = None,
+    ) -> "ScweetConfig":
+        """Build a ScweetConfig from common sources and a small set of knobs.
+
+        This is the recommended "clean" entrypoint for v4 configuration. For advanced
+        tuning (lease params, cooldowns, scheduler knobs, etc.) pass an `overrides` dict
+        (or a ScweetConfig) with nested fields, for example:
+
+            cfg = ScweetConfig.from_sources(
+                db_path="state.db",
+                cookies_file="cookies.json",
+                api_http_impersonate="chrome124",
+                overrides={"operations": {"account_lease_ttl_s": 600}},
+            )
+        """
+
+        def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
+            out = dict(base or {})
+            for key, value in (patch or {}).items():
+                if isinstance(value, dict) and isinstance(out.get(key), dict):
+                    out[key] = _deep_merge(out[key], value)
+                else:
+                    out[key] = value
+            return out
+
+        def _enum_value(value: Any) -> Any:
+            return getattr(value, "value", value)
+
+        base = cls().model_dump()
+
+        patch: dict[str, Any] = {
+            # Tweet search scraping is API-only; keep config reflective of runtime behavior.
+            "engine": {
+                "kind": EngineKind.API,
+                "api_http_mode": _enum_value(api_http_mode),
+            },
+            "storage": {"db_path": db_path},
+            "accounts": {
+                "provision_on_init": bool(provision_on_init),
+                "bootstrap_strategy": _enum_value(bootstrap_strategy),
+            },
+            "runtime": {"strict": bool(strict)},
+            "resume": {"mode": _enum_value(resume_mode)},
+        }
+
+        if accounts_file is not None:
+            patch["accounts"]["accounts_file"] = accounts_file
+        if cookies_file is not None:
+            patch["accounts"]["cookies_file"] = cookies_file
+        if env_path is not None:
+            patch["accounts"]["env_path"] = env_path
+        if cookies is not None:
+            patch["accounts"]["cookies"] = cookies
+        if manifest_url is not None:
+            patch["manifest"] = {"manifest_url": manifest_url}
+        if proxy is not None:
+            patch["runtime"]["proxy"] = proxy
+        if user_agent is not None and str(user_agent).strip():
+            patch["runtime"]["user_agent"] = str(user_agent).strip()
+        if api_user_agent is not None and str(api_user_agent).strip():
+            patch["runtime"]["api_user_agent"] = str(api_user_agent).strip()
+        if n_splits is not None:
+            patch["pool"] = dict(patch.get("pool") or {})
+            patch["pool"]["n_splits"] = n_splits
+        if concurrency is not None:
+            patch["pool"] = dict(patch.get("pool") or {})
+            patch["pool"]["concurrency"] = concurrency
+        if api_http_impersonate is not None and str(api_http_impersonate).strip():
+            patch["engine"]["api_http_impersonate"] = str(api_http_impersonate).strip()
+
+        merged = _deep_merge(base, patch)
+
+        if overrides is not None:
+            if isinstance(overrides, cls):
+                overrides_data = overrides.model_dump()
+            elif isinstance(overrides, dict):
+                overrides_data = dict(overrides)
+            else:
+                raise TypeError("overrides must be a dict, ScweetConfig, or None")
+            merged = _deep_merge(merged, overrides_data)
+
+        return cls.model_validate(merged)
 
 
 def _parse_config_input(config_input: Any) -> ScweetConfig:
@@ -195,6 +316,7 @@ def build_config_from_legacy_init_kwargs(**kwargs) -> tuple[ScweetConfig, list[s
         "`concurrency` is deprecated in v4.x, planned removal in v5.0. Use `config.pool.concurrency` instead.",
     )
 
+    engine_data = config.engine.model_dump()
     engine_kind = config.engine.kind
     engine_http_mode = config.engine.api_http_mode
     if legacy_mode is not None:
@@ -204,7 +326,11 @@ def build_config_from_legacy_init_kwargs(**kwargs) -> tuple[ScweetConfig, list[s
     if kwargs.get("api_http_mode") is not None:
         engine_http_mode = ApiHttpMode(str(kwargs["api_http_mode"]).lower())
 
-    engine = EngineConfig(kind=engine_kind, api_http_mode=engine_http_mode)
+    engine_data["kind"] = engine_kind
+    engine_data["api_http_mode"] = engine_http_mode
+    if kwargs.get("api_http_impersonate") is not None:
+        engine_data["api_http_impersonate"] = kwargs["api_http_impersonate"]
+    engine = EngineConfig.model_validate(engine_data)
 
     storage_data = config.storage.model_dump()
     if kwargs.get("db_path") is not None:

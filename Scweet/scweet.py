@@ -14,14 +14,10 @@ from .v4.auth import import_accounts_to_db
 from .v4.config import ScweetConfig, build_config_from_legacy_init_kwargs
 from .v4.exceptions import AccountPoolExhausted
 from .v4.manifest import ManifestProvider
-from .v4.mappers import (
-    LEGACY_CSV_HEADER,
-    build_legacy_csv_filename,
-    map_tweet_to_legacy_csv_row,
-    map_tweet_to_legacy_dict,
-)
+from .v4.flatten import flatten_for_csv
+from .v4.mappers import build_legacy_csv_filename
 from .v4.models import FollowsRequest, ProfileRequest, SearchRequest
-from .v4.outputs import write_csv
+from .v4.outputs import write_csv, write_csv_auto_header
 from .v4.resume import compute_query_hash, resolve_resume_start
 from .v4.repos import AccountsRepo, ResumeRepo, RunsRepo
 from .v4.runner import Runner
@@ -161,7 +157,14 @@ class Scweet:
             manifest_url=self._v4_config.manifest.manifest_url,
             ttl_s=self._v4_config.manifest.ttl_s,
         )
-        self._transaction_id_provider = TransactionIdProvider()
+        tx_provider_kwargs: dict[str, Any] = {
+            "proxy": getattr(self._v4_config.runtime, "proxy", None),
+            "user_agent": getattr(self._v4_config.runtime, "api_user_agent", None),
+        }
+        configured_impersonate = getattr(getattr(self._v4_config, "engine", None), "api_http_impersonate", None)
+        if isinstance(configured_impersonate, str) and configured_impersonate.strip():
+            tx_provider_kwargs["impersonate"] = configured_impersonate.strip()
+        self._transaction_id_provider = TransactionIdProvider(**tx_provider_kwargs)
         self._api_engine = ApiEngine(
             config=self._v4_config,
             accounts_repo=self._accounts_repo,
@@ -169,9 +172,16 @@ class Scweet:
             transaction_id_provider=self._transaction_id_provider,
         )
         configured_http_mode = getattr(self._v4_config.engine.api_http_mode, "value", self._v4_config.engine.api_http_mode)
-        self._account_session_builder = AccountSessionBuilder(
-            api_http_mode=str(configured_http_mode or "auto"),
-        )
+        session_builder_kwargs: dict[str, Any] = {
+            "api_http_mode": str(configured_http_mode or "auto"),
+            "proxy": getattr(self._v4_config.runtime, "proxy", None),
+        }
+        if isinstance(configured_impersonate, str) and configured_impersonate.strip():
+            session_builder_kwargs["impersonate"] = configured_impersonate.strip()
+        configured_api_user_agent = getattr(self._v4_config.runtime, "api_user_agent", None)
+        if isinstance(configured_api_user_agent, str) and configured_api_user_agent.strip():
+            session_builder_kwargs["user_agent"] = configured_api_user_agent.strip()
+        self._account_session_builder = AccountSessionBuilder(**session_builder_kwargs)
 
         # Phase 5: Tweet search scraping is API-only regardless of legacy mode/engine selection.
         self._browser_engine = None
@@ -477,33 +487,29 @@ class Scweet:
         except Exception:
             tweets = []
 
-        legacy_dict: dict[str, dict] = {}
-        rows: list[list] = []
+        raw_tweets: list[dict[str, Any]] = []
+        flat_rows: list[dict[str, Any]] = []
         for tweet in tweets:
-            mapped = map_tweet_to_legacy_dict(tweet)
-            tweet_id = str(mapped.get("tweetId") or "")
-            if not tweet_id:
-                continue
-            rows.append(map_tweet_to_legacy_csv_row(tweet))
-            legacy_dict[tweet_id] = {
-                "username": mapped.get("UserName", ""),
-                "handle": mapped.get("UserScreenName", ""),
-                "postdate": mapped.get("Timestamp", ""),
-                "text": mapped.get("Text", ""),
-                "embedded": mapped.get("Embedded_text", ""),
-                "emojis": mapped.get("Emojis", ""),
-                "reply_cnt": mapped.get("Comments", 0),
-                "like_cnt": mapped.get("Likes", 0),
-                "retweet_cnt": mapped.get("Retweets", 0),
-                "image_links": [item for item in str(mapped.get("Image link", "")).split(" ") if item],
-                "tweet_url": mapped.get("Tweet URL", ""),
-            }
+            raw: Any = None
+            if isinstance(tweet, dict):
+                raw = tweet
+            else:
+                raw = getattr(tweet, "raw", None)
+                if not isinstance(raw, dict) and hasattr(tweet, "model_dump"):
+                    try:
+                        raw = tweet.model_dump(mode="json")  # type: ignore[attr-defined]
+                    except Exception:
+                        raw = None
+            if not isinstance(raw, dict):
+                raw = {"value": str(tweet)}
+            raw_tweets.append(raw)
+            flat_rows.append(flatten_for_csv(raw))
 
         write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"
-        write_csv(csv_filename, rows, LEGACY_CSV_HEADER, mode=write_mode)
+        write_csv_auto_header(csv_filename, flat_rows, mode=write_mode)
 
         await self.aclose()
-        return legacy_dict
+        return raw_tweets
 
     def get_follows(self, **scrape_kwargs):
         return asyncio.run(self.aget_follows(**scrape_kwargs))
@@ -584,9 +590,16 @@ class Scweet:
             with open(path, "r", encoding="utf-8") as handle:
                 reader = csv.reader(handle)
                 header = next(reader, None)
-                if not header or "Timestamp" not in header:
+                if not header:
                     return None
-                ts_idx = header.index("Timestamp")
+                candidates = ["Timestamp", "legacy.created_at", "created_at", "legacy.createdAt", "legacyCreatedAt"]
+                ts_idx = None
+                for name in candidates:
+                    if name in header:
+                        ts_idx = header.index(name)
+                        break
+                if ts_idx is None:
+                    return None
 
                 for row in reader:
                     if len(row) <= ts_idx:
@@ -597,7 +610,10 @@ class Scweet:
                     try:
                         dt = datetime.fromisoformat(timestamp_str.replace("Z", ""))
                     except Exception:
-                        dt = None
+                        try:
+                            dt = datetime.strptime(timestamp_str, "%a %b %d %H:%M:%S %z %Y")
+                        except Exception:
+                            dt = None
                     if dt and (max_dt is None or dt > max_dt):
                         max_dt = dt
         except Exception:

@@ -11,7 +11,7 @@ Scweet v4 keeps the familiar v3 public API while moving scraping toward an API-o
 
 ## Architecture summary
 
-- Compatibility facade in `Scweet/Scweet/scweet.py` keeps legacy method signatures and return shapes.
+- Compatibility facade in `Scweet/Scweet/scweet.py` keeps legacy method signatures.
 - New core modules live in `Scweet/Scweet/v4/`.
 - Stateful components use local SQLite (`runs`, `accounts`, `resume_state`, manifest cache).
 - Internal runtime uses async runner + in-memory task queue + account leasing.
@@ -31,6 +31,12 @@ Preferred import (recommended for v4 usage):
 from Scweet import Scweet
 ```
 
+Typed config import (recommended for discoverability):
+
+```python
+from Scweet import Scweet, ScweetConfig
+```
+
 Legacy import (supported in v4.x, deprecated):
 
 ```python
@@ -48,7 +54,12 @@ Compatibility guarantees include:
   - `scrape` / `ascrape`
   - `get_user_information` / `aget_user_information`
   - follows methods (`get_followers`, `get_following`, etc.)
-- Legacy CSV output schema preserved.
+- Legacy CSV filename behavior preserved (same `save_dir` / `custom_csv_name` / naming logic).
+
+Output changes in v4 (breaking vs v3):
+
+- `scrape` / `ascrape` now returns a `list[dict]` of raw tweet objects from the GraphQL response (`tweet_results.result`).
+- CSV output is now a flattened view of those raw GraphQL tweet objects (dot-separated keys), not the legacy v3 fixed header.
 
 ## Account provisioning (DB-first)
 
@@ -143,19 +154,40 @@ Accepted forms:
 
 ## Usage examples
 
+### Recommended: build a typed config
+
+```python
+from Scweet import Scweet, ScweetConfig
+
+cfg = ScweetConfig.from_sources(
+    db_path="scweet_state.db",
+    accounts_file="accounts.txt",
+    cookies_file="cookies.json",  # or cookies.txt (Netscape)
+    env_path=".env",
+    bootstrap_strategy="auto",
+    resume_mode="hybrid_safe",
+    # curl_cffi fingerprint control (optional):
+    # api_http_impersonate="chrome124",
+    overrides={
+        # Advanced knobs live here (lease TTL, cooldowns, scheduler, etc.).
+        "operations": {"account_lease_ttl_s": 600},
+    },
+)
+
+scweet = Scweet(config=cfg)
+```
+
 ### Scrape (v4 import path)
 
 ```python
 from Scweet import Scweet
 
-scweet = Scweet(
+scweet = Scweet.from_sources(
     db_path="scweet_state.db",
     accounts_file="accounts.txt",
     cookies_file="cookies.json",
-    config={
-        "resume": {"mode": "hybrid_safe"},
-        "pool": {"n_splits": 8, "concurrency": 4},
-    },
+    resume_mode="hybrid_safe",
+    overrides={"pool": {"n_splits": 8, "concurrency": 4}},
 )
 
 tweets = scweet.scrape(
@@ -167,6 +199,8 @@ tweets = scweet.scrape(
     custom_csv_name="crypto.csv",
     resume=True,
 )
+
+# `tweets` is a list of raw tweet objects from the GraphQL response (dicts).
 ```
 
 ### Preload DB then scrape (manual provisioning)
@@ -175,9 +209,9 @@ tweets = scweet.scrape(
 from Scweet import Scweet
 
 # Disable auto-provisioning if you want an explicit "provision first" step.
-scweet = Scweet(
+scweet = Scweet.from_sources(
     db_path="scweet_state.db",
-    config={"accounts": {"provision_on_init": False}},
+    provision_on_init=False,
 )
 
 result = scweet.provision_accounts(

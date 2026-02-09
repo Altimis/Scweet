@@ -11,6 +11,7 @@ from typing import Any, Mapping, Optional, Tuple
 import requests
 
 from .exceptions import AccountSessionAuthError, AccountSessionRuntimeError, AccountSessionTransientError
+from .http_utils import apply_proxies_to_session, is_curl_cffi_session, normalize_http_proxies
 
 # Public X web bearer token historically used by web GraphQL calls.
 # Can be overridden at runtime via SCWEET_X_BEARER_TOKEN.
@@ -156,9 +157,10 @@ class AccountSessionBuilder:
         impersonate: str = DEFAULT_IMPERSONATE,
         timeout=DEFAULT_HTTP_TIMEOUT,
         default_bearer_token: Optional[str] = DEFAULT_X_BEARER_TOKEN,
-        user_agent: str = DEFAULT_USER_AGENT,
+        user_agent: Optional[str] = None,
         client_language: str = "en",
         referer: str = "https://x.com/",
+        proxy: Any = None,
     ):
         self.prefer_curl_cffi = bool(prefer_curl_cffi)
         configured_mode = str(api_http_mode or HTTP_MODE_AUTO).strip().lower()
@@ -167,9 +169,11 @@ class AccountSessionBuilder:
         self.api_http_mode = configured_mode
         self.impersonate = impersonate
         self.timeout = timeout
+        self.proxy = proxy
+        self._http_proxies = normalize_http_proxies(proxy)
         self.session_factory = session_factory or self._build_default_session_factory()
         self.default_bearer_token = default_bearer_token
-        self.user_agent = user_agent
+        self.user_agent_override = _as_str(user_agent)
         self.client_language = client_language
         self.referer = referer
 
@@ -198,7 +202,15 @@ class AccountSessionBuilder:
             from curl_cffi.requests import AsyncSession as CurlAsyncSession
 
             def _factory():
-                return CurlAsyncSession(impersonate=self.impersonate, timeout=self.timeout)
+                kwargs = {"impersonate": self.impersonate, "timeout": self.timeout}
+                if self._http_proxies:
+                    kwargs["proxies"] = self._http_proxies
+                try:
+                    return CurlAsyncSession(**kwargs)
+                except TypeError:
+                    # Older curl_cffi versions may not accept proxies at init.
+                    kwargs.pop("proxies", None)
+                    return CurlAsyncSession(**kwargs)
 
             return _factory
         except Exception:
@@ -210,7 +222,14 @@ class AccountSessionBuilder:
                 from curl_cffi.requests import Session as CurlSession
 
                 def _factory():
-                    return CurlSession(impersonate=self.impersonate, timeout=self.timeout)
+                    kwargs = {"impersonate": self.impersonate, "timeout": self.timeout}
+                    if self._http_proxies:
+                        kwargs["proxies"] = self._http_proxies
+                    try:
+                        return CurlSession(**kwargs)
+                    except TypeError:
+                        kwargs.pop("proxies", None)
+                        return CurlSession(**kwargs)
 
                 return _factory
             except Exception:
@@ -236,6 +255,7 @@ class AccountSessionBuilder:
             )
 
         try:
+            apply_proxies_to_session(session, self._http_proxies)
             self._apply_cookies(session, material.cookies)
             self._apply_headers(session, material)
         except Exception as exc:
@@ -288,9 +308,15 @@ class AccountSessionBuilder:
             "X-Twitter-Auth-Type": "OAuth2Session",
             "X-Twitter-Active-User": "yes",
             "X-Twitter-Client-Language": self.client_language,
-            "User-Agent": self.user_agent,
             "Referer": self.referer,
         }
+
+        # curl_cffi sets its own UA consistent with impersonation; overriding it can cause fingerprint mismatches.
+        # For requests fallback, we still set a browser-like UA unless the user explicitly disables/overrides it.
+        if self.user_agent_override is not None:
+            headers["User-Agent"] = self.user_agent_override
+        elif not is_curl_cffi_session(session):
+            headers["User-Agent"] = DEFAULT_USER_AGENT
 
         current_headers = getattr(session, "headers", None)
         if current_headers is None:

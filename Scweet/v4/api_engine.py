@@ -485,15 +485,16 @@ class ApiEngine:
                     continue
 
                 item_content = content.get("itemContent", {}) if isinstance(content.get("itemContent"), dict) else {}
-                tweet_result = (
+                tweet_result_raw = (
                     item_content.get("tweet_results", {})
                     .get("result", {})
                 )
-                if not isinstance(tweet_result, dict):
+                if not isinstance(tweet_result_raw, dict):
                     continue
 
-                if "tweet" in tweet_result and isinstance(tweet_result.get("tweet"), dict):
-                    tweet_result = tweet_result["tweet"]
+                tweet_result = tweet_result_raw
+                if "tweet" in tweet_result_raw and isinstance(tweet_result_raw.get("tweet"), dict):
+                    tweet_result = tweet_result_raw["tweet"]
 
                 legacy = tweet_result.get("legacy", {}) if isinstance(tweet_result.get("legacy"), dict) else {}
                 user_result = (
@@ -543,7 +544,7 @@ class ApiEngine:
                         retweets=self._safe_int(legacy.get("retweet_count")),
                         media=TweetMedia(image_links=media_urls),
                         tweet_url=tweet_url,
-                        raw=tweet_result,
+                        raw=tweet_result_raw,
                     )
                 )
 
