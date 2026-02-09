@@ -238,6 +238,295 @@ def normalize_account_record(record: dict) -> dict:
     return normalized
 
 
+def _load_dotenv_values(env_path: str) -> dict[str, str]:
+    file_path = Path(env_path)
+    if not file_path.exists():
+        return {}
+
+    # Prefer python-dotenv's pure parser (no os.environ side effects) if available.
+    try:
+        from dotenv import dotenv_values  # type: ignore
+
+        raw = dotenv_values(str(file_path))
+        return {str(key): str(value) for key, value in raw.items() if key and value is not None}
+    except Exception:
+        pass
+
+    values: dict[str, str] = {}
+    with file_path.open("r", encoding="utf-8") as handle:
+        for raw_line in handle:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.lower().startswith("export "):
+                line = line[7:].lstrip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if not key:
+                continue
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+                value = value[1:-1]
+            values[key] = value
+    return values
+
+
+def _parse_cookie_header(value: str) -> dict[str, str]:
+    raw = str(value or "").strip()
+    if not raw:
+        return {}
+
+    lowered = raw.lower()
+    if lowered.startswith("cookie:"):
+        raw = raw.split(":", 1)[1].strip()
+
+    cookies: dict[str, str] = {}
+    for part in raw.split(";"):
+        chunk = part.strip()
+        if not chunk:
+            continue
+        if "=" not in chunk:
+            continue
+        name, cookie_value = chunk.split("=", 1)
+        name = name.strip()
+        cookie_value = cookie_value.strip()
+        if not name:
+            continue
+        if len(cookie_value) >= 2 and cookie_value[0] == cookie_value[-1] and cookie_value[0] in {"'", '"'}:
+            cookie_value = cookie_value[1:-1]
+        cookies[name] = cookie_value
+    return cookies
+
+
+def load_env_account(path: str) -> list[dict]:
+    """Load a single account record from a dotenv-style file.
+
+    Supported keys (case-insensitive):
+    - Legacy v3: EMAIL, EMAIL_PASSWORD, USERNAME, PASSWORD
+    - v4: AUTH_TOKEN, CT0 (or CSRF), TWO_FA/OTP_SECRET/OTP
+
+    This loader is deterministic and performs no network calls.
+    """
+
+    raw = _load_dotenv_values(path)
+    if not raw:
+        return []
+
+    values = {str(key).strip().upper(): _as_str(value) for key, value in raw.items() if key}
+
+    record = {
+        "email": values.get("EMAIL"),
+        "email_password": values.get("EMAIL_PASSWORD"),
+        "username": values.get("USERNAME"),
+        "password": values.get("PASSWORD"),
+        "two_fa": values.get("TWO_FA") or values.get("OTP_SECRET") or values.get("OTP"),
+        "auth_token": values.get("AUTH_TOKEN"),
+        # Prefer explicit CT0 (cookie name) when present.
+        "csrf": values.get("CT0") or values.get("CSRF"),
+    }
+
+    normalized = normalize_account_record(record)
+    if normalized.get("username"):
+        return [normalized]
+    return []
+
+
+_ACCOUNT_RECORD_HINT_KEYS = {
+    # Identity / account record shape.
+    "username",
+    "user",
+    "handle",
+    "screen_name",
+    "account",
+    "login",
+    # Nested cookie payload keys.
+    "cookies",
+    "cookies_json",
+    "cookie_jar",
+    "cookieJar",
+    # Credentials.
+    "password",
+    "pass",
+    "email",
+    "email_address",
+    "mail",
+    "email_password",
+    "email_pass",
+    "mail_password",
+    "mail_pass",
+    "2fa",
+    "two_fa",
+    "twofa",
+    "otp_secret",
+    "otp",
+    # Canonical + operational keys.
+    "bearer",
+    "bearer_token",
+    "authorization",
+    "csrf",
+    "status",
+    "available_til",
+    "available_until",
+    "cooldown_until",
+    "daily_requests",
+    "daily_tweets",
+    "last_reset_date",
+    "reset_date",
+    "total_tweets",
+    "busy",
+    "last_used",
+    "last_used_at",
+    "last_error_code",
+    "cooldown_reason",
+    # Lease fields.
+    "lease_id",
+    "lease_run_id",
+    "lease_worker_id",
+    "lease_acquired_at",
+    "lease_expires_at",
+}
+
+
+def _looks_like_cookie_mapping_dict(value: dict[str, Any]) -> bool:
+    if not value:
+        return False
+    # If it already looks like an account record (identity/operational fields), don't treat it as raw cookies.
+    for key in value.keys():
+        if str(key) in _ACCOUNT_RECORD_HINT_KEYS:
+            return False
+    return any(key in value for key in ("auth_token", "ct0", "csrf_token", "authToken", "token"))
+
+
+def load_cookies_payload(payload: Any) -> list[dict]:
+    """Load account records from a direct `cookies=` payload.
+
+    Accepted forms:
+    - a single account record dict (username/auth_token/cookies/etc)
+    - a raw cookie mapping dict: {"auth_token": "...", "ct0": "...", ...}
+    - a raw cookie list: [{"name": "auth_token", "value": "..."}, ...]
+    - a list of account records
+    - an object form with {"accounts": [...]} (same as cookies.json)
+    - a mapping of username -> cookies/account payload (same as cookies.json)
+    - a JSON string containing any of the above
+
+    This loader is deterministic and performs no network calls.
+    """
+
+    if payload is None:
+        return []
+
+    if hasattr(payload, "get_dict"):
+        payload = payload.get_dict()
+
+    if isinstance(payload, str):
+        stripped = payload.strip()
+        if not stripped:
+            return []
+        try:
+            decoded = json.loads(stripped)
+        except Exception:
+            cookie_header = _parse_cookie_header(stripped)
+            if cookie_header:
+                return load_cookies_payload({"cookies": cookie_header})
+            # Treat raw strings as a direct auth_token value for convenience.
+            return load_cookies_payload({"auth_token": stripped})
+        return load_cookies_payload(decoded)
+
+    raw_records: list[Any] = []
+
+    if isinstance(payload, list):
+        if not payload:
+            return []
+        dict_items = [item for item in payload if isinstance(item, dict)]
+        looks_like_account_records = any(
+            any(
+                key in item
+                for key in (
+                    "username",
+                    "user",
+                    "handle",
+                    "screen_name",
+                    "account",
+                    "login",
+                    "auth_token",
+                    "authToken",
+                    "token",
+                    "cookies",
+                    "cookies_json",
+                    "cookie_jar",
+                    "cookieJar",
+                )
+            )
+            for item in dict_items
+        )
+        looks_like_cookie_dicts = bool(dict_items) and all(
+            "name" in item and "value" in item for item in dict_items
+        )
+        if looks_like_account_records:
+            raw_records = payload
+        elif looks_like_cookie_dicts:
+            raw_records = [{"cookies": payload}]
+        else:
+            # Ambiguous list; assume it's a cookie list for a single account.
+            raw_records = [{"cookies": payload}]
+    elif isinstance(payload, dict):
+        if isinstance(payload.get("accounts"), list):
+            raw_records = payload["accounts"]
+        elif _looks_like_cookie_mapping_dict(payload):
+            raw_records = [{"cookies": payload}]
+        elif any(
+            key in payload
+            for key in (
+                "username",
+                "user",
+                "handle",
+                "screen_name",
+                "account",
+                "login",
+                "auth_token",
+                "authToken",
+                "token",
+                "cookies",
+                "cookies_json",
+                "cookie_jar",
+                "cookieJar",
+                "csrf",
+                "csrf_token",
+                "ct0",
+            )
+        ):
+            raw_records = [payload]
+        else:
+            # Mapping-like: username -> cookies/account payload.
+            for key, value in payload.items():
+                if isinstance(value, dict):
+                    if _looks_like_cookie_mapping_dict(value):
+                        raw_records.append({"username": key, "cookies": value})
+                    else:
+                        item = dict(value)
+                        item.setdefault("username", key)
+                        raw_records.append(item)
+                else:
+                    raw_records.append({"username": key, "cookies": value})
+    else:
+        raw_records = [{"cookies": payload}]
+
+    records: list[dict[str, Any]] = []
+    for item in raw_records:
+        if isinstance(item, dict):
+            source = item
+        else:
+            source = {"cookies": item}
+
+        normalized = normalize_account_record(source)
+        if normalized.get("username"):
+            records.append(normalized)
+
+    return records
+
+
 def load_accounts_txt(path: str) -> list[dict]:
     records: list[dict[str, Any]] = []
     file_path = Path(path)
@@ -286,6 +575,8 @@ def load_cookies_json(path: str) -> list[dict]:
     elif isinstance(payload, dict):
         if isinstance(payload.get("accounts"), list):
             raw_records = payload["accounts"]
+        elif _looks_like_cookie_mapping_dict(payload):
+            raw_records = [{"cookies": payload}]
         elif any(
             key in payload
             for key in (
@@ -303,9 +594,12 @@ def load_cookies_json(path: str) -> list[dict]:
         else:
             for key, value in payload.items():
                 if isinstance(value, dict):
-                    item = dict(value)
-                    item.setdefault("username", key)
-                    raw_records.append(item)
+                    if _looks_like_cookie_mapping_dict(value):
+                        raw_records.append({"username": key, "cookies": value})
+                    else:
+                        item = dict(value)
+                        item.setdefault("username", key)
+                        raw_records.append(item)
                 else:
                     raw_records.append({"username": key, "cookies": value})
 
@@ -398,17 +692,36 @@ def import_accounts_to_db(
     db_path: str,
     accounts_file: Optional[str] = None,
     cookies_file: Optional[str] = None,
+    env_path: Optional[str] = None,
+    cookies_payload: Any = None,
     bootstrap_timeout_s: int = 30,
     bootstrap_fn=None,
+    creds_bootstrap_timeout_s: int = 180,
+    creds_bootstrap_fn=None,
+    runtime: Optional[Mapping[str, Any]] = None,
 ) -> int:
     repo = AccountsRepo(db_path)
     processed = 0
     effective_bootstrap = bootstrap_fn or bootstrap_cookies_from_auth_token
+    runtime_options = dict(runtime or {})
+
+    def _db_has_usable_auth(username: Optional[str], token: Optional[str]) -> bool:
+        existing = repo.get_by_username(username or "") if username else None
+        if existing is None and token:
+            existing = repo.get_by_auth_token(token)
+        if existing is None:
+            return False
+        material, _reason = prepare_account_auth_material(existing)
+        return material is not None
 
     def _normalize_and_enrich(record: dict[str, Any]) -> dict[str, Any]:
         normalized = normalize_account_record(record)
         username = _as_str(normalized.get("username")) or "<unknown>"
         token_fp = _token_fingerprint(_as_str(normalized.get("auth_token")))
+
+        if _db_has_usable_auth(_as_str(normalized.get("username")), _as_str(normalized.get("auth_token"))):
+            logger.info("Import account reuse username=%s token_fp=%s", username, token_fp)
+            return normalized
 
         material, reason = prepare_account_auth_material(normalized)
         token = _as_str(normalized.get("auth_token"))
@@ -441,6 +754,62 @@ def import_accounts_to_db(
                     username,
                     token_fp,
                 )
+
+        if material is None:
+            # If auth_token bootstrap couldn't produce usable auth, try credentials via nodriver.
+            has_password = _as_str(normalized.get("password")) is not None
+            has_login_identifier = _as_str(normalized.get("email")) is not None or _as_str(normalized.get("username")) is not None
+            if has_password and has_login_identifier:
+                effective_creds_bootstrap = creds_bootstrap_fn
+                if effective_creds_bootstrap is None:
+                    try:
+                        from .nodriver_bootstrap import bootstrap_cookies_from_credentials as _default_creds_bootstrap
+
+                        effective_creds_bootstrap = _default_creds_bootstrap
+                    except Exception:
+                        effective_creds_bootstrap = None
+
+                if effective_creds_bootstrap is not None:
+                    logger.info(
+                        "Import account creds bootstrap required username=%s token_fp=%s",
+                        username,
+                        token_fp,
+                    )
+                    try:
+                        bootstrapped = effective_creds_bootstrap(
+                            normalized,
+                            proxy=runtime_options.get("proxy"),
+                            user_agent=runtime_options.get("user_agent"),
+                            headless=bool(runtime_options.get("headless", True)),
+                            disable_images=bool(runtime_options.get("disable_images", False)),
+                            code_callback=runtime_options.get("code_callback"),
+                            timeout_s=int(creds_bootstrap_timeout_s),
+                        )
+                    except Exception as exc:
+                        logger.warning(
+                            "Import account creds bootstrap exception username=%s detail=%s",
+                            username,
+                            str(exc),
+                        )
+                        bootstrapped = None
+
+                    if bootstrapped:
+                        cookies_dict = _cookies_to_dict(_normalize_cookies_payload(bootstrapped))
+                        if cookies_dict:
+                            normalized["cookies_json"] = cookies_dict
+                            normalized["csrf"] = _as_str(normalized.get("csrf")) or _as_str(cookies_dict.get("ct0"))
+                            normalized["auth_token"] = _as_str(normalized.get("auth_token")) or _as_str(
+                                cookies_dict.get("auth_token")
+                            )
+                            logger.info(
+                                "Import account creds bootstrap success username=%s cookie_count=%s has_ct0=%s",
+                                username,
+                                len(cookies_dict),
+                                bool(_as_str(cookies_dict.get("ct0"))),
+                            )
+                        material, reason = prepare_account_auth_material(normalized)
+                    else:
+                        logger.warning("Import account creds bootstrap failed username=%s", username)
 
         if material is None:
             normalized["status"] = 0
@@ -480,6 +849,16 @@ def import_accounts_to_db(
 
     if cookies_file:
         for record in load_cookies_json(cookies_file):
+            repo.upsert_account(_normalize_and_enrich(record))
+            processed += 1
+
+    if env_path:
+        for record in load_env_account(env_path):
+            repo.upsert_account(_normalize_and_enrich(record))
+            processed += 1
+
+    if cookies_payload is not None:
+        for record in load_cookies_payload(cookies_payload):
             repo.upsert_account(_normalize_and_enrich(record))
             processed += 1
 

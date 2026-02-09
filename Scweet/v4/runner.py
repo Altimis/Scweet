@@ -85,6 +85,28 @@ async def _maybe_await(value):
     return value
 
 
+async def _bootstrap_token_async(auth_token: str, timeout_s: int = 30) -> Optional[dict]:
+    from .auth import bootstrap_cookies_from_auth_token
+
+    return await asyncio.to_thread(bootstrap_cookies_from_auth_token, auth_token, timeout_s=timeout_s)
+
+
+async def _bootstrap_creds_async(
+    account_record: dict[str, Any], runtime_options: dict[str, Any], timeout_s: int = 180
+) -> Optional[dict]:
+    from .nodriver_bootstrap import abootstrap_cookies_from_credentials
+
+    return await abootstrap_cookies_from_credentials(
+        account_record,
+        proxy=runtime_options.get("proxy"),
+        user_agent=runtime_options.get("user_agent"),
+        headless=bool(runtime_options.get("headless", True)),
+        disable_images=bool(runtime_options.get("disable_images", False)),
+        code_callback=runtime_options.get("code_callback"),
+        timeout_s=int(timeout_s),
+    )
+
+
 class Runner:
     def __init__(self, config, repos, engines, outputs):
         self.config = config
@@ -100,6 +122,8 @@ class Runner:
         self.account_session_builder = _resolve(engines, "account_session_builder", "session_builder")
 
         self.queue_cls = InMemoryTaskQueue
+        self._repair_attempted_keys: set[str] = set()
+        self._repair_source_records: Optional[list[dict[str, Any]]] = None
 
     def _resolve_engine(self, engines: Any, method_name: str):
         direct = engines if hasattr(engines, method_name) else None
@@ -121,6 +145,10 @@ class Runner:
         return None
 
     async def run_search(self, search_request):
+        # Reset per-run repair state to keep repair attempts bounded.
+        self._repair_attempted_keys = set()
+        self._repair_source_records = None
+
         request = self._coerce_search_request(search_request)
         if self.search_engine is None:
             raise EngineError("No search engine available for run_search")
@@ -287,6 +315,108 @@ class Runner:
             raise failure
 
         return SearchResult(tweets=collected_tweets, stats=stats)
+
+    def _runtime_options_for_bootstrap(self) -> dict[str, Any]:
+        return {
+            "proxy": _config_value(self.config, "proxy", None),
+            "user_agent": _config_value(self.config, "user_agent", None),
+            "headless": bool(_config_value(self.config, "headless", True)),
+            "disable_images": bool(_config_value(self.config, "disable_images", False)),
+            "code_callback": _config_value(self.config, "code_callback", None),
+        }
+
+    def _load_repair_source_records(self) -> list[dict[str, Any]]:
+        if self._repair_source_records is not None:
+            return list(self._repair_source_records)
+
+        records: list[dict[str, Any]] = []
+        try:
+            from .auth import load_accounts_txt, load_env_account
+
+            accounts_file = _config_value(self.config, "accounts_file", None)
+            env_path = _config_value(self.config, "env_path", None)
+            if isinstance(accounts_file, str) and accounts_file.strip():
+                records.extend(load_accounts_txt(accounts_file))
+            if isinstance(env_path, str) and env_path.strip():
+                records.extend(load_env_account(env_path))
+        except Exception:
+            records = []
+
+        self._repair_source_records = list(records)
+        return list(records)
+
+    async def _attempt_account_repair(self, account: dict[str, Any], status_code: int) -> bool:
+        if status_code not in _AUTH_ERROR_CODES:
+            return False
+        if self.accounts_repo is None or not hasattr(self.accounts_repo, "upsert_account"):
+            return False
+
+        username = account.get("username")
+        auth_token = account.get("auth_token")
+        key = str(username or auth_token or account.get("id") or "")
+        if not key:
+            return False
+        if key in self._repair_attempted_keys:
+            return False
+        self._repair_attempted_keys.add(key)
+
+        runtime_options = self._runtime_options_for_bootstrap()
+
+        # Token-first repair.
+        if isinstance(auth_token, str) and auth_token.strip():
+            try:
+                cookies = await _bootstrap_token_async(auth_token.strip(), timeout_s=30)
+            except Exception:
+                cookies = None
+            if cookies:
+                from .auth import normalize_account_record
+
+                normalized = normalize_account_record({"username": username or key, "cookies": cookies})
+                try:
+                    self.accounts_repo.upsert_account(normalized)
+                except Exception:
+                    pass
+                logger.info("Account repair succeeded via auth_token username=%s", username or "<unknown>")
+                return True
+
+        # Credentials repair (if creds are available from current sources).
+        source_records = self._load_repair_source_records()
+        matched: Optional[dict[str, Any]] = None
+        if isinstance(auth_token, str) and auth_token.strip():
+            for record in source_records:
+                if record.get("auth_token") == auth_token:
+                    matched = record
+                    break
+        if matched is None and isinstance(username, str) and username.strip():
+            for record in source_records:
+                if record.get("username") == username:
+                    matched = record
+                    break
+
+        if matched and matched.get("password"):
+            try:
+                cookies = await _bootstrap_creds_async(matched, runtime_options, timeout_s=180)
+            except Exception:
+                cookies = None
+            if cookies:
+                from .auth import normalize_account_record
+
+                normalized = normalize_account_record(
+                    {"username": matched.get("username") or username or key, "cookies": cookies}
+                )
+                try:
+                    self.accounts_repo.upsert_account(normalized)
+                except Exception:
+                    pass
+                logger.info("Account repair succeeded via credentials username=%s", username or "<unknown>")
+                return True
+
+        logger.info(
+            "Account repair not possible or failed username=%s status_code=%s",
+            username or "<unknown>",
+            status_code,
+        )
+        return False
 
     async def run_profiles(self, profile_request):
         if self.profile_engine is None:
@@ -650,6 +780,17 @@ class Runner:
                 attempt = int(task.get("attempt", 0))
                 fallback_attempts = int(task.get("fallback_attempts", 0))
                 account_switches = int(task.get("account_switches", 0))
+
+                if status_code in _AUTH_ERROR_CODES:
+                    repaired = False
+                    try:
+                        repaired = await self._attempt_account_repair(account, status_code=status_code)
+                    except Exception:
+                        repaired = False
+                    if repaired:
+                        # Keep the account usable after repair; the current worker will still exit to
+                        # allow the task retry flow to rebuild a session.
+                        account_status = 1
 
                 can_retry = attempt < max_task_attempts and fallback_attempts < max_fallback_attempts
                 retry_reason = "transient_or_rate_limit"

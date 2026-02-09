@@ -1,13 +1,13 @@
 # Scweet v4
 
-Scweet v4 keeps the familiar public API while moving internals to a modern async architecture with account pooling and SQLite state.
+Scweet v4 keeps the familiar v3 public API while moving scraping toward an API-only core and introducing DB-first account provisioning backed by SQLite.
 
 ## v4 status
 
 - v4 facade routing is active.
 - Legacy public signatures remain callable.
-- Preferred path: `from Scweet import Scweet`.
-- Legacy path remains supported in v4.x but is deprecated: `from Scweet.scweet import Scweet`.
+- Preferred import: `from Scweet import Scweet`.
+- Legacy import remains supported in v4.x but is deprecated: `from Scweet.scweet import Scweet`.
 
 ## Architecture summary
 
@@ -15,7 +15,6 @@ Scweet v4 keeps the familiar public API while moving internals to a modern async
 - New core modules live in `Scweet/Scweet/v4/`.
 - Stateful components use local SQLite (`runs`, `accounts`, `resume_state`, manifest cache).
 - Internal runtime uses async runner + in-memory task queue + account leasing.
-- Engines are selectable (`browser`, `api`, `auto`) through config.
 
 ## Installation
 
@@ -37,15 +36,42 @@ Legacy import (supported in v4.x, deprecated):
 from Scweet.scweet import Scweet
 ```
 
-## Deprecation policy (v4.x -> v5.0)
+## Backward compatibility (v4.x)
 
-The following are still supported in v4.x but emit `FutureWarning` and are planned for removal in v5.0:
+Compatibility guarantees include:
 
-- Legacy import path: `Scweet.scweet`
-- Constructor arg `mode` -> use `engine`
-- Constructor arg `env_path` -> use `accounts_file` / `cookies_file`
-- Constructor arg `n_splits` -> use `config.pool.n_splits`
-- Constructor arg `concurrency` -> use `config.pool.concurrency`
+- Legacy class import path still works: `from Scweet.scweet import Scweet`.
+- Preferred class import path available: `from Scweet import Scweet`.
+- Legacy constructor args remain accepted (for example: `env_path`, `cookies`, `cookies_path`, `n_splits`, `concurrency`, `headless`).
+- Legacy method signatures preserved for:
+  - `scrape` / `ascrape`
+  - `get_user_information` / `aget_user_information`
+  - follows methods (`get_followers`, `get_following`, etc.)
+- Legacy CSV output schema preserved.
+
+## Account provisioning (DB-first)
+
+Scweet stores account records in SQLite and reuses the DB state across runs. When you provide account sources, they are imported into the DB (best-effort) and then leased to workers during scraping.
+
+Supported account inputs:
+
+- `.env` (single-account, legacy style)
+- `accounts.txt`
+- `cookies.json`
+- direct `cookies=` payload
+
+`.env` key precedence (single account):
+
+1. `AUTH_TOKEN` + `CT0` (or `CSRF`)
+2. `AUTH_TOKEN` only
+3. legacy credentials (`EMAIL`/`EMAIL_PASSWORD` and/or `USERNAME`/`PASSWORD`)
+
+Phase 1 provisioning-related config knobs:
+
+- `accounts.provision_on_init` (default `True`)
+- `accounts.bootstrap_strategy` (default `"auto"`; one of `auto`, `token_only`, `nodriver_only`, `none`)
+- `accounts.store_credentials` (default `False`; set to `True` only if you accept storing plaintext credentials in SQLite)
+- `runtime.strict` (default `False`; if `True`, "no usable accounts" should raise instead of returning an empty result)
 
 ## Resume modes
 
@@ -57,7 +83,7 @@ Scweet v4 supports three resume modes under `config.resume.mode`:
 
 Important compatibility rule:
 
-- If you instantiate through the legacy facade path (`from Scweet.scweet import Scweet`), resume is forced to `legacy_csv` behavior for compatibility.
+- If you instantiate through the legacy import path (`from Scweet.scweet import Scweet`), resume is forced to `legacy_csv` behavior for compatibility.
 
 ## Account source formats
 
@@ -98,18 +124,17 @@ Minimal example:
 ]
 ```
 
-## Modern v4 usage (recommended)
+## Usage examples
 
-### Example: API engine + SQLite + hybrid resume
+### Scrape (v4 import path)
 
 ```python
 from Scweet import Scweet
 
 scweet = Scweet(
-    engine="api",
     db_path="scweet_state.db",
     accounts_file="accounts.txt",
-    manifest_url="https://example.com/manifest.json",
+    cookies_file="cookies.json",
     config={
         "resume": {"mode": "hybrid_safe"},
         "pool": {"n_splits": 8, "concurrency": 4},
@@ -127,35 +152,13 @@ tweets = scweet.scrape(
 )
 ```
 
-### Example: browser engine + cookies file
-
-```python
-from Scweet import Scweet
-
-scweet = Scweet(
-    engine="browser",
-    db_path="scweet_state.db",
-    cookies_file="cookies.json",
-    config={
-        "resume": {"mode": "legacy_csv"},
-    },
-)
-
-profiles = scweet.get_user_information(handles=["x_born_to_die_x"], login=True)
-```
-
-## Backward-compatible usage example
+### Backward-compatible usage (legacy import path)
 
 ```python
 from Scweet.scweet import Scweet
 
 # Deprecated import path, still supported in v4.x.
-scweet = Scweet(
-    env_path=".env",
-    n_splits=5,
-    concurrency=5,
-    headless=True,
-)
+scweet = Scweet(env_path=".env", n_splits=5, concurrency=5, headless=True)
 
 results = scweet.scrape(
     since="2025-01-01",

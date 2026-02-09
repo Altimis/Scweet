@@ -22,6 +22,92 @@ def _today_string() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
+def _as_str(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _as_int(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return int(value)
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def _is_synthetic_username(username: str) -> bool:
+    normalized = (username or "").strip().lower()
+    return normalized.startswith("auth_") or normalized.startswith("cookie_")
+
+
+def _cookies_to_dict(value: Any) -> dict[str, Any]:
+    if value is None:
+        return {}
+
+    if isinstance(value, dict):
+        return dict(value)
+
+    if isinstance(value, list):
+        out: dict[str, Any] = {}
+        for item in value:
+            if not isinstance(item, dict):
+                continue
+            name = item.get("name")
+            if name:
+                out[str(name)] = item.get("value")
+        return out
+
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return {}
+        try:
+            decoded = json.loads(stripped)
+        except Exception:
+            return {}
+        return _cookies_to_dict(decoded)
+
+    return {}
+
+
+def _cookies_non_empty_count(cookies: dict[str, Any]) -> int:
+    count = 0
+    for value in (cookies or {}).values():
+        text = _as_str(value)
+        if text is not None:
+            count += 1
+    return count
+
+
+def _auth_quality(*, auth_token: Optional[str], csrf: Optional[str], cookies: dict[str, Any]) -> tuple[int, int, int, int]:
+    has_token = 1 if _as_str(auth_token) else 0
+    has_csrf = 1 if _as_str(csrf) else 0
+    has_cookies = 1 if cookies else 0
+    cookie_count = _cookies_non_empty_count(cookies)
+    return (has_token, has_csrf, has_cookies, cookie_count)
+
+
+def _merge_cookie_dicts(existing: dict[str, Any], incoming: dict[str, Any], *, prefer_incoming: bool) -> dict[str, Any]:
+    merged = dict(existing or {})
+    for key, value in (incoming or {}).items():
+        value_text = _as_str(value)
+        if value_text is None:
+            continue
+        if prefer_incoming:
+            merged[key] = value
+            continue
+
+        current_text = _as_str(merged.get(key))
+        if current_text is None:
+            merged[key] = value
+    return merged
+
+
 def _account_to_dict(account: AccountTable) -> dict[str, Any]:
     return {column.name: getattr(account, column.name) for column in AccountTable.__table__.columns}
 
@@ -202,8 +288,8 @@ class AccountsRepo:
             session.flush()
 
     def upsert_account(self, account: dict) -> None:
-        username = account.get("username")
-        if not username:
+        incoming_username = _as_str(account.get("username"))
+        if not incoming_username:
             raise ValueError("Account record must include `username`")
 
         valid_keys = set(AccountTable.__table__.columns.keys())
@@ -213,10 +299,24 @@ class AccountsRepo:
             payload["cookies_json"] = json.dumps(cookies_value, separators=(",", ":"))
 
         with session_scope(self.db_path) as session:
-            stmt = select(AccountTable).where(AccountTable.username == username).limit(1)
+            stmt = select(AccountTable).where(AccountTable.username == incoming_username).limit(1)
             existing = session.execute(stmt).scalar_one_or_none()
+            match_reason = "username" if existing is not None else ""
+
+            incoming_auth_token = _as_str(payload.get("auth_token"))
+            if existing is None and incoming_auth_token:
+                stmt = (
+                    select(AccountTable)
+                    .where(AccountTable.auth_token == incoming_auth_token)
+                    .order_by(AccountTable.id.asc())
+                    .limit(1)
+                )
+                existing = session.execute(stmt).scalar_one_or_none()
+                if existing is not None:
+                    match_reason = "auth_token"
+
             if existing is None:
-                obj = AccountTable(username=username)
+                obj = AccountTable(username=incoming_username)
                 for key, value in payload.items():
                     if key == "id":
                         continue
@@ -225,11 +325,98 @@ class AccountsRepo:
                 session.flush()
                 return
 
-            for key, value in payload.items():
-                if key in {"id", "username"}:
-                    continue
-                setattr(existing, key, value)
+            # If we matched by auth_token and the DB username is synthetic while the incoming one looks real,
+            # rename to the incoming username (subject to uniqueness).
+            if match_reason == "auth_token" and existing.username != incoming_username:
+                existing_name = _as_str(existing.username) or ""
+                if _is_synthetic_username(existing_name) and not _is_synthetic_username(incoming_username):
+                    conflict_stmt = select(AccountTable).where(AccountTable.username == incoming_username).limit(1)
+                    conflict = session.execute(conflict_stmt).scalar_one_or_none()
+                    if conflict is None:
+                        existing.username = incoming_username
+
+            existing_cookies = _cookies_to_dict(getattr(existing, "cookies_json", None))
+            incoming_cookies = _cookies_to_dict(payload.get("cookies_json"))
+
+            existing_quality = _auth_quality(
+                auth_token=_as_str(getattr(existing, "auth_token", None)),
+                csrf=_as_str(getattr(existing, "csrf", None)),
+                cookies=existing_cookies,
+            )
+            incoming_quality = _auth_quality(
+                auth_token=incoming_auth_token,
+                csrf=_as_str(payload.get("csrf")),
+                cookies=incoming_cookies,
+            )
+            upgrade_auth = incoming_quality > existing_quality
+
+            merged_cookies: Optional[dict[str, Any]] = None
+            if existing_cookies or incoming_cookies:
+                merged_cookies = _merge_cookie_dicts(
+                    existing_cookies,
+                    incoming_cookies,
+                    prefer_incoming=upgrade_auth,
+                )
+                if merged_cookies != existing_cookies:
+                    setattr(existing, "cookies_json", json.dumps(merged_cookies, separators=(",", ":")))
+
+            existing_auth_token = _as_str(getattr(existing, "auth_token", None))
+            if incoming_auth_token and (not existing_auth_token or (upgrade_auth and incoming_auth_token != existing_auth_token)):
+                existing.auth_token = incoming_auth_token
+
+            incoming_csrf = _as_str(payload.get("csrf"))
+            existing_csrf = _as_str(getattr(existing, "csrf", None))
+            if incoming_csrf and (not existing_csrf or (upgrade_auth and incoming_csrf != existing_csrf)):
+                existing.csrf = incoming_csrf
+
+            incoming_bearer = _as_str(payload.get("bearer"))
+            existing_bearer = _as_str(getattr(existing, "bearer", None))
+            if incoming_bearer and (not existing_bearer or (upgrade_auth and incoming_bearer != existing_bearer)):
+                existing.bearer = incoming_bearer
+
+            # Avoid downgrading status/cooldown fields due to partial imports.
+            incoming_status = _as_int(payload.get("status"))
+            existing_status = _as_int(getattr(existing, "status", None))
+            if incoming_status is not None:
+                if existing_status in (None, 0) and incoming_status not in (None, 0):
+                    existing.status = incoming_status
+                elif existing_status not in (None, 0) and incoming_status in (None, 0):
+                    pass
+                elif existing_status is None:
+                    existing.status = incoming_status
+
+            # If auth material was upgraded, clear unusable markers.
+            if upgrade_auth:
+                cooldown_reason = _as_str(getattr(existing, "cooldown_reason", None))
+                if cooldown_reason and cooldown_reason.startswith("unusable:"):
+                    existing.cooldown_reason = None
+                    existing.last_error_code = None
+                    if _as_int(getattr(existing, "status", None)) == 0:
+                        existing.status = 1
+
             session.flush()
+
+    def get_by_username(self, username: str) -> Optional[dict[str, Any]]:
+        name = _as_str(username)
+        if not name:
+            return None
+        with session_scope(self.db_path) as session:
+            stmt = select(AccountTable).where(AccountTable.username == name).limit(1)
+            existing = session.execute(stmt).scalar_one_or_none()
+            if existing is None:
+                return None
+            return _account_to_dict(existing)
+
+    def get_by_auth_token(self, auth_token: str) -> Optional[dict[str, Any]]:
+        token = _as_str(auth_token)
+        if not token:
+            return None
+        with session_scope(self.db_path) as session:
+            stmt = select(AccountTable).where(AccountTable.auth_token == token).order_by(AccountTable.id.asc()).limit(1)
+            existing = session.execute(stmt).scalar_one_or_none()
+            if existing is None:
+                return None
+            return _account_to_dict(existing)
 
 
 class RunsRepo:

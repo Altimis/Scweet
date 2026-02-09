@@ -24,6 +24,13 @@ class ResumeMode(str, Enum):
     HYBRID_SAFE = "hybrid_safe"
 
 
+class BootstrapStrategy(str, Enum):
+    AUTO = "auto"
+    TOKEN_ONLY = "token_only"
+    NODRIVER_ONLY = "nodriver_only"
+    NONE = "none"
+
+
 class EngineConfig(BaseModel):
     kind: EngineKind = EngineKind.BROWSER
     api_http_mode: ApiHttpMode = ApiHttpMode.AUTO
@@ -55,6 +62,16 @@ class AccountsConfig(BaseModel):
     cookies_path: Optional[str] = None
     env_path: Optional[str] = None
     cookies: Optional[list[dict[str, Any]]] = None
+    provision_on_init: bool = True
+    bootstrap_strategy: BootstrapStrategy = BootstrapStrategy.AUTO
+    store_credentials: bool = False
+
+    @field_validator("bootstrap_strategy", mode="before")
+    @classmethod
+    def _normalize_bootstrap_strategy(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return value.lower()
+        return value
 
 
 class PoolConfig(BaseModel):
@@ -69,6 +86,7 @@ class RuntimeConfig(BaseModel):
     headless: bool = True
     scroll_ratio: int = Field(default=30, ge=1)
     code_callback: Optional[Any] = None
+    strict: bool = False
 
 
 class OperationalConfig(BaseModel):
