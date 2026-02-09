@@ -1,5 +1,6 @@
 LICENSE.txt
 README.md
+pyproject.toml
 setup.cfg
 setup.py
 Scweet/__init__.py
@@ -18,6 +19,8 @@ Scweet/v4/auth.py
 Scweet/v4/config.py
 Scweet/v4/cooldown.py
 Scweet/v4/exceptions.py
+Scweet/v4/flatten.py
+Scweet/v4/http_utils.py
 Scweet/v4/limiter.py
 Scweet/v4/manifest.py
 Scweet/v4/mappers.py
@@ -33,4 +36,5 @@ Scweet/v4/scheduler.py
 Scweet/v4/schema.py
 Scweet/v4/storage.py
 Scweet/v4/transaction.py
+Scweet/v4/tweet_csv.py
 Scweet/v4/warnings.py

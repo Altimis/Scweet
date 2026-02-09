@@ -59,7 +59,8 @@ Compatibility guarantees include:
 Output changes in v4 (breaking vs v3):
 
 - `scrape` / `ascrape` now returns a `list[dict]` of raw tweet objects from the GraphQL response (`tweet_results.result`).
-- CSV output is now a flattened view of those raw GraphQL tweet objects (dot-separated keys), not the legacy v3 fixed header.
+- CSV output is now a curated "important fields" schema (stable header) derived from those raw GraphQL tweet objects.
+  - For full coverage, use JSON output (`config.output.format="json"` or `"both"`) or the returned `list[dict]`.
 
 ## Account provisioning (DB-first)
 
@@ -177,6 +178,20 @@ cfg = ScweetConfig.from_sources(
 scweet = Scweet(config=cfg)
 ```
 
+### Output format (CSV / JSON / both)
+
+By default, `scrape/ascrape` writes a curated CSV with important tweet/user fields (stable header).
+
+You can control output via `config.output.format` (or `Scweet.from_sources(output_format=...)`):
+
+- `"csv"` (default): write CSV only
+- `"json"`: write JSON only
+- `"both"`: write CSV + JSON
+- `"none"`: write no files (still returns tweets as Python objects)
+
+When JSON output is enabled, Scweet writes a `.json` file next to the CSV path (same basename, `.json` suffix).
+When `resume=True` and the JSON file already exists, Scweet appends new tweet objects to the existing JSON array.
+
 ### Scrape (v4 import path)
 
 ```python
@@ -260,6 +275,39 @@ results = scweet.scrape(
 
 - Migration guide: `Scweet/MIGRATION_V3_TO_V4.md`
 - Changelog: `Scweet/CHANGELOG.md`
+
+## Logging
+
+Scweet uses the standard Python `logging` module (for example: `Scweet.v4.runner`, `Scweet.v4.auth`), and does **not**
+install logging handlers for you. In notebooks (and some environments), you must configure logging to see output.
+
+### Notebook-friendly logging setup
+
+```python
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.INFO,  # DEBUG/INFO/WARNING/ERROR
+    format="%(asctime)s %(levelname)s %(name)s:%(lineno)d | %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+    force=True,  # important in notebooks (overrides existing handlers)
+)
+
+# Optional: make only Scweet verbose
+logging.getLogger("Scweet").setLevel(logging.DEBUG)
+
+# Optional: quiet noisy deps
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+```
+
+### pytest logging
+
+pytest captures logs by default. To see logs in test runs:
+
+```bash
+pytest -q tests -s --log-cli-level=INFO
+```
 
 ## Responsible use
 

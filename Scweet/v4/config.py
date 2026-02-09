@@ -175,6 +175,7 @@ class ScweetConfig(BaseModel):
         user_agent: Optional[str] = None,
         api_user_agent: Optional[str] = None,
         resume_mode: ResumeMode | str = ResumeMode.HYBRID_SAFE,
+        output_format: Optional[str] = None,
         api_http_mode: ApiHttpMode | str = ApiHttpMode.AUTO,
         api_http_impersonate: Optional[str] = None,
         n_splits: Optional[int] = None,
@@ -234,6 +235,9 @@ class ScweetConfig(BaseModel):
             patch["accounts"]["cookies"] = cookies
         if manifest_url is not None:
             patch["manifest"] = {"manifest_url": manifest_url}
+        if output_format is not None and str(output_format).strip():
+            patch["output"] = dict(patch.get("output") or {})
+            patch["output"]["format"] = str(output_format).strip().lower()
         if proxy is not None:
             patch["runtime"]["proxy"] = proxy
         if user_agent is not None and str(user_agent).strip():

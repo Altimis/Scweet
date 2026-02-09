@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 from typing import Any, Awaitable, Callable, Mapping, Optional
 
 
@@ -110,21 +111,41 @@ def bootstrap_cookies_from_credentials(
     to use in that code path.
     """
 
+    async def _run() -> Optional[dict[str, str]]:
+        return await abootstrap_cookies_from_credentials(
+            account,
+            proxy=proxy,
+            user_agent=user_agent,
+            headless=headless,
+            disable_images=disable_images,
+            code_callback=code_callback,
+            timeout_s=timeout_s,
+        )
+
     try:
         asyncio.get_running_loop()
+        has_running_loop = True
     except RuntimeError:
-        return asyncio.run(
-            abootstrap_cookies_from_credentials(
-                account,
-                proxy=proxy,
-                user_agent=user_agent,
-                headless=headless,
-                disable_images=disable_images,
-                code_callback=code_callback,
-                timeout_s=timeout_s,
-            )
-        )
-    raise RuntimeError(
-        "bootstrap_cookies_from_credentials() cannot run inside an active event loop; "
-        "use abootstrap_cookies_from_credentials() instead."
-    )
+        has_running_loop = False
+
+    if not has_running_loop:
+        return asyncio.run(_run())
+
+    # Notebooks (and other environments) often have an event loop running already.
+    # We cannot call asyncio.run() in that case, so run the coroutine in a dedicated
+    # thread with its own loop.
+    out: dict[str, Any] = {}
+
+    def _thread_runner() -> None:
+        try:
+            out["value"] = asyncio.run(_run())
+        except Exception as exc:
+            out["exc"] = exc
+
+    thread = threading.Thread(target=_thread_runner, daemon=True)
+    thread.start()
+    thread.join()
+
+    if "exc" in out:
+        raise out["exc"]
+    return out.get("value")

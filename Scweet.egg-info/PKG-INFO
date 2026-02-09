@@ -57,7 +57,7 @@ Scweet v4 keeps the familiar v3 public API while moving scraping toward an API-o
 
 ## Architecture summary
 
-- Compatibility facade in `Scweet/Scweet/scweet.py` keeps legacy method signatures and return shapes.
+- Compatibility facade in `Scweet/Scweet/scweet.py` keeps legacy method signatures.
 - New core modules live in `Scweet/Scweet/v4/`.
 - Stateful components use local SQLite (`runs`, `accounts`, `resume_state`, manifest cache).
 - Internal runtime uses async runner + in-memory task queue + account leasing.
@@ -77,6 +77,12 @@ Preferred import (recommended for v4 usage):
 from Scweet import Scweet
 ```
 
+Typed config import (recommended for discoverability):
+
+```python
+from Scweet import Scweet, ScweetConfig
+```
+
 Legacy import (supported in v4.x, deprecated):
 
 ```python
@@ -94,7 +100,13 @@ Compatibility guarantees include:
   - `scrape` / `ascrape`
   - `get_user_information` / `aget_user_information`
   - follows methods (`get_followers`, `get_following`, etc.)
-- Legacy CSV output schema preserved.
+- Legacy CSV filename behavior preserved (same `save_dir` / `custom_csv_name` / naming logic).
+
+Output changes in v4 (breaking vs v3):
+
+- `scrape` / `ascrape` now returns a `list[dict]` of raw tweet objects from the GraphQL response (`tweet_results.result`).
+- CSV output is now a curated "important fields" schema (stable header) derived from those raw GraphQL tweet objects.
+  - For full coverage, use JSON output (`config.output.format="json"` or `"both"`) or the returned `list[dict]`.
 
 ## Account provisioning (DB-first)
 
@@ -189,19 +201,54 @@ Accepted forms:
 
 ## Usage examples
 
+### Recommended: build a typed config
+
+```python
+from Scweet import Scweet, ScweetConfig
+
+cfg = ScweetConfig.from_sources(
+    db_path="scweet_state.db",
+    accounts_file="accounts.txt",
+    cookies_file="cookies.json",  # or cookies.txt (Netscape)
+    env_path=".env",
+    bootstrap_strategy="auto",
+    resume_mode="hybrid_safe",
+    # curl_cffi fingerprint control (optional):
+    # api_http_impersonate="chrome124",
+    overrides={
+        # Advanced knobs live here (lease TTL, cooldowns, scheduler, etc.).
+        "operations": {"account_lease_ttl_s": 600},
+    },
+)
+
+scweet = Scweet(config=cfg)
+```
+
+### Output format (CSV / JSON / both)
+
+By default, `scrape/ascrape` writes a curated CSV with important tweet/user fields (stable header).
+
+You can control output via `config.output.format` (or `Scweet.from_sources(output_format=...)`):
+
+- `"csv"` (default): write CSV only
+- `"json"`: write JSON only
+- `"both"`: write CSV + JSON
+- `"none"`: write no files (still returns tweets as Python objects)
+
+When JSON output is enabled, Scweet writes a `.json` file next to the CSV path (same basename, `.json` suffix).
+When `resume=True` and the JSON file already exists, Scweet appends new tweet objects to the existing JSON array.
+
 ### Scrape (v4 import path)
 
 ```python
 from Scweet import Scweet
 
-scweet = Scweet(
+scweet = Scweet.from_sources(
     db_path="scweet_state.db",
     accounts_file="accounts.txt",
     cookies_file="cookies.json",
-    config={
-        "resume": {"mode": "hybrid_safe"},
-        "pool": {"n_splits": 8, "concurrency": 4},
-    },
+    resume_mode="hybrid_safe",
+    overrides={"pool": {"n_splits": 8, "concurrency": 4}},
 )
 
 tweets = scweet.scrape(
@@ -213,6 +260,8 @@ tweets = scweet.scrape(
     custom_csv_name="crypto.csv",
     resume=True,
 )
+
+# `tweets` is a list of raw tweet objects from the GraphQL response (dicts).
 ```
 
 ### Preload DB then scrape (manual provisioning)
@@ -221,9 +270,9 @@ tweets = scweet.scrape(
 from Scweet import Scweet
 
 # Disable auto-provisioning if you want an explicit "provision first" step.
-scweet = Scweet(
+scweet = Scweet.from_sources(
     db_path="scweet_state.db",
-    config={"accounts": {"provision_on_init": False}},
+    provision_on_init=False,
 )
 
 result = scweet.provision_accounts(
@@ -272,6 +321,39 @@ results = scweet.scrape(
 
 - Migration guide: `Scweet/MIGRATION_V3_TO_V4.md`
 - Changelog: `Scweet/CHANGELOG.md`
+
+## Logging
+
+Scweet uses the standard Python `logging` module (for example: `Scweet.v4.runner`, `Scweet.v4.auth`), and does **not**
+install logging handlers for you. In notebooks (and some environments), you must configure logging to see output.
+
+### Notebook-friendly logging setup
+
+```python
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.INFO,  # DEBUG/INFO/WARNING/ERROR
+    format="%(asctime)s %(levelname)s %(name)s:%(lineno)d | %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+    force=True,  # important in notebooks (overrides existing handlers)
+)
+
+# Optional: make only Scweet verbose
+logging.getLogger("Scweet").setLevel(logging.DEBUG)
+
+# Optional: quiet noisy deps
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+```
+
+### pytest logging
+
+pytest captures logs by default. To see logs in test runs:
+
+```bash
+pytest -q tests -s --log-cli-level=INFO
+```
 
 ## Responsible use
 

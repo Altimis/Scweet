@@ -14,13 +14,13 @@ from .v4.auth import import_accounts_to_db
 from .v4.config import ScweetConfig, build_config_from_legacy_init_kwargs
 from .v4.exceptions import AccountPoolExhausted
 from .v4.manifest import ManifestProvider
-from .v4.flatten import flatten_for_csv
 from .v4.mappers import build_legacy_csv_filename
 from .v4.models import FollowsRequest, ProfileRequest, SearchRequest
-from .v4.outputs import write_csv, write_csv_auto_header
+from .v4.outputs import write_csv, write_json_auto_append
 from .v4.resume import compute_query_hash, resolve_resume_start
 from .v4.repos import AccountsRepo, ResumeRepo, RunsRepo
 from .v4.runner import Runner
+from .v4.tweet_csv import SUMMARY_CSV_HEADER, tweet_to_csv_rows
 from .v4.transaction import TransactionIdProvider
 from .v4.warnings import warn_deprecated, warn_legacy_import_path
 
@@ -488,7 +488,8 @@ class Scweet:
             tweets = []
 
         raw_tweets: list[dict[str, Any]] = []
-        flat_rows: list[dict[str, Any]] = []
+        csv_rows_summary: list[dict[str, Any]] = []
+        csv_rows_compat: list[dict[str, Any]] = []
         for tweet in tweets:
             raw: Any = None
             if isinstance(tweet, dict):
@@ -503,10 +504,47 @@ class Scweet:
             if not isinstance(raw, dict):
                 raw = {"value": str(tweet)}
             raw_tweets.append(raw)
-            flat_rows.append(flatten_for_csv(raw))
+            mapped = tweet_to_csv_rows(raw)
+            csv_rows_summary.append(mapped.summary)
+            csv_rows_compat.append(mapped.compat)
 
-        write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"
-        write_csv_auto_header(csv_filename, flat_rows, mode=write_mode)
+        configured_format = getattr(getattr(self._v4_config, "output", None), "format", None)
+        fmt = str(configured_format or "csv").strip().lower()
+        if fmt not in {"csv", "json", "both", "none"}:
+            fmt = "csv"
+
+        if fmt in {"csv", "both"}:
+            write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"
+
+            if not csv_rows_summary:
+                # Preserve legacy behavior: when there are no rows, create an empty file (no header)
+                # so downstream resume helpers can still see the expected path.
+                if write_mode == "w" and not os.path.exists(csv_filename):
+                    Path(csv_filename).parent.mkdir(parents=True, exist_ok=True)
+                    Path(csv_filename).touch()
+                # Nothing to append when resume=True.
+            else:
+                existing_header: Optional[list[str]] = None
+                if write_mode == "a" and os.path.exists(csv_filename) and os.path.getsize(csv_filename) > 0:
+                    try:
+                        with open(csv_filename, "r", encoding="utf-8", newline="") as handle:
+                            reader = csv.reader(handle)
+                            existing_header = next(reader, None) or None
+                    except Exception:
+                        existing_header = None
+
+                # For new files, write the stable "summary" schema with friendly column names.
+                # For existing files with a different schema, append using the existing header and
+                # a compat row mapping (so resume doesn't corrupt older CSVs).
+                if existing_header and existing_header != SUMMARY_CSV_HEADER:
+                    write_csv(csv_filename, csv_rows_compat, existing_header, mode="a")
+                else:
+                    write_csv(csv_filename, csv_rows_summary, SUMMARY_CSV_HEADER, mode=write_mode)
+
+        if fmt in {"json", "both"}:
+            json_path = str(Path(csv_filename).with_suffix(".json"))
+            json_mode = "a" if (resume and os.path.exists(json_path)) else "w"
+            write_json_auto_append(json_path, raw_tweets, mode=json_mode)
 
         await self.aclose()
         return raw_tweets
