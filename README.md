@@ -152,6 +152,43 @@ tweets = scweet.scrape(
 )
 ```
 
+### Preload DB then scrape (manual provisioning)
+
+```python
+from Scweet import Scweet
+
+# Disable auto-provisioning if you want an explicit "provision first" step.
+scweet = Scweet(
+    db_path="scweet_state.db",
+    config={"accounts": {"provision_on_init": False}},
+)
+
+result = scweet.provision_accounts(
+    accounts_file="accounts.txt",
+    cookies_file="cookies.json",
+    env_path=".env",
+    cookies={"auth_token": "...", "ct0": "..."},
+)
+print(result)  # {"processed": ..., "eligible": ...}
+
+# DB-first reuse: re-running provisioning does not re-bootstrap accounts that already have usable auth in SQLite.
+tweets = scweet.scrape(
+    since="2026-02-01",
+    until="2026-02-07",
+    words=["openai"],
+    limit=50,
+    save_dir="outputs",
+    custom_csv_name="tweets.csv",
+)
+
+# Strict mode: raise instead of silently returning empty results when no usable accounts exist.
+strict_scweet = Scweet(
+    db_path="scweet_state.db",
+    config={"runtime": {"strict": True}, "accounts": {"provision_on_init": False}},
+)
+strict_scweet.provision_accounts(env_path=".env")
+```
+
 ### Backward-compatible usage (legacy import path)
 
 ```python

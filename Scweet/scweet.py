@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import logging
 import os
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Awaitable, Callable, Optional, Union, List
+from typing import Any, Awaitable, Callable, Optional, Union, List
 
 from .v4.api_engine import ApiEngine
 from .v4.account_session import AccountSessionBuilder
 from .v4.auth import import_accounts_to_db
-from .v4.browser_engine import BrowserEngine
 from .v4.config import ScweetConfig, build_config_from_legacy_init_kwargs
-from .v4.engines import select_engine
+from .v4.exceptions import AccountPoolExhausted
 from .v4.manifest import ManifestProvider
 from .v4.mappers import (
     LEGACY_CSV_HEADER,
@@ -27,6 +27,8 @@ from .v4.repos import AccountsRepo, ResumeRepo, RunsRepo
 from .v4.runner import Runner
 from .v4.transaction import TransactionIdProvider
 from .v4.warnings import warn_deprecated, warn_legacy_import_path
+
+logger = logging.getLogger(__name__)
 
 
 class Scweet:
@@ -121,14 +123,51 @@ class Scweet:
         self._runs_repo = RunsRepo(db_path)
         self._resume_repo = ResumeRepo(db_path)
 
-        accounts_file = self._v4_config.accounts.accounts_file
-        cookies_file = self._v4_config.accounts.cookies_file
-        if accounts_file or cookies_file:
-            try:
-                import_accounts_to_db(db_path, accounts_file=accounts_file, cookies_file=cookies_file)
-            except Exception:
-                # Account import is best-effort in this routing phase.
-                pass
+        provision_on_init = bool(getattr(self._v4_config.accounts, "provision_on_init", True))
+        if provision_on_init:
+            accounts_file = self._v4_config.accounts.accounts_file
+            cookies_file = self._v4_config.accounts.cookies_file
+            env_path = self._v4_config.accounts.env_path
+            cookies_payload = self.cookies
+            if cookies_payload is None:
+                cookies_payload = getattr(self._v4_config.accounts, "cookies", None)
+
+            has_sources = bool(accounts_file or cookies_file or env_path or cookies_payload is not None)
+            if has_sources:
+                runtime_options = {
+                    "proxy": getattr(self._v4_config.runtime, "proxy", None),
+                    "user_agent": getattr(self._v4_config.runtime, "user_agent", None),
+                    "headless": bool(getattr(self._v4_config.runtime, "headless", True)),
+                    "disable_images": bool(getattr(self._v4_config.runtime, "disable_images", False)),
+                    "code_callback": getattr(self._v4_config.runtime, "code_callback", None),
+                }
+                def _disabled_bootstrap(*_args, **_kwargs):
+                    return None
+
+                strategy_raw = getattr(self._v4_config.accounts, "bootstrap_strategy", "auto")
+                strategy_value = getattr(strategy_raw, "value", strategy_raw)
+                strategy = str(strategy_value or "auto").strip().lower()
+                bootstrap_fn = None
+                creds_bootstrap_fn = None
+                if strategy in {"nodriver_only", "none"}:
+                    bootstrap_fn = _disabled_bootstrap
+                if strategy in {"token_only", "none"}:
+                    creds_bootstrap_fn = _disabled_bootstrap
+                try:
+                    import_accounts_to_db(
+                        db_path,
+                        accounts_file=accounts_file,
+                        cookies_file=cookies_file,
+                        env_path=env_path,
+                        cookies_payload=cookies_payload,
+                        bootstrap_fn=bootstrap_fn,
+                        creds_bootstrap_fn=creds_bootstrap_fn,
+                        runtime=runtime_options,
+                    )
+                except Exception:
+                    # Provisioning is best-effort by default; scraping will surface "no usable accounts"
+                    # unless strict mode is enabled.
+                    logger.exception("Account provisioning failed (best-effort); continuing")
 
         self._manifest_provider = ManifestProvider(
             db_path=db_path,
@@ -147,23 +186,9 @@ class Scweet:
             api_http_mode=str(configured_http_mode or "auto"),
         )
 
-        selected_kind = getattr(self._v4_config.engine.kind, "value", self._v4_config.engine.kind)
-        normalized_kind = str(selected_kind or "auto").strip().lower()
+        # Phase 5: Tweet search scraping is API-only regardless of legacy mode/engine selection.
         self._browser_engine = None
-        if normalized_kind == "browser":
-            browser_client_factory = getattr(self, "_legacy_client_factory", None)
-            if browser_client_factory is None:
-                browser_client_factory = self._default_legacy_client_factory
-            self._browser_engine = BrowserEngine(
-                self._v4_config,
-                legacy_client_factory=browser_client_factory,
-            )
-
-        self._selected_engine = select_engine(
-            str(selected_kind),
-            api_engine=self._api_engine,
-            browser_engine=self._browser_engine,
-        )
+        self._selected_engine = self._api_engine
 
         self._runner = Runner(
             config=self._v4_config,
@@ -175,7 +200,7 @@ class Scweet:
             engines={
                 "api_engine": self._api_engine,
                 "browser_engine": self._browser_engine,
-                "engine": self._selected_engine,
+                "engine": self._api_engine,
                 "account_session_builder": self._account_session_builder,
             },
             outputs={
@@ -187,6 +212,111 @@ class Scweet:
         from .legacy_runtime import Scweet as LegacyRuntimeScweet
 
         return LegacyRuntimeScweet(**kwargs)
+
+    def provision_accounts(
+        self,
+        *,
+        accounts_file: Optional[str] = None,
+        cookies_file: Optional[str] = None,
+        env_path: Optional[str] = None,
+        cookies: Any = None,
+        db_path: Optional[str] = None,
+        bootstrap_timeout_s: int = 30,
+        creds_bootstrap_timeout_s: int = 180,
+    ) -> dict[str, int]:
+        """Import accounts into SQLite from the provided sources (optionally bootstrapping).
+
+        This is a manual provisioning API; it does not require scraping.
+        """
+
+        def _as_strategy(value: Any) -> str:
+            raw = getattr(value, "value", value)
+            return str(raw or "auto").strip().lower()
+
+        effective_db_path = db_path or self._v4_config.storage.db_path
+        effective_accounts_file = accounts_file if accounts_file is not None else self._v4_config.accounts.accounts_file
+        effective_cookies_file = cookies_file if cookies_file is not None else self._v4_config.accounts.cookies_file
+        effective_env_path = env_path if env_path is not None else self._v4_config.accounts.env_path
+
+        if cookies is not None:
+            cookies_payload = cookies
+        else:
+            cookies_payload = self.cookies
+            if cookies_payload is None:
+                cookies_payload = getattr(self._v4_config.accounts, "cookies", None)
+
+        runtime_options = {
+            "proxy": getattr(self._v4_config.runtime, "proxy", None),
+            "user_agent": getattr(self._v4_config.runtime, "user_agent", None),
+            "headless": bool(getattr(self._v4_config.runtime, "headless", True)),
+            "disable_images": bool(getattr(self._v4_config.runtime, "disable_images", False)),
+            "code_callback": getattr(self._v4_config.runtime, "code_callback", None),
+        }
+
+        def _disabled_bootstrap(*_args, **_kwargs):
+            return None
+
+        strategy = _as_strategy(getattr(self._v4_config.accounts, "bootstrap_strategy", "auto"))
+        bootstrap_fn = None
+        creds_bootstrap_fn = None
+        if strategy in {"nodriver_only", "none"}:
+            bootstrap_fn = _disabled_bootstrap
+        if strategy in {"token_only", "none"}:
+            creds_bootstrap_fn = _disabled_bootstrap
+
+        processed = import_accounts_to_db(
+            effective_db_path,
+            accounts_file=effective_accounts_file,
+            cookies_file=effective_cookies_file,
+            env_path=effective_env_path,
+            cookies_payload=cookies_payload,
+            bootstrap_timeout_s=int(bootstrap_timeout_s),
+            bootstrap_fn=bootstrap_fn,
+            creds_bootstrap_timeout_s=int(creds_bootstrap_timeout_s),
+            creds_bootstrap_fn=creds_bootstrap_fn,
+            runtime=runtime_options,
+        )
+
+        if getattr(self._accounts_repo, "db_path", None) == effective_db_path:
+            repo = self._accounts_repo
+        else:
+            repo = AccountsRepo(effective_db_path, require_auth_material=True)
+        eligible = int(repo.count_eligible())
+
+        if bool(getattr(self._v4_config.runtime, "strict", False)) and eligible <= 0:
+            raise AccountPoolExhausted(
+                "No usable accounts available after provisioning. "
+                "Provide accounts via `accounts_file` (accounts.txt), `cookies_file` (cookies.json), "
+                "`env_path` (.env), or `cookies=` (cookie dict/list/header/token)."
+            )
+
+        return {"processed": int(processed), "eligible": eligible}
+
+    def import_accounts(self, **kwargs) -> dict[str, int]:
+        """Alias for provision_accounts for readability."""
+
+        return self.provision_accounts(**kwargs)
+
+    def add_account(self, account: Optional[dict[str, Any]] = None, *, db_path: Optional[str] = None, **kwargs) -> dict[str, Any]:
+        """Upsert a single account record into SQLite (no scraping required)."""
+
+        from .v4.auth import normalize_account_record
+
+        payload: dict[str, Any] = {}
+        if account:
+            payload.update(dict(account))
+        payload.update(kwargs)
+        normalized = normalize_account_record(payload)
+        if not normalized.get("username"):
+            raise ValueError("Account record must include username/email/auth_token/cookies to derive a stable username")
+
+        effective_db_path = db_path or self._v4_config.storage.db_path
+        if getattr(self._accounts_repo, "db_path", None) == effective_db_path:
+            repo = self._accounts_repo
+        else:
+            repo = AccountsRepo(effective_db_path, require_auth_material=True)
+        repo.upsert_account(normalized)
+        return normalized
 
     async def init_nodriver(self):
         """Legacy no-op hook retained for compatibility."""
@@ -355,6 +485,17 @@ class Scweet:
         try:
             run_result = await self._runner.run_search(search_request)
             tweets = list(getattr(run_result, "tweets", []) or [])
+        except AccountPoolExhausted as exc:
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            detail = (
+                "No usable accounts available for API scraping. "
+                "Provide accounts via `accounts_file` (accounts.txt), `cookies_file` (cookies.json), "
+                "`env_path` (.env), or `cookies=` (cookie dict/list/header/token)."
+            )
+            if strict:
+                raise AccountPoolExhausted(detail) from exc
+            logger.error("%s (%s)", detail, str(exc))
+            tweets = []
         except Exception:
             tweets = []
 

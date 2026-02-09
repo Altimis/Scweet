@@ -61,7 +61,9 @@ class AccountsConfig(BaseModel):
     cookies_file: Optional[str] = None
     cookies_path: Optional[str] = None
     env_path: Optional[str] = None
-    cookies: Optional[list[dict[str, Any]]] = None
+    # Accept the legacy `cookies=` payload without forcing a particular shape.
+    # Normalization is handled by v4 auth loaders (load_cookies_payload/normalize_account_record).
+    cookies: Any = None
     provision_on_init: bool = True
     bootstrap_strategy: BootstrapStrategy = BootstrapStrategy.AUTO
     store_credentials: bool = False
