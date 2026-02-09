@@ -124,6 +124,7 @@ class Runner:
         self.queue_cls = InMemoryTaskQueue
         self._repair_attempted_keys: set[str] = set()
         self._repair_source_records: Optional[list[dict[str, Any]]] = None
+        self._repair_policy_logged_none: bool = False
 
     def _resolve_engine(self, engines: Any, method_name: str):
         direct = engines if hasattr(engines, method_name) else None
@@ -148,6 +149,7 @@ class Runner:
         # Reset per-run repair state to keep repair attempts bounded.
         self._repair_attempted_keys = set()
         self._repair_source_records = None
+        self._repair_policy_logged_none = False
 
         request = self._coerce_search_request(search_request)
         if self.search_engine is None:
@@ -351,6 +353,18 @@ class Runner:
         if self.accounts_repo is None or not hasattr(self.accounts_repo, "upsert_account"):
             return False
 
+        strategy_raw = _config_value(self.config, "bootstrap_strategy", "auto")
+        strategy_value = getattr(strategy_raw, "value", strategy_raw)
+        strategy = str(strategy_value or "auto").strip().lower()
+        if strategy == "none":
+            if not self._repair_policy_logged_none:
+                logger.info("Account repair skipped bootstrap_strategy=none")
+                self._repair_policy_logged_none = True
+            return False
+
+        allow_token_bootstrap = strategy in {"auto", "token_only"}
+        allow_creds_bootstrap = strategy in {"auto", "nodriver_only"}
+
         username = account.get("username")
         auth_token = account.get("auth_token")
         key = str(username or auth_token or account.get("id") or "")
@@ -363,7 +377,7 @@ class Runner:
         runtime_options = self._runtime_options_for_bootstrap()
 
         # Token-first repair.
-        if isinstance(auth_token, str) and auth_token.strip():
+        if allow_token_bootstrap and isinstance(auth_token, str) and auth_token.strip():
             try:
                 cookies = await _bootstrap_token_async(auth_token.strip(), timeout_s=30)
             except Exception:
@@ -380,6 +394,14 @@ class Runner:
                 return True
 
         # Credentials repair (if creds are available from current sources).
+        if not allow_creds_bootstrap:
+            logger.info(
+                "Account repair not possible or failed username=%s status_code=%s",
+                username or "<unknown>",
+                status_code,
+            )
+            return False
+
         source_records = self._load_repair_source_records()
         matched: Optional[dict[str, Any]] = None
         if isinstance(auth_token, str) and auth_token.strip():

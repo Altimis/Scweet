@@ -300,6 +300,45 @@ def _parse_cookie_header(value: str) -> dict[str, str]:
     return cookies
 
 
+def _parse_netscape_cookies_text(value: str) -> dict[str, str]:
+    """Parse a Netscape cookies.txt export into a cookie dict.
+
+    Format: 7 columns per line:
+      domain, flag, path, secure, expiry, name, value
+    """
+
+    text = str(value or "")
+    if not text.strip():
+        return {}
+
+    cookies: dict[str, str] = {}
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        # Netscape exports use comments; HttpOnly cookies are prefixed with '#HttpOnly_'.
+        if line.startswith("#") and not line.startswith("#HttpOnly_"):
+            continue
+        if line.startswith("#HttpOnly_"):
+            line = line[len("#HttpOnly_") :].lstrip()
+
+        parts = line.split("\t")
+        if len(parts) < 7:
+            parts = line.split()
+        if len(parts) < 7:
+            continue
+        if len(parts) > 7:
+            remainder = "\t".join(parts[6:]) if "\t" in line else " ".join(parts[6:])
+            parts = parts[:6] + [remainder]
+
+        name = str(parts[5] or "").strip()
+        if not name:
+            continue
+        cookies[name] = str(parts[6] or "")
+
+    return cookies
+
+
 def load_env_account(path: str) -> list[dict]:
     """Load a single account record from a dotenv-style file.
 
@@ -424,6 +463,11 @@ def load_cookies_payload(payload: Any) -> list[dict]:
         stripped = payload.strip()
         if not stripped:
             return []
+        try:
+            if Path(stripped).exists():
+                return load_cookies_json(stripped)
+        except Exception:
+            pass
         try:
             decoded = json.loads(stripped)
         except Exception:
@@ -565,8 +609,15 @@ def load_accounts_txt(path: str) -> list[dict]:
 
 def load_cookies_json(path: str) -> list[dict]:
     file_path = Path(path)
-    with file_path.open("r", encoding="utf-8") as handle:
-        payload = json.load(handle)
+    text = file_path.read_text(encoding="utf-8")
+
+    try:
+        payload = json.loads(text)
+    except Exception:
+        cookies = _parse_netscape_cookies_text(text)
+        if not cookies:
+            raise
+        payload = [{"cookies": cookies}]
 
     raw_records: list[Any] = []
 
@@ -694,6 +745,7 @@ def import_accounts_to_db(
     cookies_file: Optional[str] = None,
     env_path: Optional[str] = None,
     cookies_payload: Any = None,
+    bootstrap_strategy: Any = "auto",
     bootstrap_timeout_s: int = 30,
     bootstrap_fn=None,
     creds_bootstrap_timeout_s: int = 180,
@@ -704,6 +756,14 @@ def import_accounts_to_db(
     processed = 0
     effective_bootstrap = bootstrap_fn or bootstrap_cookies_from_auth_token
     runtime_options = dict(runtime or {})
+
+    strategy_raw = getattr(bootstrap_strategy, "value", bootstrap_strategy)
+    strategy = str(strategy_raw or "auto").strip().lower()
+    if strategy not in {"auto", "token_only", "nodriver_only", "none"}:
+        logger.warning("Unknown bootstrap_strategy=%s; using auto", str(strategy_raw))
+        strategy = "auto"
+    allow_token_bootstrap = strategy in {"auto", "token_only"}
+    allow_creds_bootstrap = strategy in {"auto", "nodriver_only"}
 
     def _db_has_usable_auth(username: Optional[str], token: Optional[str]) -> bool:
         existing = repo.get_by_username(username or "") if username else None
@@ -725,7 +785,12 @@ def import_accounts_to_db(
 
         material, reason = prepare_account_auth_material(normalized)
         token = _as_str(normalized.get("auth_token"))
-        needs_bootstrap = material is None and token and reason in {"missing_csrf", "missing_auth_token"}
+        needs_bootstrap = (
+            allow_token_bootstrap
+            and material is None
+            and token
+            and reason in {"missing_csrf", "missing_auth_token"}
+        )
         if needs_bootstrap:
             logger.info(
                 "Import account bootstrap required username=%s token_fp=%s reason=%s",
@@ -758,8 +823,10 @@ def import_accounts_to_db(
         if material is None:
             # If auth_token bootstrap couldn't produce usable auth, try credentials via nodriver.
             has_password = _as_str(normalized.get("password")) is not None
-            has_login_identifier = _as_str(normalized.get("email")) is not None or _as_str(normalized.get("username")) is not None
-            if has_password and has_login_identifier:
+            has_login_identifier = (
+                _as_str(normalized.get("email")) is not None or _as_str(normalized.get("username")) is not None
+            )
+            if allow_creds_bootstrap and has_password and has_login_identifier:
                 effective_creds_bootstrap = creds_bootstrap_fn
                 if effective_creds_bootstrap is None:
                     try:

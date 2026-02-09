@@ -70,64 +70,28 @@ async def abootstrap_cookies_from_credentials(
         logger.warning("Nodriver bootstrap skipped: missing email/username identifier")
         return None
 
-    from ..legacy_runtime import Scweet as LegacyRuntimeScweet
+    from .nodriver_login import alogin_and_get_cookies
 
-    client = LegacyRuntimeScweet(
+    cookies_dict = await alogin_and_get_cookies(
+        account,
         proxy=proxy,
-        cookies=None,
-        cookies_path=None,
         user_agent=user_agent,
-        disable_images=bool(disable_images),
-        env_path=None,
-        n_splits=1,
-        concurrency=1,
         headless=bool(headless),
-        scroll_ratio=30,
-        mode="BROWSER",
+        disable_images=bool(disable_images),
         code_callback=code_callback,
+        timeout_s=int(timeout_s),
     )
+    if not cookies_dict:
+        logger.warning("Nodriver bootstrap failed username=%s", username or "<unknown>")
+        return None
 
-    try:
-        await client.init_nodriver()
-        client.main_tab = await client.driver.get("https://x.com/login")
-        await client.main_tab.sleep(2)
-
-        login_payload = {
-            "email_address": identifier,
-            "password": password,
-            "username": username or identifier,
-            "email_password": email_password,
-        }
-
-        coro = client.normal_login(login_payload)
-        if timeout_s and timeout_s > 0:
-            coro = asyncio.wait_for(coro, timeout=float(timeout_s))
-        _tab, ok, reason, cookies = await coro
-        if not ok or not cookies:
-            logger.warning(
-                "Nodriver bootstrap failed username=%s reason=%s",
-                username or "<unknown>",
-                reason or "login_failed",
-            )
-            return None
-
-        cookies_dict = _cookies_list_to_dict(cookies)
-        if not cookies_dict:
-            logger.warning("Nodriver bootstrap returned no cookies username=%s", username or "<unknown>")
-            return None
-
-        logger.info(
-            "Nodriver bootstrap success username=%s cookie_count=%s has_ct0=%s",
-            username or "<unknown>",
-            len(cookies_dict),
-            bool(_as_str(cookies_dict.get("ct0"))),
-        )
-        return cookies_dict
-    finally:
-        try:
-            await client.close()
-        except Exception:
-            pass
+    logger.info(
+        "Nodriver bootstrap success username=%s cookie_count=%s has_ct0=%s",
+        username or "<unknown>",
+        len(cookies_dict),
+        bool(_as_str(cookies_dict.get("ct0"))),
+    )
+    return cookies_dict
 
 
 def bootstrap_cookies_from_credentials(
@@ -164,4 +128,3 @@ def bootstrap_cookies_from_credentials(
         "bootstrap_cookies_from_credentials() cannot run inside an active event loop; "
         "use abootstrap_cookies_from_credentials() instead."
     )
-

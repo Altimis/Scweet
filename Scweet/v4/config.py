@@ -66,7 +66,6 @@ class AccountsConfig(BaseModel):
     cookies: Any = None
     provision_on_init: bool = True
     bootstrap_strategy: BootstrapStrategy = BootstrapStrategy.AUTO
-    store_credentials: bool = False
 
     @field_validator("bootstrap_strategy", mode="before")
     @classmethod
@@ -184,11 +183,6 @@ def build_config_from_legacy_init_kwargs(**kwargs) -> tuple[ScweetConfig, list[s
         warnings_out,
         legacy_mode is not None and str(legacy_mode).strip().upper() != "BROWSER",
         "`mode` is deprecated in v4.x, planned removal in v5.0. Use `engine` instead.",
-    )
-    _with_warning_if_needed(
-        warnings_out,
-        bool(legacy_env_path),
-        "`env_path` is deprecated in v4.x, planned removal in v5.0. Use `accounts_file`/`cookies_file` instead.",
     )
     _with_warning_if_needed(
         warnings_out,

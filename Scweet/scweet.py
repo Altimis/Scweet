@@ -141,18 +141,6 @@ class Scweet:
                     "disable_images": bool(getattr(self._v4_config.runtime, "disable_images", False)),
                     "code_callback": getattr(self._v4_config.runtime, "code_callback", None),
                 }
-                def _disabled_bootstrap(*_args, **_kwargs):
-                    return None
-
-                strategy_raw = getattr(self._v4_config.accounts, "bootstrap_strategy", "auto")
-                strategy_value = getattr(strategy_raw, "value", strategy_raw)
-                strategy = str(strategy_value or "auto").strip().lower()
-                bootstrap_fn = None
-                creds_bootstrap_fn = None
-                if strategy in {"nodriver_only", "none"}:
-                    bootstrap_fn = _disabled_bootstrap
-                if strategy in {"token_only", "none"}:
-                    creds_bootstrap_fn = _disabled_bootstrap
                 try:
                     import_accounts_to_db(
                         db_path,
@@ -160,8 +148,7 @@ class Scweet:
                         cookies_file=cookies_file,
                         env_path=env_path,
                         cookies_payload=cookies_payload,
-                        bootstrap_fn=bootstrap_fn,
-                        creds_bootstrap_fn=creds_bootstrap_fn,
+                        bootstrap_strategy=getattr(self._v4_config.accounts, "bootstrap_strategy", "auto"),
                         runtime=runtime_options,
                     )
                 except Exception:
@@ -208,11 +195,6 @@ class Scweet:
             },
         )
 
-    def _default_legacy_client_factory(self, **kwargs):
-        from .legacy_runtime import Scweet as LegacyRuntimeScweet
-
-        return LegacyRuntimeScweet(**kwargs)
-
     def provision_accounts(
         self,
         *,
@@ -228,10 +210,6 @@ class Scweet:
 
         This is a manual provisioning API; it does not require scraping.
         """
-
-        def _as_strategy(value: Any) -> str:
-            raw = getattr(value, "value", value)
-            return str(raw or "auto").strip().lower()
 
         effective_db_path = db_path or self._v4_config.storage.db_path
         effective_accounts_file = accounts_file if accounts_file is not None else self._v4_config.accounts.accounts_file
@@ -253,27 +231,15 @@ class Scweet:
             "code_callback": getattr(self._v4_config.runtime, "code_callback", None),
         }
 
-        def _disabled_bootstrap(*_args, **_kwargs):
-            return None
-
-        strategy = _as_strategy(getattr(self._v4_config.accounts, "bootstrap_strategy", "auto"))
-        bootstrap_fn = None
-        creds_bootstrap_fn = None
-        if strategy in {"nodriver_only", "none"}:
-            bootstrap_fn = _disabled_bootstrap
-        if strategy in {"token_only", "none"}:
-            creds_bootstrap_fn = _disabled_bootstrap
-
         processed = import_accounts_to_db(
             effective_db_path,
             accounts_file=effective_accounts_file,
             cookies_file=effective_cookies_file,
             env_path=effective_env_path,
             cookies_payload=cookies_payload,
+            bootstrap_strategy=getattr(self._v4_config.accounts, "bootstrap_strategy", "auto"),
             bootstrap_timeout_s=int(bootstrap_timeout_s),
-            bootstrap_fn=bootstrap_fn,
             creds_bootstrap_timeout_s=int(creds_bootstrap_timeout_s),
-            creds_bootstrap_fn=creds_bootstrap_fn,
             runtime=runtime_options,
         )
 
@@ -296,6 +262,18 @@ class Scweet:
         """Alias for provision_accounts for readability."""
 
         return self.provision_accounts(**kwargs)
+
+    def maintenance_collapse_duplicates(
+        self,
+        *,
+        dry_run: bool = True,
+        db_path: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Opt-in DB maintenance: collapse duplicate rows sharing the same auth_token."""
+
+        effective_db_path = db_path or self._v4_config.storage.db_path
+        repo = AccountsRepo(effective_db_path)
+        return repo.collapse_duplicates_by_auth_token(dry_run=bool(dry_run))
 
     def add_account(self, account: Optional[dict[str, Any]] = None, *, db_path: Optional[str] = None, **kwargs) -> dict[str, Any]:
         """Upsert a single account record into SQLite (no scraping required)."""

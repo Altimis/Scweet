@@ -15,6 +15,7 @@ Scweet v4 keeps the familiar v3 public API while moving scraping toward an API-o
 - New core modules live in `Scweet/Scweet/v4/`.
 - Stateful components use local SQLite (`runs`, `accounts`, `resume_state`, manifest cache).
 - Internal runtime uses async runner + in-memory task queue + account leasing.
+- Tweet search scraping is API-only; nodriver is used internally only for optional cookie bootstrap via credentials.
 
 ## Installation
 
@@ -57,7 +58,7 @@ Supported account inputs:
 
 - `.env` (single-account, legacy style)
 - `accounts.txt`
-- `cookies.json`
+- `cookies.json` (or Netscape `cookies.txt`)
 - direct `cookies=` payload
 
 `.env` key precedence (single account):
@@ -70,7 +71,6 @@ Phase 1 provisioning-related config knobs:
 
 - `accounts.provision_on_init` (default `True`)
 - `accounts.bootstrap_strategy` (default `"auto"`; one of `auto`, `token_only`, `nodriver_only`, `none`)
-- `accounts.store_credentials` (default `False`; set to `True` only if you accept storing plaintext credentials in SQLite)
 - `runtime.strict` (default `False`; if `True`, "no usable accounts" should raise instead of returning an empty result)
 
 ## Resume modes
@@ -123,6 +123,23 @@ Minimal example:
   }
 ]
 ```
+
+### `cookies.txt` (Netscape export)
+
+Scweet also accepts the classic Netscape cookies.txt format (commonly exported by browsers/extensions).
+
+Only the cookie `name` and `value` fields are used; comments/blank lines are ignored.
+
+### Direct `cookies=` payload
+
+Accepted forms:
+
+- cookie dict: `{"auth_token": "...", "ct0": "..."}`
+- cookie list: `[{"name": "auth_token", "value": "..."}, ...]`
+- Cookie header string: `"auth_token=...; ct0=..."`
+- raw auth_token string: `"..."` (convenience)
+- file path string to `cookies.json` or `cookies.txt`
+- JSON string containing any of the above
 
 ## Usage examples
 

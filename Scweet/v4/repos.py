@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import time
@@ -417,6 +418,163 @@ class AccountsRepo:
             if existing is None:
                 return None
             return _account_to_dict(existing)
+
+    def collapse_duplicates_by_auth_token(self, *, dry_run: bool = True) -> dict[str, Any]:
+        """Collapse duplicate account rows that share the same (non-empty) auth_token.
+
+        This is an opt-in maintenance routine; it is never run automatically.
+        """
+
+        def _token_fingerprint(value: str) -> str:
+            token = _as_str(value)
+            if not token:
+                return "-"
+            return hashlib.sha1(token.encode("utf-8")).hexdigest()[:10]
+
+        def _status_rank(value: Any) -> int:
+            parsed = _as_int(value)
+            if parsed is None:
+                return 0
+            return 1 if parsed != 0 else 0
+
+        def _last_used_value(value: Any) -> float:
+            try:
+                return float(value or 0.0)
+            except Exception:
+                return 0.0
+
+        def _score(record: dict[str, Any]) -> tuple[tuple[int, int, int, int], int, float]:
+            cookies = _cookies_to_dict(record.get("cookies_json"))
+            quality = _auth_quality(
+                auth_token=_as_str(record.get("auth_token")),
+                csrf=_as_str(record.get("csrf")),
+                cookies=cookies,
+            )
+            return (quality, _status_rank(record.get("status")), _last_used_value(record.get("last_used")))
+
+        plan: list[dict[str, Any]] = []
+        deleted_rows = 0
+        updated_rows = 0
+        renamed_rows = 0
+
+        with session_scope(self.db_path) as session:
+            token_expr = func.trim(func.coalesce(AccountTable.auth_token, ""))
+            stmt = (
+                select(AccountTable)
+                .where(func.length(token_expr) > 0)
+                .order_by(token_expr.asc(), AccountTable.id.asc())
+            )
+            rows = list(session.execute(stmt).scalars().all())
+
+            groups: dict[str, list[AccountTable]] = {}
+            for row in rows:
+                token = _as_str(getattr(row, "auth_token", None))
+                if not token:
+                    continue
+                groups.setdefault(token, []).append(row)
+
+            dup_groups = {token: grp for token, grp in groups.items() if len(grp) > 1}
+            for token, accounts in dup_groups.items():
+                records: list[tuple[AccountTable, dict[str, Any]]] = [(acct, _account_to_dict(acct)) for acct in accounts]
+                # Stable tie-breaking: preserve deterministic ordering by id (query already orders by id asc).
+                canonical_obj, canonical_dict = max(records, key=lambda item: _score(item[1]))
+                canonical_quality, _canon_status_rank, _canon_last_used = _score(canonical_dict)
+
+                group_ids = {int(getattr(obj, "id")) for obj, _rec in records if getattr(obj, "id", None) is not None}
+                delete_objs = [obj for obj, _rec in records if obj is not canonical_obj]
+                delete_usernames = [str(getattr(obj, "username", "") or "") for obj in delete_objs]
+
+                rename_to: Optional[str] = None
+                canonical_name = _as_str(getattr(canonical_obj, "username", None)) or ""
+                if canonical_name and _is_synthetic_username(canonical_name):
+                    real_candidates = [
+                        (obj, rec)
+                        for obj, rec in records
+                        if not _is_synthetic_username(_as_str(getattr(obj, "username", None)) or "")
+                    ]
+                    if real_candidates:
+                        real_obj, _real_rec = max(real_candidates, key=lambda item: _score(item[1]))
+                        target_name = _as_str(getattr(real_obj, "username", None))
+                        if target_name and target_name != canonical_name:
+                            conflict_stmt = select(AccountTable).where(AccountTable.username == target_name).limit(1)
+                            conflict = session.execute(conflict_stmt).scalar_one_or_none()
+                            # Allow renaming when the only conflict is within this duplicate group (we're deleting it).
+                            if conflict is None or int(getattr(conflict, "id")) in group_ids:
+                                rename_to = target_name
+
+                plan.append(
+                    {
+                        "auth_token_fp": _token_fingerprint(token),
+                        "count": len(accounts),
+                        "keep_username": canonical_name,
+                        "delete_usernames": delete_usernames,
+                        "rename_to": rename_to,
+                    }
+                )
+
+                if dry_run:
+                    continue
+
+                merged_cookies = _cookies_to_dict(getattr(canonical_obj, "cookies_json", None))
+                best_csrf = _as_str(getattr(canonical_obj, "csrf", None)) or _as_str(merged_cookies.get("ct0"))
+                best_bearer = _as_str(getattr(canonical_obj, "bearer", None))
+                best_status = _as_int(getattr(canonical_obj, "status", None)) or 0
+                best_last_used = _last_used_value(getattr(canonical_obj, "last_used", None))
+
+                for other_obj, other_dict in records:
+                    if other_obj is canonical_obj:
+                        continue
+                    other_cookies = _cookies_to_dict(getattr(other_obj, "cookies_json", None))
+                    other_quality, _other_status_rank, _other_last_used = _score(other_dict)
+                    merged_cookies = _merge_cookie_dicts(
+                        merged_cookies,
+                        other_cookies,
+                        prefer_incoming=other_quality > canonical_quality,
+                    )
+
+                    if not best_csrf:
+                        best_csrf = _as_str(getattr(other_obj, "csrf", None)) or _as_str(other_cookies.get("ct0"))
+                    if not best_bearer:
+                        best_bearer = _as_str(getattr(other_obj, "bearer", None))
+                    if best_status == 0 and _as_int(getattr(other_obj, "status", None)) not in (None, 0):
+                        best_status = int(getattr(other_obj, "status"))
+                    best_last_used = max(best_last_used, _last_used_value(getattr(other_obj, "last_used", None)))
+
+                # Ensure canonical cookies include the auth token and (when available) ct0.
+                merged_cookies.setdefault("auth_token", token)
+                if best_csrf:
+                    merged_cookies.setdefault("ct0", best_csrf)
+
+                canonical_obj.auth_token = token
+                if best_csrf:
+                    canonical_obj.csrf = best_csrf
+                if best_bearer:
+                    canonical_obj.bearer = best_bearer
+                canonical_obj.status = int(best_status)
+                canonical_obj.last_used = float(best_last_used)
+                canonical_obj.cookies_json = json.dumps(merged_cookies, separators=(",", ":"))
+                updated_rows += 1
+
+                # Delete duplicates first to avoid username uniqueness conflicts during rename.
+                for obj in delete_objs:
+                    session.delete(obj)
+                    deleted_rows += 1
+                session.flush()
+
+                if rename_to:
+                    canonical_obj.username = rename_to
+                    renamed_rows += 1
+                    session.flush()
+
+        return {
+            "dry_run": bool(dry_run),
+            "groups": len(plan),
+            "rows_to_delete": int(sum(max(0, item["count"] - 1) for item in plan)),
+            "deleted_rows": int(deleted_rows),
+            "updated_rows": int(updated_rows),
+            "renamed_rows": int(renamed_rows),
+            "plan": plan,
+        }
 
 
 class RunsRepo:
