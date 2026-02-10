@@ -1,4 +1,4 @@
-# Scweet (v4): API-Only Tweet Search Scraping in Python
+# Scweet (v4)
 
 [![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
 [![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
