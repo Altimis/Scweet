@@ -1,14 +1,17 @@
 from __future__ import annotations
-
 import hashlib
 import json
+import logging
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
-import requests
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from .repos import ManifestRepo
+from .exceptions import ManifestError
+from .async_tools import call_in_thread
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_MANIFEST = {
     "version": "v4-default-1",
@@ -122,16 +125,68 @@ class ManifestProvider:
         if not self.manifest_url:
             return None, None
 
-        response = requests.get(self.manifest_url, timeout=10)
-        if int(getattr(response, "status_code", 0) or 0) != 200:
-            raise RuntimeError(f"manifest fetch failed with status={getattr(response, 'status_code', None)}")
+        try:
+            from curl_cffi.requests import Session as CurlSession
+        except Exception as exc:
+            raise RuntimeError("curl_cffi is required to fetch remote manifest") from exc
 
-        payload = response.json()
-        etag = None
-        headers = getattr(response, "headers", None)
-        if isinstance(headers, dict):
-            etag = headers.get("ETag") or headers.get("etag")
-        return payload, etag
+        session = None
+        try:
+            session = CurlSession()
+            response = session.get(self.manifest_url, timeout=10, allow_redirects=True)
+            if int(getattr(response, "status_code", 0) or 0) != 200:
+                raise RuntimeError(f"manifest fetch failed with status={getattr(response, 'status_code', None)}")
+
+            payload = response.json()
+            etag = None
+            headers = getattr(response, "headers", None)
+            if isinstance(headers, dict):
+                etag = headers.get("ETag") or headers.get("etag")
+            return payload, etag
+        finally:
+            if session is not None and hasattr(session, "close"):
+                try:
+                    session.close()
+                except Exception:
+                    pass
+
+    def refresh_sync(self, *, strict: bool = False) -> ManifestModel:
+        """Force a remote manifest fetch and update the cache (when manifest_url is set).
+
+        Intended for `update_manifest=True` at client init. If refresh fails:
+        - strict=True -> raises ManifestError
+        - strict=False -> logs a warning and returns cached/local manifest
+        """
+
+        local_manifest = self._load_local_manifest()
+        if not self.manifest_url:
+            return local_manifest
+
+        try:
+            payload, remote_etag = self._fetch_remote_manifest_sync()
+            remote_manifest = self._coerce_manifest(payload)
+            if remote_manifest is None:
+                raise ManifestError("manifest refresh returned invalid payload")
+
+            self.repo.set_cached(
+                self.manifest_url,
+                remote_manifest.model_dump(mode="json"),
+                ttl_s=self.ttl_s,
+                etag=remote_etag,
+            )
+            return remote_manifest
+        except Exception as exc:
+            detail = f"Manifest refresh failed url={self.manifest_url} detail={exc}"
+            if strict:
+                raise ManifestError(detail) from exc
+            logger.warning("%s", detail)
+
+            cached_manifest = self.repo.get_cached(self.manifest_url, allow_expired=True)
+            if cached_manifest and isinstance(cached_manifest.get("manifest"), dict):
+                parsed_cached = self._coerce_manifest(cached_manifest["manifest"])
+                if parsed_cached is not None:
+                    return parsed_cached
+            return local_manifest
 
     async def get_manifest(self) -> ManifestModel:
         local_manifest = self._load_local_manifest()
@@ -139,11 +194,17 @@ class ManifestProvider:
         if not self.manifest_url:
             return local_manifest
 
+        cached_manifest = self.repo.get_cached(self.manifest_url)
+        if cached_manifest and isinstance(cached_manifest.get("manifest"), dict):
+            parsed_cached = self._coerce_manifest(cached_manifest["manifest"])
+            if parsed_cached is not None:
+                return parsed_cached
+
         remote_manifest: Optional[ManifestModel] = None
         remote_etag: Optional[str] = None
 
         try:
-            payload, remote_etag = self._fetch_remote_manifest_sync()
+            payload, remote_etag = await call_in_thread(self._fetch_remote_manifest_sync)
             remote_manifest = self._coerce_manifest(payload)
         except Exception:
             remote_manifest = None
@@ -157,9 +218,9 @@ class ManifestProvider:
             )
             return remote_manifest
 
-        cached_manifest = self.repo.get_cached(self.manifest_url)
-        if cached_manifest and isinstance(cached_manifest.get("manifest"), dict):
-            parsed_cached = self._coerce_manifest(cached_manifest["manifest"])
+        stale_cached = self.repo.get_cached(self.manifest_url, allow_expired=True)
+        if stale_cached and isinstance(stale_cached.get("manifest"), dict):
+            parsed_cached = self._coerce_manifest(stale_cached["manifest"])
             if parsed_cached is not None:
                 return parsed_cached
 

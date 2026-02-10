@@ -2,7 +2,6 @@ certifi
 python-dotenv
 urllib3
 PyVirtualDisplay
-requests
 beautifulsoup4==4.12.3
 nodriver==0.38.post1  # 0.45.2
 sqlmodel>=0.0.22

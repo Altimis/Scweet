@@ -298,6 +298,12 @@ class AccountsRepo:
         cookies_value = payload.get("cookies_json")
         if isinstance(cookies_value, (dict, list)):
             payload["cookies_json"] = json.dumps(cookies_value, separators=(",", ":"))
+        proxy_value = payload.get("proxy_json")
+        if isinstance(proxy_value, (dict, list)):
+            payload["proxy_json"] = json.dumps(proxy_value, separators=(",", ":"))
+        elif isinstance(proxy_value, str):
+            cleaned = proxy_value.strip()
+            payload["proxy_json"] = cleaned if cleaned else None
 
         with session_scope(self.db_path) as session:
             stmt = select(AccountTable).where(AccountTable.username == incoming_username).limit(1)
@@ -374,6 +380,11 @@ class AccountsRepo:
             existing_bearer = _as_str(getattr(existing, "bearer", None))
             if incoming_bearer and (not existing_bearer or (upgrade_auth and incoming_bearer != existing_bearer)):
                 existing.bearer = incoming_bearer
+
+            incoming_proxy = _as_str(payload.get("proxy_json"))
+            existing_proxy = _as_str(getattr(existing, "proxy_json", None))
+            if incoming_proxy and (not existing_proxy or incoming_proxy != existing_proxy):
+                setattr(existing, "proxy_json", incoming_proxy)
 
             # Avoid downgrading status/cooldown fields due to partial imports.
             incoming_status = _as_int(payload.get("status"))
@@ -518,6 +529,7 @@ class AccountsRepo:
                 merged_cookies = _cookies_to_dict(getattr(canonical_obj, "cookies_json", None))
                 best_csrf = _as_str(getattr(canonical_obj, "csrf", None)) or _as_str(merged_cookies.get("ct0"))
                 best_bearer = _as_str(getattr(canonical_obj, "bearer", None))
+                best_proxy = _as_str(getattr(canonical_obj, "proxy_json", None))
                 best_status = _as_int(getattr(canonical_obj, "status", None)) or 0
                 best_last_used = _last_used_value(getattr(canonical_obj, "last_used", None))
 
@@ -536,6 +548,8 @@ class AccountsRepo:
                         best_csrf = _as_str(getattr(other_obj, "csrf", None)) or _as_str(other_cookies.get("ct0"))
                     if not best_bearer:
                         best_bearer = _as_str(getattr(other_obj, "bearer", None))
+                    if not best_proxy:
+                        best_proxy = _as_str(getattr(other_obj, "proxy_json", None))
                     if best_status == 0 and _as_int(getattr(other_obj, "status", None)) not in (None, 0):
                         best_status = int(getattr(other_obj, "status"))
                     best_last_used = max(best_last_used, _last_used_value(getattr(other_obj, "last_used", None)))
@@ -550,6 +564,8 @@ class AccountsRepo:
                     canonical_obj.csrf = best_csrf
                 if best_bearer:
                     canonical_obj.bearer = best_bearer
+                if best_proxy:
+                    canonical_obj.proxy_json = best_proxy
                 canonical_obj.status = int(best_status)
                 canonical_obj.last_used = float(best_last_used)
                 canonical_obj.cookies_json = json.dumps(merged_cookies, separators=(",", ":"))
@@ -672,14 +688,14 @@ class ManifestRepo:
         self.db_path = db_path
         init_db(db_path)
 
-    def get_cached(self, key: str) -> Optional[dict]:
+    def get_cached(self, key: str, *, allow_expired: bool = False) -> Optional[dict]:
         now_ts = time.time()
         with session_scope(self.db_path) as session:
             stmt = select(ManifestCacheTable).where(ManifestCacheTable.key == key).limit(1)
             cached = session.execute(stmt).scalar_one_or_none()
             if cached is None:
                 return None
-            if cached.expires_at <= now_ts:
+            if (not allow_expired) and cached.expires_at <= now_ts:
                 return None
             try:
                 manifest = json.loads(cached.manifest_json)

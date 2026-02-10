@@ -28,7 +28,7 @@ class Scweet(LegacyScweet):
         config: Optional[Union[ScweetConfig, dict[str, Any]]] = None,
         **kwargs,
     ):
-        allowed_extras = {"engine", "db_path", "accounts_file", "cookies_file", "manifest_url"}
+        allowed_extras = {"engine", "db_path", "accounts_file", "cookies_file", "manifest_url", "update_manifest"}
         unknown = set(kwargs.keys()) - allowed_extras
         if unknown:
             unknown_str = ", ".join(sorted(unknown))
@@ -123,6 +123,7 @@ class Scweet(LegacyScweet):
         env_path: Optional[str] = None,
         cookies: Any = None,
         manifest_url: Optional[str] = None,
+        update_manifest: bool = False,
         bootstrap_strategy: BootstrapStrategy | str = BootstrapStrategy.AUTO,
         provision_on_init: bool = True,
         strict: bool = False,
@@ -144,6 +145,7 @@ class Scweet(LegacyScweet):
             env_path=env_path,
             cookies=cookies,
             manifest_url=manifest_url,
+            update_manifest=bool(update_manifest),
             bootstrap_strategy=bootstrap_strategy,
             provision_on_init=provision_on_init,
             strict=strict,

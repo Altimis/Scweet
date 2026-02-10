@@ -9,10 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-import requests
-
 from .account_session import DEFAULT_X_BEARER_TOKEN, prepare_account_auth_material
-from .http_utils import apply_proxies_to_session, normalize_http_proxies
+from .http_utils import apply_proxies_to_session, is_curl_cffi_session, normalize_http_proxies
 from .repos import AccountsRepo
 
 logger = logging.getLogger(__name__)
@@ -24,7 +22,13 @@ _DEFAULT_USER_AGENT = (
 )
 
 # Overridable in tests for deterministic, network-free behavior.
-_SESSION_FACTORY = requests.Session
+def _default_session_factory():
+    from curl_cffi.requests import Session as CurlSession
+
+    return CurlSession()
+
+
+_SESSION_FACTORY = _default_session_factory
 
 _CANONICAL_KEYS = {
     "username",
@@ -32,6 +36,7 @@ _CANONICAL_KEYS = {
     "cookies_json",
     "csrf",
     "bearer",
+    "proxy_json",
     "status",
     "available_til",
     "daily_requests",
@@ -120,6 +125,37 @@ def _normalize_cookies_payload(payload: Any) -> Any:
     return str(payload)
 
 
+def _normalize_proxy_payload(payload: Any) -> Any:
+    """Normalize a proxy payload into a stable python value.
+
+    Accepted forms:
+    - None
+    - str (proxy URL, or JSON-encoded dict)
+    - dict (host/port or http/https mapping)
+    """
+
+    if payload is None:
+        return None
+
+    if isinstance(payload, str):
+        stripped = payload.strip()
+        if not stripped:
+            return None
+        # Allow JSON-encoded proxy dicts in text sources (accounts.txt, DB, etc).
+        if stripped.startswith("{") or stripped.startswith("[") or stripped.startswith('"'):
+            try:
+                decoded = json.loads(stripped)
+            except Exception:
+                return stripped
+            return decoded
+        return stripped
+
+    if isinstance(payload, dict):
+        return dict(payload)
+
+    return payload
+
+
 def _cookies_to_dict(cookies_payload: Any) -> dict[str, Any]:
     if isinstance(cookies_payload, dict):
         return cookies_payload
@@ -185,6 +221,7 @@ def normalize_account_record(record: dict) -> dict:
         _first(data, "cookies_json", "cookies", "cookie_jar", "cookieJar")
     )
     cookies_dict = _cookies_to_dict(cookies_payload_raw)
+    proxy_payload = _normalize_proxy_payload(_first(data, "proxy_json", "proxy"))
 
     if not auth_token:
         auth_token = _as_str(cookies_dict.get("auth_token"))
@@ -213,6 +250,7 @@ def normalize_account_record(record: dict) -> dict:
         "cookies_json": cookies_payload,
         "csrf": csrf,
         "bearer": bearer,
+        "proxy_json": proxy_payload,
         "status": _as_int(_first(data, "status"), default=1),
         "available_til": _as_float(_first(data, "available_til", "available_until", "cooldown_until"), default=None),
         "daily_requests": max(0, _as_int(_first(data, "daily_requests"), default=0)),
@@ -366,6 +404,7 @@ def load_env_account(path: str) -> list[dict]:
         "auth_token": values.get("AUTH_TOKEN"),
         # Prefer explicit CT0 (cookie name) when present.
         "csrf": values.get("CT0") or values.get("CSRF"),
+        "proxy": values.get("PROXY"),
     }
 
     normalized = normalize_account_record(record)
@@ -585,6 +624,12 @@ def load_accounts_txt(path: str) -> list[dict]:
             if line.startswith("#"):
                 continue
 
+            proxy_spec: Any = None
+            if "\t" in line:
+                base, suffix = line.split("\t", 1)
+                line = base.strip()
+                proxy_spec = _normalize_proxy_payload(suffix)
+
             parts = [part.strip() for part in line.split(":")]
             if len(parts) > 6:
                 parts = parts[:5] + [":".join(parts[5:]).strip()]
@@ -599,6 +644,8 @@ def load_accounts_txt(path: str) -> list[dict]:
                 "2fa": parts[4],
                 "auth_token": parts[5],
             }
+            if proxy_spec is not None:
+                record["proxy"] = proxy_spec
             if not any(record.values()):
                 continue
 
@@ -693,32 +740,47 @@ def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30, *, p
                 session.cookies.set("auth_token", token)
 
         apply_proxies_to_session(session, proxies)
-        response = session.get(
-            "https://x.com/home",
-            headers={"User-Agent": _DEFAULT_USER_AGENT},
-            timeout=timeout_s,
-            allow_redirects=True,
-        )
+        headers = None
+        if not is_curl_cffi_session(session):
+            headers = {"User-Agent": _DEFAULT_USER_AGENT}
+        if headers is None:
+            response = session.get("https://x.com/home", timeout=timeout_s, allow_redirects=True)
+        else:
+            response = session.get(
+                "https://x.com/home",
+                headers=headers,
+                timeout=timeout_s,
+                allow_redirects=True,
+            )
         status_code = int(getattr(response, "status_code", 0) or 0)
         if status_code >= 400:
             logger.warning("Auth bootstrap failed token_fp=%s: response_status=%s", token_fp, status_code)
             return None
 
+        def _cookies_to_dict(value: Any) -> dict[str, Any]:
+            if value is None:
+                return {}
+            if isinstance(value, dict):
+                return dict(value)
+            getter = getattr(value, "get_dict", None)
+            if getter is not None:
+                try:
+                    got = getter()
+                    if isinstance(got, dict):
+                        return dict(got)
+                except Exception:
+                    pass
+            try:
+                return {str(item.name): item.value for item in value}
+            except Exception:
+                return {}
+
         cookies: dict[str, Any] = {}
         if hasattr(session, "cookies"):
-            try:
-                cookies = requests.utils.dict_from_cookiejar(session.cookies)
-            except Exception:
-                try:
-                    cookies = session.cookies.get_dict()
-                except Exception:
-                    cookies = {}
+            cookies = _cookies_to_dict(getattr(session, "cookies", None))
 
         if not cookies and hasattr(response, "cookies"):
-            try:
-                cookies = response.cookies.get_dict()
-            except Exception:
-                cookies = {}
+            cookies = _cookies_to_dict(getattr(response, "cookies", None))
 
         if not cookies:
             logger.warning("Auth bootstrap failed token_fp=%s: no cookies captured", token_fp)
@@ -769,7 +831,7 @@ def import_accounts_to_db(
     allow_token_bootstrap = strategy in {"auto", "token_only"}
     allow_creds_bootstrap = strategy in {"auto", "nodriver_only"}
 
-    def _call_token_bootstrap(auth_token: str) -> Optional[dict]:
+    def _call_token_bootstrap(auth_token: str, *, proxy: Any) -> Optional[dict]:
         if effective_bootstrap is None:
             return None
         try:
@@ -778,7 +840,7 @@ def import_accounts_to_db(
                 return effective_bootstrap(
                     auth_token,
                     timeout_s=bootstrap_timeout_s,
-                    proxy=runtime_options.get("proxy"),
+                    proxy=proxy,
                 )
         except Exception:
             pass
@@ -797,6 +859,10 @@ def import_accounts_to_db(
         normalized = normalize_account_record(record)
         username = _as_str(normalized.get("username")) or "<unknown>"
         token_fp = _token_fingerprint(_as_str(normalized.get("auth_token")))
+        record_proxy = normalized.get("proxy_json")
+        if record_proxy is None:
+            record_proxy = runtime_options.get("proxy")
+        record_proxy = _normalize_proxy_payload(record_proxy)
 
         if _db_has_usable_auth(_as_str(normalized.get("username")), _as_str(normalized.get("auth_token"))):
             logger.info("Import account reuse username=%s token_fp=%s", username, token_fp)
@@ -817,7 +883,7 @@ def import_accounts_to_db(
                 token_fp,
                 reason,
             )
-            bootstrapped = _call_token_bootstrap(token)
+            bootstrapped = _call_token_bootstrap(token, proxy=record_proxy)
             if bootstrapped:
                 cookies_dict = _cookies_to_dict(_normalize_cookies_payload(bootstrapped))
                 if cookies_dict:
@@ -864,7 +930,7 @@ def import_accounts_to_db(
                     try:
                         bootstrapped = effective_creds_bootstrap(
                             normalized,
-                            proxy=runtime_options.get("proxy"),
+                            proxy=record_proxy,
                             user_agent=runtime_options.get("user_agent"),
                             headless=bool(runtime_options.get("headless", True)),
                             disable_images=bool(runtime_options.get("disable_images", False)),

@@ -5,7 +5,6 @@ import os
 import time
 from typing import Any, Optional
 
-import requests
 from bs4 import BeautifulSoup
 
 from .account_session import DEFAULT_HTTP_TIMEOUT, DEFAULT_IMPERSONATE, DEFAULT_USER_AGENT
@@ -72,8 +71,8 @@ class TransactionIdProvider:
 
                 return _factory
             except Exception:
-                logger.info("curl_cffi not available for transaction bootstrap; falling back to requests.Session")
-        return requests.Session
+                logger.info("curl_cffi not available for transaction bootstrap; disabling transaction-id header")
+        return lambda: None
 
     def _ensure_dependencies(self) -> bool:
         if self._deps_checked:

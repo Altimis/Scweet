@@ -110,6 +110,9 @@ class RuntimeConfig(BaseModel):
 class OperationalConfig(BaseModel):
     account_lease_ttl_s: int = Field(default=120, ge=1)
     account_lease_heartbeat_s: float = Field(default=30.0, ge=0.0)
+    # Per-account daily caps (used for lease eligibility). These reset by UTC date.
+    account_daily_requests_limit: int = Field(default=5000, ge=1)
+    account_daily_tweets_limit: int = Field(default=50000, ge=1)
     cooldown_default_s: float = Field(default=120.0, ge=0.0)
     transient_cooldown_s: float = Field(default=120.0, ge=0.0)
     auth_cooldown_s: float = Field(default=30 * 24 * 60 * 60, ge=0.0)
@@ -146,6 +149,7 @@ class OutputConfig(BaseModel):
 class ManifestConfig(BaseModel):
     manifest_url: Optional[str] = None
     ttl_s: int = Field(default=3600, ge=1)
+    update_on_init: bool = False
 
 
 class ScweetConfig(BaseModel):
@@ -169,6 +173,7 @@ class ScweetConfig(BaseModel):
         env_path: Optional[str] = None,
         cookies: Any = None,
         manifest_url: Optional[str] = None,
+        update_manifest: bool = False,
         bootstrap_strategy: BootstrapStrategy | str = BootstrapStrategy.AUTO,
         provision_on_init: bool = True,
         strict: bool = False,
@@ -236,6 +241,9 @@ class ScweetConfig(BaseModel):
             patch["accounts"]["cookies"] = cookies
         if manifest_url is not None:
             patch["manifest"] = {"manifest_url": manifest_url}
+        if update_manifest:
+            patch["manifest"] = dict(patch.get("manifest") or {})
+            patch["manifest"]["update_on_init"] = True
         if output_format is not None and str(output_format).strip():
             patch["output"] = dict(patch.get("output") or {})
             patch["output"]["format"] = str(output_format).strip().lower()
@@ -411,6 +419,8 @@ def build_config_from_legacy_init_kwargs(**kwargs) -> tuple[ScweetConfig, list[s
     manifest_data = config.manifest.model_dump()
     if kwargs.get("manifest_url") is not None:
         manifest_data["manifest_url"] = kwargs["manifest_url"]
+    if kwargs.get("update_manifest") is not None:
+        manifest_data["update_on_init"] = bool(kwargs["update_manifest"])
     manifest = ManifestConfig.model_validate(manifest_data)
 
     try:

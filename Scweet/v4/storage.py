@@ -53,6 +53,40 @@ def create_sqlite_engine(db_path: str) -> Engine:
 def init_db(db_path: str) -> None:
     engine = create_sqlite_engine(db_path)
     Base.metadata.create_all(engine)
+    _ensure_schema(engine)
+
+
+def _ensure_schema(engine: Engine) -> None:
+    """Best-effort, idempotent schema migration for SQLite.
+
+    We avoid introducing a heavyweight migration framework. For additive changes
+    (new nullable columns), we use SQLite's ALTER TABLE when a column is missing.
+    """
+
+    def _has_column(conn, table: str, column: str) -> bool:
+        rows = conn.exec_driver_sql(f"PRAGMA table_info({table})").fetchall()
+        # PRAGMA table_info columns: cid, name, type, notnull, dflt_value, pk
+        return any(str(row[1]) == column for row in rows)
+
+    with engine.begin() as conn:
+        try:
+            needs_proxy = not _has_column(conn, "accounts", "proxy_json")
+        except Exception:
+            # If PRAGMA fails for any reason, don't block library usage.
+            return
+        if not needs_proxy:
+            return
+
+        try:
+            conn.exec_driver_sql("ALTER TABLE accounts ADD COLUMN proxy_json TEXT")
+        except Exception:
+            # Another process may have raced to add the column. Re-check before failing.
+            try:
+                if _has_column(conn, "accounts", "proxy_json"):
+                    return
+            except Exception:
+                pass
+            raise
 
 
 @contextmanager

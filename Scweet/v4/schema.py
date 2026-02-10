@@ -38,6 +38,8 @@ if SQLMODEL_AVAILABLE:
         csrf: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
         bearer: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
         cookies_json: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+        # Optional per-account proxy override (string URL or JSON-encoded dict).
+        proxy_json: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
         status: int = Field(default=1, sa_column=Column(Integer, index=True, nullable=False))
         available_til: Optional[float] = Field(default=None, sa_column=Column(Float, nullable=True, index=True))
@@ -124,6 +126,7 @@ else:
         csrf: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
         bearer: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
         cookies_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+        proxy_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
         status: Mapped[int] = mapped_column(Integer, default=1, index=True)
         available_til: Mapped[Optional[float]] = mapped_column(Float, nullable=True, index=True)

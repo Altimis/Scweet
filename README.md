@@ -1,21 +1,36 @@
-# Scweet v4
+# Scweet (v4): API-Only Tweet Search Scraping in Python
 
-Scweet v4 keeps the familiar v3 public API while moving scraping toward an API-only core and introducing DB-first account provisioning backed by SQLite.
+[![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
+[![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
+[![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
+[![License](https://img.shields.io/github/license/Altimis/scweet)](https://github.com/Altimis/scweet/blob/main/LICENSE)
 
-## v4 status
+> Note: Scweet is not affiliated with Twitter/X. Use responsibly and lawfully.
 
-- v4 facade routing is active.
-- Legacy public signatures remain callable.
-- Preferred import: `from Scweet import Scweet`.
-- Legacy import remains supported in v4.x but is deprecated: `from Scweet.scweet import Scweet`.
+Scweet is a Python library for scraping tweets via Twitter/X web GraphQL.
 
-## Architecture summary
+What Scweet v4 is good for:
 
-- Compatibility facade in `Scweet/Scweet/scweet.py` keeps legacy method signatures.
-- New core modules live in `Scweet/Scweet/v4/`.
-- Stateful components use local SQLite (`runs`, `accounts`, `resume_state`, manifest cache).
-- Internal runtime uses async runner + in-memory task queue + account leasing.
-- Tweet search scraping is API-only; nodriver is used internally only for optional cookie bootstrap via credentials.
+- Search tweets by keywords, hashtags, mentions, accounts, and date windows.
+- Keep state locally (SQLite) so accounts + resume checkpoints persist across runs.
+- Build repeatable data pipelines where you can provision once and scrape many times.
+
+v4 notes:
+
+- Tweet search scraping is API-only (no browser scraping engine).
+- `nodriver` is used internally only for optional cookie bootstrap (credentials login -> cookies).
+- Profile/followers/following APIs are coming soon (v4 methods exist for compatibility but are not implemented yet).
+
+Full documentation: `Scweet/DOCUMENTATION.md`
+
+## Scweet on Apify (Hosted Option)
+
+If you prefer a hosted / no local setup option, Scweet is also available as an Apify Actor:
+
+- Link: https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97
+- Fast, managed runs without maintaining local infrastructure.
+
+[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
 
 ## Installation
 
@@ -23,83 +38,120 @@ Scweet v4 keeps the familiar v3 public API while moving scraping toward an API-o
 pip install Scweet
 ```
 
-## Import policy
-
-Preferred import (recommended for v4 usage):
+## Imports (v4)
 
 ```python
-from Scweet import Scweet
+from Scweet import Scweet, ScweetConfig, ScweetDB
 ```
 
-Typed config import (recommended for discoverability):
-
-```python
-from Scweet import Scweet, ScweetConfig
-```
-
-Legacy import (supported in v4.x, deprecated):
+Legacy import path (supported in v4.x, deprecated):
 
 ```python
 from Scweet.scweet import Scweet
 ```
 
-## Backward compatibility (v4.x)
+## Quickstart (Cookies -> Scrape)
 
-Compatibility guarantees include:
+```python
+from Scweet import Scweet
 
-- Legacy class import path still works: `from Scweet.scweet import Scweet`.
-- Preferred class import path available: `from Scweet import Scweet`.
-- Legacy constructor args remain accepted (for example: `env_path`, `cookies`, `cookies_path`, `n_splits`, `concurrency`, `headless`).
-- Legacy method signatures preserved for:
-  - `scrape` / `ascrape`
-  - `get_user_information` / `aget_user_information`
-  - follows methods (`get_followers`, `get_following`, etc.)
-- Legacy CSV filename behavior preserved (same `save_dir` / `custom_csv_name` / naming logic).
+scweet = Scweet.from_sources(
+    db_path="scweet_state.db",
+    # Option A: direct cookie dict (auth_token + ct0)
+    accounts_file="accounts.txt", 
+    # Option B: convenience raw auth_token string (Scweet will bootstrap ct0 if allowed)
+    # cookies="YOUR_AUTH_TOKEN",
+    output_format="both",  # csv|json|both|none
+)
 
-Output changes in v4 (breaking vs v3):
+tweets = scweet.scrape(
+    since="2026-02-01",
+    until="2026-02-07",
+    words=["openai"],
+    limit=200,
+    resume=True,
+    save_dir="outputs",
+    custom_csv_name="openai.csv",
+)
 
-- `scrape` / `ascrape` now returns a `list[dict]` of raw tweet objects from the GraphQL response (`tweet_results.result`).
-- CSV output is now a curated "important fields" schema (stable header) derived from those raw GraphQL tweet objects.
-  - For full coverage, use JSON output (`config.output.format="json"` or `"both"`) or the returned `list[dict]`.
+print("tweets:", len(tweets))
+```
 
-## Account provisioning (DB-first)
+Examples you can run from source checkout:
 
-Scweet stores account records in SQLite and reuses the DB state across runs. When you provide account sources, they are imported into the DB (best-effort) and then leased to workers during scraping.
+- Sync: `Scweet/sync_example.py`
+- Async: `Scweet/async_example.py`
+- Notebook: `Scweet/example.ipynb`
 
-Supported account inputs:
+## Configure Scweet (Recommended: ScweetConfig)
 
-- `.env` (single-account, legacy style)
+If you want one place to control everything, build a config and pass it to `Scweet(config=...)`.
+
+```python
+from Scweet import Scweet, ScweetConfig
+
+cfg = ScweetConfig.from_sources(
+    db_path="scweet_state.db",
+    cookies="YOUR_AUTH_TOKEN",
+    cookies_file="cookies.json",       # optional provisioning source
+    accounts_file="accounts.txt",      # optional provisioning source
+    # cookies={"auth_token": "...", "ct0": "..."},  # optional provisioning source
+    bootstrap_strategy="auto",         # auto|token_only|nodriver_only|none
+    provision_on_init=True,            # import sources during Scweet init
+    output_format="both",              # csv|json|both|none
+    resume_mode="hybrid_safe",         # legacy_csv|db_cursor|hybrid_safe
+    strict=False,                      # raise instead of returning empty output for some failures
+    proxy=None,                        # used for API calls and nodriver bootstrap
+    overrides={
+        "pool": {"concurrency": 4},
+        "operations": {
+            "account_lease_ttl_s": 300,
+            "account_requests_per_min": 30,
+            # Per-account daily caps (lease eligibility; resets by UTC day).
+            "account_daily_requests_limit": 5000,
+            "account_daily_tweets_limit": 50000,
+        },
+        "output": {"dedupe_on_resume_by_tweet_id": True},
+    },
+)
+
+scweet = Scweet(config=cfg)
+```
+
+Daily caps:
+
+- `operations.account_daily_tweets_limit` and `operations.account_daily_requests_limit` control when an account becomes ineligible for leasing for the rest of the UTC day.
+- Counters reset automatically when the day changes (UTC), or you can reset them manually via `ScweetDB.reset_daily_counters()`.
+
+## Provision Accounts (DB-First)
+
+Scweet stores accounts in SQLite. Provisioning imports account sources into the DB and marks which accounts are eligible.
+
+Supported sources include:
+
 - `accounts.txt`
-- `cookies.json` (or Netscape `cookies.txt`)
-- direct `cookies=` payload
+- `cookies.json` (and Netscape `cookies.txt`)
+- `cookies=` payload (cookie dict/list/header string/auth_token string/file path/JSON string)
+- `.env` via `env_path`
 
-`.env` key precedence (single account):
+You can provision on init (recommended) or manually:
 
-1. `AUTH_TOKEN` + `CT0` (or `CSRF`)
-2. `AUTH_TOKEN` only
-3. legacy credentials (`EMAIL`/`EMAIL_PASSWORD` and/or `USERNAME`/`PASSWORD`)
+```python
+from Scweet import Scweet
 
-Phase 1 provisioning-related config knobs:
+scweet = Scweet.from_sources(db_path="scweet_state.db", provision_on_init=False)
 
-- `accounts.provision_on_init` (default `True`)
-- `accounts.bootstrap_strategy` (default `"auto"`; one of `auto`, `token_only`, `nodriver_only`, `none`)
-- `runtime.strict` (default `False`; if `True`, "no usable accounts" should raise instead of returning an empty result)
+result = scweet.provision_accounts(
+    accounts_file="accounts.txt",
+    cookies_file="cookies.json",
+    # env_path=".env",
+    # cookies={"auth_token": "...", "ct0": "..."},
+    # cookies="YOUR_AUTH_TOKEN",
+)
+print(result)  # {"processed": ..., "eligible": ...}
+```
 
-## Resume modes
-
-Scweet v4 supports three resume modes under `config.resume.mode`:
-
-- `legacy_csv`: v3-compatible resume using max CSV `Timestamp` to override `since`.
-- `db_cursor`: resume from SQLite checkpoint (`since` + `cursor`) only.
-- `hybrid_safe`: try DB checkpoint first, then fallback to CSV timestamp behavior.
-
-Important compatibility rule:
-
-- If you instantiate through the legacy import path (`from Scweet.scweet import Scweet`), resume is forced to `legacy_csv` behavior for compatibility.
-
-## Account source formats
-
-### `accounts.txt`
+### accounts.txt format
 
 One account per line (colon-separated):
 
@@ -107,235 +159,90 @@ One account per line (colon-separated):
 username:password:email:email_password:2fa:auth_token
 ```
 
-Notes:
+Missing trailing fields are allowed.
 
-- Blank lines and lines starting with `#` are ignored.
-- Missing trailing fields are accepted.
-- The auth token segment may include additional colons; parser keeps the rest as token.
+### Per-account proxy override (optional)
 
-### `cookies.json`
+By default, `proxy=` (runtime proxy) applies to all accounts. If you need a different proxy per account, set a proxy on the account record:
 
-Accepted forms include:
+- In `cookies.json`: add `"proxy"` to the account object (string URL or dict).
+- In `accounts.txt`: append a tab then a proxy value (string URL or JSON dict).
+- Or set it later via `ScweetDB.set_account_proxy(username, proxy)`.
 
-1. List of account records.
-2. Object with `accounts: [...]`.
-3. Single account object.
-4. Object mapping username -> cookies/account payload.
+Proxy credentials are supported:
 
-Minimal example:
+- API HTTP (curl_cffi) accepts either a URL string like `"http://user:pass@host:port"` or a dict like `{"host": "...", "port": 8080, "username": "...", "password": "..."}`.
+- nodriver bootstrap also supports authenticated proxies, but the dict form is recommended for proxy auth.
+
+Example `cookies.json` record:
 
 ```json
 [
   {
     "username": "acct1",
-    "cookies": {
-      "auth_token": "...",
-      "ct0": "..."
-    }
+    "cookies": {"auth_token": "...", "ct0": "..."},
+    "proxy": {"host": "127.0.0.1", "port": 8080, "username": "proxyuser", "password": "proxypass"}
   }
 ]
 ```
 
-### `cookies.txt` (Netscape export)
+Example `accounts.txt` line with a proxy (tab-separated):
 
-Scweet also accepts the classic Netscape cookies.txt format (commonly exported by browsers/extensions).
-
-Only the cookie `name` and `value` fields are used; comments/blank lines are ignored.
-
-### Direct `cookies=` payload
-
-Accepted forms:
-
-- cookie dict: `{"auth_token": "...", "ct0": "..."}`
-- cookie list: `[{"name": "auth_token", "value": "..."}, ...]`
-- Cookie header string: `"auth_token=...; ct0=..."`
-- raw auth_token string: `"..."` (convenience)
-- file path string to `cookies.json` or `cookies.txt`
-- JSON string containing any of the above
-
-## Usage examples
-
-### Recommended: build a typed config
-
-```python
-from Scweet import Scweet, ScweetConfig
-
-cfg = ScweetConfig.from_sources(
-    db_path="scweet_state.db",
-    accounts_file="accounts.txt",
-    cookies_file="cookies.json",  # or cookies.txt (Netscape)
-    env_path=".env",
-    bootstrap_strategy="auto",
-    resume_mode="hybrid_safe",
-    # curl_cffi fingerprint control (optional):
-    # api_http_impersonate="chrome124",
-    overrides={
-        # Advanced knobs live here (lease TTL, cooldowns, scheduler, etc.).
-        "operations": {"account_lease_ttl_s": 600},
-    },
-)
-
-scweet = Scweet(config=cfg)
+```text
+alice:::::AUTH_TOKEN_HERE	{"host":"127.0.0.1","port":8080}
 ```
 
-### Output format (CSV / JSON / both)
+## Scrape (Inputs + Outputs)
 
-By default, `scrape/ascrape` writes a curated CSV with important tweet/user fields (stable header).
+Key scrape inputs:
 
-You can control output via `config.output.format` (or `Scweet.from_sources(output_format=...)`):
+- `since`, `until` (YYYY-MM-DD)
+- `words` (list or legacy string split by `//`)
+- `from_account`, `to_account`, `mention_account`, `hashtag`, `lang`
+- `display_type` ("Top" or "Latest")
+- `limit` (best-effort per run)
+- `resume=True` appends to outputs and continues using the configured resume mode
 
-- `"csv"` (default): write CSV only
-- `"json"`: write JSON only
-- `"both"`: write CSV + JSON
-- `"none"`: write no files (still returns tweets as Python objects)
+The return value is always `list[dict]` of raw GraphQL tweet objects.
 
-When JSON output is enabled, Scweet writes a `.json` file next to the CSV path (same basename, `.json` suffix).
-When `resume=True` and the JSON file already exists, Scweet appends new tweet objects to the existing JSON array.
+Files are controlled by `output_format`:
 
-### Scrape (v4 import path)
+- `csv`: curated "important fields" schema
+- `json`: raw tweets (full fidelity)
+- `both`: write both
+- `none`: return only
 
-```python
-from Scweet import Scweet
+## Resume + Dedupe
 
-scweet = Scweet.from_sources(
-    db_path="scweet_state.db",
-    accounts_file="accounts.txt",
-    cookies_file="cookies.json",
-    resume_mode="hybrid_safe",
-    overrides={"pool": {"n_splits": 8, "concurrency": 4}},
-)
+- `resume=True` appends to existing CSV and JSON outputs.
+- To avoid writing duplicates across runs when resuming:
+  - `overrides={"output": {"dedupe_on_resume_by_tweet_id": True}}`
 
-tweets = scweet.scrape(
-    since="2026-02-01",
-    until="2026-02-07",
-    words=["bitcoin", "ethereum"],
-    limit=200,
-    save_dir="outputs",
-    custom_csv_name="crypto.csv",
-    resume=True,
-)
+## Local DB Helpers (ScweetDB)
 
-# `tweets` is a list of raw tweet objects from the GraphQL response (dicts).
-```
-
-### Preload DB then scrape (manual provisioning)
+Use `ScweetDB` to inspect and maintain the local state DB:
 
 ```python
-from Scweet import Scweet
+from Scweet import ScweetDB
 
-# Disable auto-provisioning if you want an explicit "provision first" step.
-scweet = Scweet.from_sources(
-    db_path="scweet_state.db",
-    provision_on_init=False,
-)
-
-result = scweet.provision_accounts(
-    accounts_file="accounts.txt",
-    cookies_file="cookies.json",
-    env_path=".env",
-    cookies={"auth_token": "...", "ct0": "..."},
-)
-print(result)  # {"processed": ..., "eligible": ...}
-
-# DB-first reuse: re-running provisioning does not re-bootstrap accounts that already have usable auth in SQLite.
-tweets = scweet.scrape(
-    since="2026-02-01",
-    until="2026-02-07",
-    words=["openai"],
-    limit=50,
-    save_dir="outputs",
-    custom_csv_name="tweets.csv",
-)
-
-# Strict mode: raise instead of silently returning empty results when no usable accounts exist.
-strict_scweet = Scweet(
-    db_path="scweet_state.db",
-    config={"runtime": {"strict": True}, "accounts": {"provision_on_init": False}},
-)
-strict_scweet.provision_accounts(env_path=".env")
-```
-
-### DB/state maintenance (ScweetDB)
-
-Scweet stores state in a local SQLite DB (`scweet_state.db` by default). You can inspect and maintain it via `ScweetDB`.
-
-By default, secrets are **redacted** (you get fingerprints and cookie key names). Pass `reveal_secrets=True` explicitly if
-you really want raw tokens/cookies returned.
-
-```python
-from Scweet import Scweet, ScweetDB
-
-# Option A: manage DB directly (no scraping)
 db = ScweetDB("scweet_state.db")
 print(db.accounts_summary())
-print(db.list_accounts(limit=10, eligible_only=True, include_cookies=True))
-
-# Fix common local-state issues
-db.clear_leases(expired_only=True)
-db.reset_account_cooldowns(clear_leases=True)
-
-# Opt-in maintenance: collapse duplicate DB rows by auth_token
+print(db.list_accounts(limit=10, eligible_only=True))
+print(db.set_account_proxy("acct1", {"host": "127.0.0.1", "port": 8080}))
+print(db.reset_daily_counters())
+print(db.clear_leases(expired_only=True))
+print(db.reset_account_cooldowns(clear_leases=True, include_unusable=True))
 print(db.collapse_duplicates_by_auth_token(dry_run=True))
-
-# Option B: from an existing Scweet instance
-scweet = Scweet.from_sources(db_path="scweet_state.db", provision_on_init=False)
-print(scweet.db.accounts_summary())
 ```
 
-### Backward-compatible usage (legacy import path)
+## Coming Soon
 
-```python
-from Scweet.scweet import Scweet
+- API-only profile info scraping
+- API-only followers/following scraping 
+- API-only login/provisioning from creds
+- API-only profile timeline scraping
+- Richer scraping query inputs.
 
-# Deprecated import path, still supported in v4.x.
-scweet = Scweet(env_path=".env", n_splits=5, concurrency=5, headless=True)
+## More Details
 
-results = scweet.scrape(
-    since="2025-01-01",
-    until="2025-01-07",
-    words=["scweet"],
-    resume=True,
-)
-```
-
-## Migration and release notes
-
-- Migration guide: `Scweet/MIGRATION_V3_TO_V4.md`
-- Changelog: `Scweet/CHANGELOG.md`
-
-## Logging
-
-Scweet uses the standard Python `logging` module (for example: `Scweet.v4.runner`, `Scweet.v4.auth`), and does **not**
-install logging handlers for you. In notebooks (and some environments), you must configure logging to see output.
-
-### Notebook-friendly logging setup
-
-```python
-import logging
-import sys
-
-logging.basicConfig(
-    level=logging.INFO,  # DEBUG/INFO/WARNING/ERROR
-    format="%(asctime)s %(levelname)s %(name)s:%(lineno)d | %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-    force=True,  # important in notebooks (overrides existing handlers)
-)
-
-# Optional: make only Scweet verbose
-logging.getLogger("Scweet").setLevel(logging.DEBUG)
-
-# Optional: quiet noisy deps
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-```
-
-### pytest logging
-
-pytest captures logs by default. To see logs in test runs:
-
-```bash
-pytest -q tests -s --log-cli-level=INFO
-```
-
-## Responsible use
-
-Scweet is not affiliated with Twitter/X. Use lawfully, respect platform terms, and avoid misuse.
+See `Scweet/DOCUMENTATION.md` for the full guide (cookies formats, logging setup, strict mode, manifest updates, advanced config knobs).

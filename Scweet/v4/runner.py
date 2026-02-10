@@ -73,6 +73,22 @@ def _config_value(config: Any, key: str, default: Any) -> Any:
     return default
 
 
+def _normalize_proxy_payload(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        if stripped.startswith("{") or stripped.startswith("[") or stripped.startswith('"'):
+            try:
+                return json.loads(stripped)
+            except Exception:
+                return stripped
+        return stripped
+    return value
+
+
 def _is_transient_status(status_code: int) -> bool:
     if status_code in _TRANSIENT_CODES:
         return True
@@ -85,10 +101,16 @@ async def _maybe_await(value):
     return value
 
 
-async def _bootstrap_token_async(auth_token: str, timeout_s: int = 30) -> Optional[dict]:
+async def _bootstrap_token_async(auth_token: str, timeout_s: int = 30, *, proxy: Any = None) -> Optional[dict]:
     from .auth import bootstrap_cookies_from_auth_token
+    from .async_tools import call_in_thread
 
-    return await asyncio.to_thread(bootstrap_cookies_from_auth_token, auth_token, timeout_s=timeout_s)
+    return await call_in_thread(
+        bootstrap_cookies_from_auth_token,
+        auth_token,
+        timeout_s=timeout_s,
+        proxy=proxy,
+    )
 
 
 async def _bootstrap_creds_async(
@@ -378,8 +400,11 @@ class Runner:
 
         # Token-first repair.
         if allow_token_bootstrap and isinstance(auth_token, str) and auth_token.strip():
+            proxy_for_token = _normalize_proxy_payload(account.get("proxy_json") or account.get("proxy"))
+            if proxy_for_token is None:
+                proxy_for_token = _normalize_proxy_payload(runtime_options.get("proxy"))
             try:
-                cookies = await _bootstrap_token_async(auth_token.strip(), timeout_s=30)
+                cookies = await _bootstrap_token_async(auth_token.strip(), timeout_s=30, proxy=proxy_for_token)
             except Exception:
                 cookies = None
             if cookies:
@@ -416,15 +441,23 @@ class Runner:
                     break
 
         if matched and matched.get("password"):
+            runtime_for_creds = dict(runtime_options)
+            matched_proxy = _normalize_proxy_payload(matched.get("proxy_json") or matched.get("proxy"))
+            if matched_proxy is not None:
+                runtime_for_creds["proxy"] = matched_proxy
             try:
-                cookies = await _bootstrap_creds_async(matched, runtime_options, timeout_s=180)
+                cookies = await _bootstrap_creds_async(matched, runtime_for_creds, timeout_s=180)
             except Exception:
                 cookies = None
             if cookies:
                 from .auth import normalize_account_record
 
                 normalized = normalize_account_record(
-                    {"username": matched.get("username") or username or key, "cookies": cookies}
+                    {
+                        "username": matched.get("username") or username or key,
+                        "cookies": cookies,
+                        "proxy": matched_proxy,
+                    }
                 )
                 try:
                     self.accounts_repo.upsert_account(normalized)

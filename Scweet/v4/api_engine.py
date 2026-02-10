@@ -8,8 +8,6 @@ import threading
 from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
-import requests
-
 from .models import SearchRequest, SearchResult, TweetMedia, TweetRecord, TweetUser
 
 JSON_DECODE_STATUS = 598
@@ -88,8 +86,7 @@ class ApiEngine:
 
             return CurlSession
         except Exception:
-            logger.info("API HTTP sync session unavailable in curl_cffi; falling back to requests.Session")
-            return requests.Session
+            raise RuntimeError("curl_cffi is required for API HTTP requests") from None
 
     async def search_tweets(self, request):
         provided_session, account_context, runtime_hints = self._extract_runtime_context(request)

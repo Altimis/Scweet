@@ -8,8 +8,6 @@ import os
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional, Tuple
 
-import requests
-
 from .exceptions import AccountSessionAuthError, AccountSessionRuntimeError, AccountSessionTransientError
 from .http_utils import apply_proxies_to_session, is_curl_cffi_session, normalize_http_proxies
 
@@ -65,6 +63,23 @@ def _normalize_cookies_payload(payload: Any) -> Any:
         return payload
 
     return None
+
+
+def _normalize_proxy_payload(payload: Any) -> Any:
+    if payload is None:
+        return None
+    if isinstance(payload, str):
+        stripped = payload.strip()
+        if not stripped:
+            return None
+        if stripped.startswith("{") or stripped.startswith("[") or stripped.startswith('"'):
+            try:
+                decoded = json.loads(stripped)
+            except Exception:
+                return stripped
+            return decoded
+        return stripped
+    return payload
 
 
 def _cookies_to_dict(cookies_payload: Any) -> dict[str, str]:
@@ -193,7 +208,7 @@ class AccountSessionBuilder:
         sync_factory = self._build_sync_factory()
         if sync_factory is not None:
             return sync_factory
-        return requests.Session
+        raise RuntimeError("curl_cffi is required for API HTTP sessions")
 
     def _build_curl_async_factory(self):
         if not self.prefer_curl_cffi:
@@ -233,8 +248,8 @@ class AccountSessionBuilder:
 
                 return _factory
             except Exception:
-                logger.info("curl_cffi sync Session unavailable, falling back to requests.Session")
-        return requests.Session
+                logger.info("curl_cffi sync Session unavailable")
+        return None
 
     def build(self, account: Mapping[str, Any]) -> tuple[Any, dict[str, Any]]:
         material, reason = prepare_account_auth_material(account, default_bearer_token=self.default_bearer_token)
@@ -255,7 +270,10 @@ class AccountSessionBuilder:
             )
 
         try:
-            apply_proxies_to_session(session, self._http_proxies)
+            account_proxy = _normalize_proxy_payload(_record_get(account, "proxy_json", "proxy"))
+            account_proxies = normalize_http_proxies(account_proxy)
+            effective_proxies = account_proxies if account_proxies is not None else self._http_proxies
+            apply_proxies_to_session(session, effective_proxies)
             self._apply_cookies(session, material.cookies)
             self._apply_headers(session, material)
         except Exception as exc:
@@ -312,7 +330,7 @@ class AccountSessionBuilder:
         }
 
         # curl_cffi sets its own UA consistent with impersonation; overriding it can cause fingerprint mismatches.
-        # For requests fallback, we still set a browser-like UA unless the user explicitly disables/overrides it.
+        # For non-curl clients, we provide a browser-like UA by default.
         if self.user_agent_override is not None:
             headers["User-Agent"] = self.user_agent_override
         elif not is_curl_cffi_session(session):

@@ -192,14 +192,23 @@ class Scweet:
         """Convenience accessor for DB maintenance APIs (ScweetDB)."""
         from .v4.db import ScweetDB
 
-        return ScweetDB(self._v4_config.storage.db_path)
+        ops = getattr(self._v4_config, "operations", None)
+        return ScweetDB(
+            self._v4_config.storage.db_path,
+            account_daily_requests_limit=int(getattr(ops, "account_daily_requests_limit", 5000) or 5000),
+            account_daily_tweets_limit=int(getattr(ops, "account_daily_tweets_limit", 50000) or 50000),
+        )
 
     def _init_v4_core(self) -> None:
         db_path = self._v4_config.storage.db_path
         lease_ttl_s = max(1, int(getattr(self._v4_config.operations, "account_lease_ttl_s", 120)))
+        daily_requests_limit = max(1, int(getattr(self._v4_config.operations, "account_daily_requests_limit", 5000)))
+        daily_tweets_limit = max(1, int(getattr(self._v4_config.operations, "account_daily_tweets_limit", 50000)))
         self._accounts_repo = AccountsRepo(
             db_path,
             lease_ttl_s=lease_ttl_s,
+            daily_pages_limit=daily_requests_limit,
+            daily_tweets_limit=daily_tweets_limit,
             require_auth_material=True,
         )
         self._runs_repo = RunsRepo(db_path)
@@ -243,6 +252,14 @@ class Scweet:
             manifest_url=self._v4_config.manifest.manifest_url,
             ttl_s=self._v4_config.manifest.ttl_s,
         )
+        if bool(getattr(self._v4_config.manifest, "update_on_init", False)):
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            try:
+                self._manifest_provider.refresh_sync(strict=strict)
+            except Exception:
+                if strict:
+                    raise
+                logger.exception("Manifest refresh failed (best-effort); continuing")
         tx_provider_kwargs: dict[str, Any] = {
             "proxy": getattr(self._v4_config.runtime, "proxy", None),
             "user_agent": getattr(self._v4_config.runtime, "api_user_agent", None),
@@ -342,7 +359,14 @@ class Scweet:
         if getattr(self._accounts_repo, "db_path", None) == effective_db_path:
             repo = self._accounts_repo
         else:
-            repo = AccountsRepo(effective_db_path, require_auth_material=True)
+            ops = getattr(self._v4_config, "operations", None)
+            repo = AccountsRepo(
+                effective_db_path,
+                require_auth_material=True,
+                lease_ttl_s=max(1, int(getattr(ops, "account_lease_ttl_s", 120) or 120)),
+                daily_pages_limit=max(1, int(getattr(ops, "account_daily_requests_limit", 5000) or 5000)),
+                daily_tweets_limit=max(1, int(getattr(ops, "account_daily_tweets_limit", 50000) or 50000)),
+            )
         eligible = int(repo.count_eligible())
 
         if bool(getattr(self._v4_config.runtime, "strict", False)) and eligible <= 0:
