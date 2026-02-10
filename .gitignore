@@ -3,6 +3,22 @@
 dist/
 build/
 
+# Python cache/bytecode
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local state DBs (examples/runtime artifacts)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Local secrets (never commit real tokens/passwords)
+/.env
+
 # Ignore IDE settings
 .idea/
 

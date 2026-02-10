@@ -29,18 +29,19 @@ def read_requirements(path: Path) -> list[str]:
 
 about: dict[str, str] = {}
 exec(read_text(ROOT / "Scweet" / "__version__.py"), about)
+version = about["__version__"]
 
 setup(
     name="Scweet",
-    version=about["__version__"],
+    version=version,
     license="MIT",
-    description="Tool for scraping Tweets",
+    description="API-only tweet search scraping (Twitter/X web GraphQL)",
     long_description=read_text(ROOT / "README.md"),
     long_description_content_type="text/markdown",
     author="Yassine AIT JEDDI",
     author_email="aitjeddiyassine@gmail.com",
     url="https://github.com/Altimis/Scweet",
-    download_url="https://github.com/Altimis/Scweet/archive/v3.0.tar.gz",
+    download_url=f"https://github.com/Altimis/Scweet/archive/v{version}.tar.gz",
     keywords=[
         "twitter",
         "scraper",
@@ -53,6 +54,7 @@ setup(
     ],
     packages=find_packages(include=("Scweet", "Scweet.*")),
     include_package_data=True,
+    package_data={"Scweet.v4": ["default_manifest.json"]},
     install_requires=read_requirements(ROOT / "requirements.txt"),
     python_requires=">=3.9",
     classifiers=[

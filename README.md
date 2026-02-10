@@ -21,7 +21,7 @@ v4 notes:
 - `nodriver` is used internally only for optional cookie bootstrap (credentials login -> cookies).
 - Profile/followers/following APIs are coming soon (v4 methods exist for compatibility but are not implemented yet).
 
-Full documentation: `Scweet/DOCUMENTATION.md`
+Full documentation: `DOCUMENTATION.md`
 
 ## Scweet on Apify (Hosted Option)
 
@@ -57,10 +57,12 @@ from Scweet import Scweet
 
 scweet = Scweet.from_sources(
     db_path="scweet_state.db",
-    # Option A: direct cookie dict (auth_token + ct0)
-    accounts_file="accounts.txt", 
-    # Option B: convenience raw auth_token string (Scweet will bootstrap ct0 if allowed)
-    # cookies="YOUR_AUTH_TOKEN",
+    # Provide accounts via one (or more) sources:
+    cookies_file="cookies.json",       # also supports Netscape cookies.txt
+    # accounts_file="accounts.txt",
+    # env_path=".env",
+    # cookies={"auth_token": "...", "ct0": "..."},
+    # cookies="YOUR_AUTH_TOKEN",  # convenience auth_token string (ct0 can be bootstrapped if allowed)
     output_format="both",  # csv|json|both|none
 )
 
@@ -79,9 +81,15 @@ print("tweets:", len(tweets))
 
 Examples you can run from source checkout:
 
-- Sync: `Scweet/sync_example.py`
-- Async: `Scweet/async_example.py`
-- Notebook: `Scweet/example.ipynb`
+- Sync: `examples/sync_example.py`
+- Async: `examples/async_example.py`
+- Notebook: `examples/example.ipynb`
+
+Example input templates (placeholders):
+
+- `examples/.env`
+- `examples/accounts.txt`
+- `examples/cookies.json`
 
 ## Configure Scweet (Recommended: ScweetConfig)
 
@@ -104,16 +112,17 @@ cfg = ScweetConfig.from_sources(
     proxy=None,                        # used for API calls and nodriver bootstrap
     overrides={
         "pool": {"concurrency": 4},
-        "operations": {
-            "account_lease_ttl_s": 300,
-            "account_requests_per_min": 30,
-            # Per-account daily caps (lease eligibility; resets by UTC day).
-            "account_daily_requests_limit": 5000,
-            "account_daily_tweets_limit": 50000,
+            "operations": {
+                "account_lease_ttl_s": 300,
+                "account_requests_per_min": 30,
+                "account_min_delay_s": 2,
+                # Per-account daily caps (lease eligibility; resets by UTC day).
+                "account_daily_requests_limit": 30,
+                "account_daily_tweets_limit": 600,
+            },
+            "output": {"dedupe_on_resume_by_tweet_id": True},
         },
-        "output": {"dedupe_on_resume_by_tweet_id": True},
-    },
-)
+    )
 
 scweet = Scweet(config=cfg)
 ```
@@ -245,4 +254,4 @@ print(db.collapse_duplicates_by_auth_token(dry_run=True))
 
 ## More Details
 
-See `Scweet/DOCUMENTATION.md` for the full guide (cookies formats, logging setup, strict mode, manifest updates, advanced config knobs).
+See `DOCUMENTATION.md` for the full guide (cookies formats, logging setup, strict mode, manifest updates, advanced config knobs).

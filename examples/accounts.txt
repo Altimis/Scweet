@@ -1,0 +1,19 @@
+# Scweet v4 example accounts.txt (placeholders only).
+#
+# Format (one account per line):
+#   username:password:email:email_password:2fa:auth_token
+#
+# Notes:
+# - Missing trailing fields are allowed (you can provide only username/auth_token).
+# - Blank lines and lines starting with # are ignored.
+# - Per-account proxy override: append a TAB then a proxy value (URL or JSON dict).
+
+# Token-only (recommended if you already have it)
+alice:::::YOUR_AUTH_TOKEN_HERE
+
+# Credentials (used only for optional nodriver bootstrap; API login is not implemented yet)
+bob:YOUR_PASSWORD:bob@example.com:YOUR_EMAIL_PASSWORD:YOUR_TOTP_SECRET:
+
+# Token + per-account proxy (TAB then proxy JSON dict OR proxy URL)
+carol:::::YOUR_AUTH_TOKEN_HERE	{"host":"127.0.0.1","port":8080,"username":"proxyuser","password":"proxypass"}
+dave:::::YOUR_AUTH_TOKEN_HERE	http://user:pass@host:port

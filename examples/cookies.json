@@ -1,0 +1,11 @@
+[
+  {
+    "username": "acct1",
+    "cookies": { "auth_token": "YOUR_AUTH_TOKEN", "ct0": "YOUR_CT0" , "x":  "vx", "y":  "vy"}
+  },
+  {
+    "username": "acct2",
+    "auth_token": "YOUR_AUTH_TOKEN_ONLY",
+    "proxy": "http://user:pass@host:port"
+  }
+]

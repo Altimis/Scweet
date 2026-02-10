@@ -6,7 +6,7 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- New v4 internal architecture under `Scweet/Scweet/v4/`.
+- New v4 internal architecture under `Scweet/v4/`.
 - Async runner orchestration with in-memory task queue.
 - SQLite-backed state for account lifecycle, runs, resume checkpoints, and manifest cache.
 - API-first scraping core (GraphQL) with async runner orchestration.
@@ -54,3 +54,7 @@ All notable changes to this project are documented in this file.
 ### Removed
 
 - `requests` dependency/fallbacks for API HTTP. v4 API scraping requires `curl_cffi`.
+
+### Fixed
+
+- Ensure `Scweet/v4/default_manifest.json` is shipped in built distributions (wheel/sdist).

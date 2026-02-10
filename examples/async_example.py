@@ -14,14 +14,20 @@ Important:
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 from Scweet import Scweet, ScweetConfig, ScweetDB
 
 
 async def main() -> None:
+    root = Path(__file__).resolve().parents[1]
+    examples_dir = root / "examples"
+    db_path = root / "scweet_state.db"
+    outputs_dir = root / "outputs"
+
     cfg = ScweetConfig.from_sources(
-        db_path="../scweet_state.db",
-        cookies_file="cookies.json",
+        db_path=str(db_path),
+        cookies_file=str(examples_dir / "cookies.json"),
         # cookies={"auth_token": "...", "ct0": "..."},
         # cookies="YOUR_AUTH_TOKEN",
         provision_on_init=True,
@@ -36,7 +42,7 @@ async def main() -> None:
     scweet = Scweet(config=cfg)
 
     # Optional: set/override a per-account proxy in the DB (applies to API calls for that account).
-    # ScweetDB("scweet_state.db").set_account_proxy("acct-a", {"host": "127.0.0.1", "port": 8080})
+    # ScweetDB(str(db_path)).set_account_proxy("acct-a", {"host": "127.0.0.1", "port": 8080})
 
     tweets = await scweet.ascrape(
         since="2026-02-01",
@@ -44,8 +50,8 @@ async def main() -> None:
         words=["bitcoin"],
         limit=50,
         resume=True,
-        save_dir="outputs",
-        custom_csv_name="async_bitcoin.json",
+        save_dir=str(outputs_dir),
+        custom_csv_name="async_bitcoin.csv",
         display_type="Latest",
     )
     print("tweets:", len(tweets))
