@@ -63,7 +63,7 @@ For more details, see Apify Python client quickstart: https://apify.com/altimis/
 - You need accounts/cookies. Rate limits and anti-bot controls vary.
 - For production workflows, the Apify Actor is usually the simplest and most reliable option.
 
-## Installation
+## Installation (Scweet library)
 
 ```bash
 pip install Scweet
