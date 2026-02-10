@@ -194,7 +194,6 @@ Examples you can run from source checkout:
 
 - Sync: `examples/sync_example.py`
 - Async: `examples/async_example.py`
-- Notebook: `examples/example.ipynb`
 
 Example input templates (placeholders):
 
