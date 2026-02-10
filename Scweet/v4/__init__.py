@@ -25,8 +25,11 @@ from .exceptions import (
     AccountSessionTransientError,
     ConfigError,
     EngineError,
+    NetworkError,
     ManifestError,
+    ProxyError,
     ResumeError,
+    RunFailed,
     ScweetError,
 )
 
@@ -55,5 +58,8 @@ __all__ = [
     "AccountSessionRuntimeError",
     "AccountSessionTransientError",
     "EngineError",
+    "RunFailed",
+    "NetworkError",
+    "ProxyError",
     "ResumeError",
 ]

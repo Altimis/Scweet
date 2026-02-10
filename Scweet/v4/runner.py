@@ -10,7 +10,15 @@ from typing import Any, Optional
 import uuid
 
 from .cooldown import compute_cooldown
-from .exceptions import AccountPoolExhausted, AccountSessionBuildError, EngineError
+from .exceptions import (
+    AccountPoolExhausted,
+    AccountSessionBuildError,
+    EngineError,
+    NetworkError,
+    ProxyError,
+    RunFailed,
+)
+from .http_utils import apply_proxies_to_session, normalize_http_proxies
 from .limiter import TokenBucketLimiter
 from .models import RunStats, SearchRequest, SearchResult
 from .queue import InMemoryTaskQueue
@@ -18,8 +26,9 @@ from .scheduler import build_tasks_for_intervals, split_time_intervals
 
 _TS_FMT = "%Y-%m-%d_%H:%M:%S_UTC"
 _DATE_FMT = "%Y-%m-%d"
-_AUTH_ERROR_CODES = {401, 403, 404}
+_AUTH_ERROR_CODES = {401, 403}
 _TRANSIENT_CODES = {429, 598, 599}
+_MAX_ERROR_EVENTS = 50
 logger = logging.getLogger(__name__)
 
 
@@ -99,6 +108,29 @@ async def _maybe_await(value):
     if inspect.isawaitable(value):
         return await value
     return value
+
+
+def _truncate(value: Any, *, limit: int = 240) -> str:
+    text = str(value or "")
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3] + "..."
+
+
+async def _append_error_event(
+    events: Optional[list[dict[str, Any]]],
+    lock: Optional[asyncio.Lock],
+    event: dict[str, Any],
+) -> None:
+    if events is None:
+        return
+    if lock is None:
+        if len(events) < _MAX_ERROR_EVENTS:
+            events.append(event)
+        return
+    async with lock:
+        if len(events) < _MAX_ERROR_EVENTS:
+            events.append(event)
 
 
 async def _bootstrap_token_async(auth_token: str, timeout_s: int = 30, *, proxy: Any = None) -> Optional[dict]:
@@ -212,6 +244,8 @@ class Runner:
         global_stop_event = asyncio.Event()
         leased_accounts: dict[str, dict[str, Any]] = {}
         handed_off_lease_ids: set[str] = set()
+        error_events: list[dict[str, Any]] = []
+        error_lock = asyncio.Lock()
 
         try:
             if self.runs_repo is not None and hasattr(self.runs_repo, "create_run"):
@@ -283,6 +317,8 @@ class Runner:
                             checkpoint_enabled=resume_checkpoint_enabled,
                             global_limit=global_limit,
                             stop_event=global_stop_event,
+                            error_events=error_events,
+                            error_lock=error_lock,
                         )
                     )
                 )
@@ -338,6 +374,18 @@ class Runner:
         if failure is not None:
             raise failure
 
+        strict = bool(_config_value(self.config, "strict", False))
+        unresolved = max(0, stats.tasks_total - stats.tasks_done - stats.tasks_failed)
+        if stats.tweets_count == 0 and (stats.tasks_failed > 0 or unresolved > 0):
+            summary = self._build_run_failure_summary(
+                stats,
+                unresolved=unresolved,
+                error_events=error_events,
+            )
+            if strict:
+                raise self._classify_run_failure(summary, error_events=error_events)
+            logger.error("%s", summary)
+
         return SearchResult(tweets=collected_tweets, stats=stats)
 
     def _runtime_options_for_bootstrap(self) -> dict[str, Any]:
@@ -348,6 +396,59 @@ class Runner:
             "disable_images": bool(_config_value(self.config, "disable_images", False)),
             "code_callback": _config_value(self.config, "code_callback", None),
         }
+
+    async def _proxy_smoke_check(self, proxy: Any, *, url: str, timeout_s: float) -> tuple[bool, int, str]:
+        """Check proxy health with a clean HTTP call (no account cookies/headers)."""
+
+        proxies = normalize_http_proxies(proxy)
+        if not proxies:
+            return True, 0, ""
+
+        from .async_tools import call_in_thread
+
+        impersonate_raw = _config_value(self.config, "api_http_impersonate", None)
+        impersonate = None
+        if impersonate_raw is not None and str(impersonate_raw).strip():
+            impersonate = str(impersonate_raw).strip()
+
+        def _check_sync() -> tuple[bool, int, str]:
+            try:
+                from curl_cffi.requests import Session as CurlSession
+            except Exception as exc:
+                return False, 599, f"curl_cffi_unavailable:{exc.__class__.__name__}"
+
+            kwargs: dict[str, Any] = {"timeout": timeout_s}
+            if impersonate is not None:
+                kwargs["impersonate"] = impersonate
+
+            session = None
+            try:
+                try:
+                    session = CurlSession(proxies=proxies, **kwargs)
+                except TypeError:
+                    session = CurlSession(**kwargs)
+                    apply_proxies_to_session(session, proxies)
+
+                # Ensure we don't mix with env proxy variables.
+                apply_proxies_to_session(session, proxies)
+
+                response = session.get(url, timeout=timeout_s, allow_redirects=True)
+                status_code = int(getattr(response, "status_code", 0) or 0)
+                snippet = str(getattr(response, "text", "") or "")[:200]
+
+                if status_code == 407:
+                    return False, status_code, "proxy_auth_required"
+                return True, status_code, snippet
+            except Exception as exc:
+                return False, 599, str(exc)
+            finally:
+                if session is not None and hasattr(session, "close"):
+                    try:
+                        session.close()
+                    except Exception:
+                        pass
+
+        return await call_in_thread(_check_sync)
 
     def _load_repair_source_records(self) -> list[dict[str, Any]]:
         if self._repair_source_records is not None:
@@ -497,6 +598,8 @@ class Runner:
         checkpoint_enabled: bool = False,
         global_limit: Optional[int] = None,
         stop_event: Optional[asyncio.Event] = None,
+        error_events: Optional[list[dict[str, Any]]] = None,
+        error_lock: Optional[asyncio.Lock] = None,
     ) -> None:
         lease_id = str(account.get("lease_id") or "").strip()
         ttl_s = max(1, int(_config_value(self.config, "account_lease_ttl_s", 120)))
@@ -542,6 +645,8 @@ class Runner:
                 checkpoint_enabled=checkpoint_enabled,
                 global_limit=global_limit,
                 stop_event=stop_event,
+                error_events=error_events,
+                error_lock=error_lock,
             )
         finally:
             cancelled = False
@@ -663,6 +768,8 @@ class Runner:
         checkpoint_enabled: bool = False,
         global_limit: Optional[int] = None,
         stop_event: Optional[asyncio.Event] = None,
+        error_events: Optional[list[dict[str, Any]]] = None,
+        error_lock: Optional[asyncio.Lock] = None,
     ) -> None:
         account_status = 1
         last_headers: Optional[dict[str, Any]] = None
@@ -693,6 +800,20 @@ class Runner:
                         account_session = session_build_out
                 except AccountSessionBuildError as exc:
                     account_status = int(exc.status_code)
+                    await _append_error_event(
+                        error_events,
+                        error_lock,
+                        {
+                            "kind": "session_build",
+                            "username": account.get("username"),
+                            "account_id": account.get("id"),
+                            "lease_id": lease_id,
+                            "status_code": exc.status_code,
+                            "category": exc.category,
+                            "code": exc.code,
+                            "reason": exc.reason,
+                        },
+                    )
                     logger.warning(
                         "Account session build classified username=%s id=%s lease_id=%s category=%s code=%s reason=%s status_code=%s",
                         account.get("username"),
@@ -706,6 +827,20 @@ class Runner:
                     return
                 except Exception as exc:
                     account_status = 599
+                    await _append_error_event(
+                        error_events,
+                        error_lock,
+                        {
+                            "kind": "session_build",
+                            "username": account.get("username"),
+                            "account_id": account.get("id"),
+                            "lease_id": lease_id,
+                            "status_code": account_status,
+                            "category": "transient",
+                            "code": "session_build_unexpected_error",
+                            "reason": exc.__class__.__name__,
+                        },
+                    )
                     logger.warning(
                         "Account session build classified username=%s id=%s lease_id=%s category=%s code=%s reason=%s status_code=%s",
                         account.get("username"),
@@ -725,6 +860,47 @@ class Runner:
                     session_meta.get("cookie_count", "n/a"),
                     session_meta.get("session_mode", "unknown"),
                 )
+
+            proxy_check_on_lease = bool(_config_value(self.config, "proxy_check_on_lease", False))
+            if proxy_check_on_lease and account_session is not None:
+                account_proxy = _normalize_proxy_payload(account.get("proxy_json") or account.get("proxy"))
+                if account_proxy is None:
+                    account_proxy = _normalize_proxy_payload(_config_value(self.config, "proxy", None))
+                has_proxy = normalize_http_proxies(account_proxy) is not None
+                if has_proxy:
+                    proxy_check_url = str(
+                        _config_value(self.config, "proxy_check_url", "https://api.ipify.org?format=json") or ""
+                    ).strip() or "https://api.ipify.org?format=json"
+                    proxy_check_timeout_s = float(_config_value(self.config, "proxy_check_timeout_s", 10.0))
+                    ok, status, detail = await self._proxy_smoke_check(
+                        proxy=account_proxy,
+                        url=proxy_check_url,
+                        timeout_s=proxy_check_timeout_s,
+                    )
+                    if not ok:
+                        account_status = int(status or 599)
+                        await _append_error_event(
+                            error_events,
+                            error_lock,
+                            {
+                                "kind": "proxy_check",
+                                "username": account.get("username"),
+                                "account_id": account.get("id"),
+                                "lease_id": lease_id,
+                                "status_code": account_status,
+                                "detail": _truncate(detail),
+                                "url": proxy_check_url,
+                            },
+                        )
+                        logger.warning(
+                            "Proxy check failed username=%s id=%s lease_id=%s status_code=%s detail=%s",
+                            account.get("username"),
+                            account.get("id"),
+                            lease_id,
+                            account_status,
+                            _truncate(detail),
+                        )
+                        return
 
             while True:
                 task = await queue.lease(worker_id)
@@ -758,12 +934,13 @@ class Runner:
 
                 try:
                     response = await _maybe_await(self.search_engine.search_tweets(request_payload))
-                except Exception:
+                except Exception as exc:
                     response = {
                         "result": SearchResult(),
                         "cursor": task_query.get("cursor"),
                         "status_code": 599,
                         "headers": {},
+                        "text_snippet": _truncate(str(exc)),
                     }
 
                 status_code = int((response or {}).get("status_code") or 200)
@@ -832,6 +1009,18 @@ class Runner:
                     continue
 
                 account_status = status_code
+                await _append_error_event(
+                    error_events,
+                    error_lock,
+                    {
+                        "kind": "api_request",
+                        "username": account.get("username"),
+                        "account_id": account.get("id"),
+                        "lease_id": lease_id,
+                        "status_code": status_code,
+                        "detail": _truncate((response or {}).get("text_snippet") or ""),
+                    },
+                )
                 attempt = int(task.get("attempt", 0))
                 fallback_attempts = int(task.get("fallback_attempts", 0))
                 account_switches = int(task.get("account_switches", 0))
@@ -1071,3 +1260,41 @@ class Runner:
                 await maybe_awaitable
         except Exception:
             pass
+
+    @staticmethod
+    def _build_run_failure_summary(
+        stats: RunStats,
+        *,
+        unresolved: int,
+        error_events: list[dict[str, Any]],
+    ) -> str:
+        lines = [
+            "Scweet run failed to make progress (0 tweets collected).",
+            f"stats: tasks_total={stats.tasks_total} tasks_done={stats.tasks_done} tasks_failed={stats.tasks_failed} unresolved={unresolved} retries={stats.retries}",
+        ]
+        if error_events:
+            lines.append("recent_errors:")
+            for event in error_events[-5:]:
+                kind = event.get("kind", "?")
+                username = event.get("username") or "-"
+                code = event.get("status_code") or "-"
+                detail = event.get("detail") or event.get("reason") or ""
+                lines.append(f"- {kind} account={username} status={code} detail={_truncate(detail)}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _classify_run_failure(summary: str, *, error_events: list[dict[str, Any]]) -> RunFailed:
+        lowered = summary.lower()
+        for event in error_events:
+            if str(event.get("kind") or "").startswith("proxy"):
+                return ProxyError(summary, diagnostics={"events": error_events[-10:]})
+            if int(event.get("status_code") or 0) == 407:
+                return ProxyError(summary, diagnostics={"events": error_events[-10:]})
+            detail = str(event.get("detail") or event.get("reason") or "").lower()
+            if "proxy" in detail:
+                return ProxyError(summary, diagnostics={"events": error_events[-10:]})
+
+        if any(int(e.get("status_code") or 0) == 599 for e in error_events) or "timed out" in lowered:
+            return NetworkError(summary, diagnostics={"events": error_events[-10:]})
+
+        return RunFailed(summary, diagnostics={"events": error_events[-10:]})

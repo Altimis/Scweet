@@ -594,7 +594,11 @@ class Scweet:
                 raise AccountPoolExhausted(detail) from exc
             logger.error("%s (%s)", detail, str(exc))
             tweets = []
-        except Exception:
+        except Exception as exc:
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            if strict:
+                raise
+            logger.error("Scrape failed detail=%s (set strict=True to raise)", str(exc))
             tweets = []
 
         raw_tweets: list[dict[str, Any]] = []

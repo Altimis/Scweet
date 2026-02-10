@@ -165,6 +165,14 @@ Key knobs most users care about:
 - `output.format` and `output.dedupe_on_resume_by_tweet_id`
 - `resume.mode` (`legacy_csv`, `db_cursor`, `hybrid_safe`)
 
+Logging (optional):
+
+```python
+from Scweet import configure_logging
+
+configure_logging(profile="simple", level="INFO", force=True)  # notebook-friendly
+```
+
 ## Provision Accounts (DB-First)
 
 Scweet stores accounts in SQLite. Provisioning imports account sources into the DB and marks which accounts are eligible.
@@ -192,8 +200,6 @@ result = scweet.provision_accounts(
 )
 print(result)  # {"processed": ..., "eligible": ...}
 ```
-
-Account/proxy file formats live in `DOCUMENTATION.md` (kept out of README on purpose).
 
 ### accounts.txt format
 

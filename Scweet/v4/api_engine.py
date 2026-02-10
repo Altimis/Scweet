@@ -329,8 +329,15 @@ class ApiEngine:
             logger.info("API request endpoint=%s status=%s account=%s", url, status, account_label)
             return payload, status, headers, text_snippet
         except Exception as exc:
-            logger.warning("API request endpoint=%s status=%s account=%s detail=%s", url, NETWORK_ERROR_STATUS, account_label, str(exc))
-            return None, NETWORK_ERROR_STATUS, {}, ""
+            detail = str(exc)
+            logger.warning(
+                "API request endpoint=%s status=%s account=%s detail=%s",
+                url,
+                NETWORK_ERROR_STATUS,
+                account_label,
+                detail,
+            )
+            return None, NETWORK_ERROR_STATUS, {}, detail[:200]
         finally:
             if owns_session:
                 await self._close_session(active_session)

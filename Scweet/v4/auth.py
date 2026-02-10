@@ -222,6 +222,9 @@ def normalize_account_record(record: dict) -> dict:
     )
     cookies_dict = _cookies_to_dict(cookies_payload_raw)
     proxy_payload = _normalize_proxy_payload(_first(data, "proxy_json", "proxy"))
+    if proxy_payload is not None and normalize_http_proxies(proxy_payload) is None:
+        logger.warning("Invalid proxy ignored for account record proxy=%s", str(proxy_payload)[:200])
+        proxy_payload = None
 
     if not auth_token:
         auth_token = _as_str(cookies_dict.get("auth_token"))

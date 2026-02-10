@@ -203,31 +203,34 @@ Runtime behavior and nodriver (credentials bootstrap) controls.
 | `runtime.headless` | `bool` | `True` | nodriver option: headless mode for bootstrap/login. |
 | `runtime.scroll_ratio` | `int` | `30` | Legacy field (browser-scraping era). Currently unused in v4 API-only scraping. |
 | `runtime.code_callback` | `callable \| None` | `None` | Optional callback used by nodriver bootstrap to request user-provided login codes (email/2FA). |
-| `runtime.strict` | `bool` | `False` | If `True`, some failures become exceptions (for example: manifest refresh when `update_on_init=True`, or "no usable accounts" instead of returning empty outputs). |
+| `runtime.strict` | `bool` | `False` | If `True`, Scweet raises instead of silently returning empty output when a run cannot make progress (for example: no leasable accounts, or repeated network/proxy failures). |
 
 #### `operations`
 
 Account leasing, rate limiting, retries, and cooldown policy.
 
-| Key | Type | Default | Description |
-| --- | --- | --- | --- |
-| `operations.account_lease_ttl_s` | `int` | `120` | How long a leased account stays reserved before expiring (crash safety). |
-| `operations.account_lease_heartbeat_s` | `float` | `30.0` | How often workers extend the lease while running. Set `0` to disable heartbeats. |
-| `operations.account_daily_requests_limit` | `int` | `5000` | Per-account daily cap (UTC) on *requests/pages*; accounts above this cap become ineligible for leasing until reset. |
-| `operations.account_daily_tweets_limit` | `int` | `50000` | Per-account daily cap (UTC) on *tweets returned*; accounts above this cap become ineligible for leasing until reset. |
-| `operations.cooldown_default_s` | `float` | `120.0` | Cooldown used for rate limits when no reset header is available. |
-| `operations.transient_cooldown_s` | `float` | `120.0` | Cooldown used for transient/network/5xx failures. |
-| `operations.auth_cooldown_s` | `float` | `2592000.0` | Cooldown used for auth failures (401/403/404). Default is 30 days. |
-| `operations.cooldown_jitter_s` | `float` | `10.0` | Adds random jitter to cooldowns to avoid synchronized retries. |
-| `operations.account_requests_per_min` | `int` | `30` | Per-account request rate limit (token bucket). |
-| `operations.account_min_delay_s` | `float` | `0.0` | Minimum delay between requests (per account worker). |
-| `operations.api_page_size` | `int` | `20` | GraphQL page size (`count`). Larger values reduce requests but can increase per-request payload. Max 100. |
-| `operations.task_retry_base_s` | `int` | `1` | Base delay (seconds) used for task retries. |
-| `operations.task_retry_max_s` | `int` | `30` | Max delay (seconds) for exponential backoff on transient errors. |
-| `operations.max_task_attempts` | `int` | `3` | Max retries per task before failing. |
-| `operations.max_fallback_attempts` | `int` | `3` | Max fallback retries per task before failing (used for continuation/edge cases). |
-| `operations.max_account_switches` | `int` | `2` | Max times a task can switch accounts after auth errors before failing. |
-| `operations.scheduler_min_interval_s` | `int` | `300` | Minimum interval size used when splitting `[since, until]` into `pool.n_splits` tasks. Limits how many splits are allowed. |
+| Key | Type | Default                      | Description |
+| --- | --- |------------------------------| --- |
+| `operations.account_lease_ttl_s` | `int` | `120`                        | How long a leased account stays reserved before expiring (crash safety). |
+| `operations.account_lease_heartbeat_s` | `float` | `30.0`                       | How often workers extend the lease while running. Set `0` to disable heartbeats. |
+| `operations.proxy_check_on_lease` | `bool` | `True`                       | Optional proxy smoke-check when building/leasing account sessions (helps fail fast on bad proxies). |
+| `operations.proxy_check_url` | `str` | `"https://x.com/robots.txt"` | URL used by the optional proxy smoke-check (default returns the proxy egress IP). |
+| `operations.proxy_check_timeout_s` | `float` | `10.0`                       | Timeout for the optional proxy smoke-check. |
+| `operations.account_daily_requests_limit` | `int` | `30`                         | Per-account daily cap (UTC) on *requests/pages*; accounts above this cap become ineligible for leasing until reset. |
+| `operations.account_daily_tweets_limit` | `int` | `600`                        | Per-account daily cap (UTC) on *tweets returned*; accounts above this cap become ineligible for leasing until reset. |
+| `operations.cooldown_default_s` | `float` | `120.0`                      | Cooldown used for rate limits when no reset header is available. |
+| `operations.transient_cooldown_s` | `float` | `120.0`                      | Cooldown used for transient/network/5xx failures. |
+| `operations.auth_cooldown_s` | `float` | `2592000.0`                  | Cooldown used for auth failures (401/403). Default is 30 days. |
+| `operations.cooldown_jitter_s` | `float` | `10.0`                       | Adds random jitter to cooldowns to avoid synchronized retries. |
+| `operations.account_requests_per_min` | `int` | `30`                         | Per-account request rate limit (token bucket). |
+| `operations.account_min_delay_s` | `float` | `2.0`                        | Minimum delay between requests (per account worker). |
+| `operations.api_page_size` | `int` | `20`                         | GraphQL page size (`count`). Larger values reduce requests but can increase per-request payload. Max 100. |
+| `operations.task_retry_base_s` | `int` | `1`                          | Base delay (seconds) used for task retries. |
+| `operations.task_retry_max_s` | `int` | `30`                         | Max delay (seconds) for exponential backoff on transient errors. |
+| `operations.max_task_attempts` | `int` | `3`                          | Max retries per task before failing. |
+| `operations.max_fallback_attempts` | `int` | `3`                          | Max fallback retries per task before failing (used for continuation/edge cases). |
+| `operations.max_account_switches` | `int` | `2`                          | Max times a task can switch accounts after auth errors before failing. |
+| `operations.scheduler_min_interval_s` | `int` | `300`                        | Minimum interval size used when splitting `[since, until]` into `pool.n_splits` tasks. Limits how many splits are allowed. |
 
 #### `resume`
 
@@ -363,7 +366,7 @@ Compatibility rule:
 
 Scweet uses the standard Python `logging` module and installs no handlers.
 
-Notebook-friendly setup:
+Notebook-friendly setup (stdlib):
 
 ```python
 import logging, sys
@@ -374,6 +377,17 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
     force=True,
 )
+```
+
+Notebook-friendly setup (Scweet helper):
+
+```python
+from Scweet import configure_logging
+
+configure_logging(profile="simple", level="INFO", force=True)
+
+# More detail (per-request API logs + file/line):
+configure_logging(profile="detailed", level="DEBUG", show_api_http=True, force=True)
 ```
 
 Common messages:
@@ -409,12 +423,20 @@ Set `runtime.proxy` as:
 - `"http://user:pass@host:port"` (string)
 - `{"http": "...", "https": "..."}` (requests/curl-style dict)
 
+Invalid proxy formats raise a config validation error.
+
 This proxy is used for:
 
 - API calls (curl_cffi sessions)
 - Transaction-id bootstrap (if enabled)
 - Token bootstrap (best-effort)
 - nodriver login bootstrap
+
+Optional fail-fast proxy check:
+
+- `config.operations.proxy_check_on_lease=True` will run a cheap proxy-only connectivity check (no account cookies/headers).
+- `config.operations.proxy_check_url` and `config.operations.proxy_check_timeout_s` control the check.
+  - Default URL is an IP-echo endpoint so you can validate proxy egress.
 
 ### User-Agent policy
 

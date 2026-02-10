@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from enum import Enum
 from typing import Any, Optional
 
@@ -106,10 +107,51 @@ class RuntimeConfig(BaseModel):
     code_callback: Optional[Any] = None
     strict: bool = False
 
+    @field_validator("proxy", mode="before")
+    @classmethod
+    def _normalize_proxy(cls, value: Any) -> Any:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return None
+            # Allow passing JSON-encoded proxy dicts as strings.
+            if stripped.startswith("{") or stripped.startswith("[") or stripped.startswith('"'):
+                try:
+                    decoded = json.loads(stripped)
+                except Exception:
+                    return stripped
+                return decoded
+            return stripped
+        return value
+
+    @field_validator("proxy", mode="after")
+    @classmethod
+    def _validate_proxy(cls, value: Any) -> Any:
+        if value is None:
+            return None
+        from .http_utils import normalize_http_proxies
+
+        proxies = normalize_http_proxies(value)
+        if proxies is None:
+            raise ValueError(
+                "Invalid proxy format. Expected one of: "
+                "URL string ('http://host:port' or 'host:port'), "
+                "dict with {'http': '...', 'https': '...'}, "
+                "or dict with {'host': '...', 'port': 8080, optional 'scheme', 'username', 'password'}."
+            )
+        return value
+
 
 class OperationalConfig(BaseModel):
     account_lease_ttl_s: int = Field(default=120, ge=1)
     account_lease_heartbeat_s: float = Field(default=30.0, ge=0.0)
+    # Optional proxy smoke-check when leasing/building account sessions (helps fail fast on bad proxies).
+    proxy_check_on_lease: bool = True
+    # Default points to an IP-echo endpoint to validate proxy egress is working.
+    proxy_check_url: str = "https://x.com/robots.txt"
+    proxy_check_timeout_s: float = Field(default=10.0, ge=0.0)
     # Per-account daily caps (used for lease eligibility). These reset by UTC date.
     account_daily_requests_limit: int = Field(default=30, ge=1)
     account_daily_tweets_limit: int = Field(default=600, ge=1)

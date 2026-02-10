@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 
 class ScweetError(Exception):
@@ -21,6 +21,22 @@ class AccountPoolExhausted(ScweetError):
 
 class EngineError(ScweetError):
     """Engine-level runtime error."""
+
+
+class RunFailed(EngineError):
+    """A run completed without raising, but could not produce results due to errors."""
+
+    def __init__(self, message: str, *, diagnostics: Optional[dict[str, Any]] = None) -> None:
+        self.diagnostics = dict(diagnostics or {})
+        super().__init__(message)
+
+
+class NetworkError(RunFailed):
+    """Network/connectivity failure prevented scraping progress."""
+
+
+class ProxyError(RunFailed):
+    """Proxy misconfiguration or proxy connectivity failure prevented scraping progress."""
 
 
 class ResumeError(ScweetError):
