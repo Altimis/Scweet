@@ -130,12 +130,12 @@ class ScweetDB:
         self,
         db_path: str = "scweet_state.db",
         *,
-        account_daily_requests_limit: int = 5000,
-        account_daily_tweets_limit: int = 50000,
+        account_daily_requests_limit: int = 30,
+        account_daily_tweets_limit: int = 600,
     ):
         self.db_path = str(db_path or "scweet_state.db")
-        self.account_daily_requests_limit = max(1, int(account_daily_requests_limit or 5000))
-        self.account_daily_tweets_limit = max(1, int(account_daily_tweets_limit or 50000))
+        self.account_daily_requests_limit = max(1, int(account_daily_requests_limit or 30))
+        self.account_daily_tweets_limit = max(1, int(account_daily_tweets_limit or 600))
         init_db(self.db_path)
 
     def accounts_summary(self) -> dict[str, Any]:

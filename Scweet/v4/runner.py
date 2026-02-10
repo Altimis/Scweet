@@ -671,7 +671,7 @@ class Runner:
         session_meta: dict[str, Any] = {}
 
         requests_per_min = int(_config_value(self.config, "account_requests_per_min", 30))
-        min_delay_s = float(_config_value(self.config, "account_min_delay_s", 0.0))
+        min_delay_s = float(_config_value(self.config, "account_min_delay_s", 2.0))
         api_page_size = max(1, min(int(_config_value(self.config, "api_page_size", 20)), 100))
         limiter = TokenBucketLimiter(requests_per_min=requests_per_min, min_delay_s=min_delay_s)
 

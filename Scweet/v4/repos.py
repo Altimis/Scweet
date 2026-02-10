@@ -119,8 +119,8 @@ class AccountsRepo:
         db_path: str,
         *,
         lease_ttl_s: int = 120,
-        daily_pages_limit: int = 5000,
-        daily_tweets_limit: int = 50000,
+        daily_pages_limit: int = 30,
+        daily_tweets_limit: int = 600,
         require_auth_material: bool = False,
         default_bearer_token: Optional[str] = DEFAULT_X_BEARER_TOKEN,
     ):

@@ -195,15 +195,15 @@ class Scweet:
         ops = getattr(self._v4_config, "operations", None)
         return ScweetDB(
             self._v4_config.storage.db_path,
-            account_daily_requests_limit=int(getattr(ops, "account_daily_requests_limit", 5000) or 5000),
-            account_daily_tweets_limit=int(getattr(ops, "account_daily_tweets_limit", 50000) or 50000),
+            account_daily_requests_limit=int(getattr(ops, "account_daily_requests_limit", 30) or 30),
+            account_daily_tweets_limit=int(getattr(ops, "account_daily_tweets_limit", 600) or 600),
         )
 
     def _init_v4_core(self) -> None:
         db_path = self._v4_config.storage.db_path
         lease_ttl_s = max(1, int(getattr(self._v4_config.operations, "account_lease_ttl_s", 120)))
-        daily_requests_limit = max(1, int(getattr(self._v4_config.operations, "account_daily_requests_limit", 5000)))
-        daily_tweets_limit = max(1, int(getattr(self._v4_config.operations, "account_daily_tweets_limit", 50000)))
+        daily_requests_limit = max(1, int(getattr(self._v4_config.operations, "account_daily_requests_limit", 30)))
+        daily_tweets_limit = max(1, int(getattr(self._v4_config.operations, "account_daily_tweets_limit", 600)))
         self._accounts_repo = AccountsRepo(
             db_path,
             lease_ttl_s=lease_ttl_s,
@@ -364,8 +364,8 @@ class Scweet:
                 effective_db_path,
                 require_auth_material=True,
                 lease_ttl_s=max(1, int(getattr(ops, "account_lease_ttl_s", 120) or 120)),
-                daily_pages_limit=max(1, int(getattr(ops, "account_daily_requests_limit", 5000) or 5000)),
-                daily_tweets_limit=max(1, int(getattr(ops, "account_daily_tweets_limit", 50000) or 50000)),
+                daily_pages_limit=max(1, int(getattr(ops, "account_daily_requests_limit", 30) or 30)),
+                daily_tweets_limit=max(1, int(getattr(ops, "account_daily_tweets_limit", 600) or 600)),
             )
         eligible = int(repo.count_eligible())
 
