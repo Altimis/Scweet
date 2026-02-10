@@ -140,6 +140,7 @@ class ResumeConfig(BaseModel):
 class OutputConfig(BaseModel):
     save_dir: str = "outputs"
     format: str = "csv"
+    dedupe_on_resume_by_tweet_id: bool = False
 
 
 class ManifestConfig(BaseModel):

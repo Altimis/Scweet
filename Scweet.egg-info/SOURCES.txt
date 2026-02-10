@@ -18,6 +18,7 @@ Scweet/v4/api_engine.py
 Scweet/v4/auth.py
 Scweet/v4/config.py
 Scweet/v4/cooldown.py
+Scweet/v4/db.py
 Scweet/v4/exceptions.py
 Scweet/v4/flatten.py
 Scweet/v4/http_utils.py

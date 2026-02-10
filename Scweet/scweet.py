@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import json
 import logging
 import os
 from datetime import date, datetime, timedelta
@@ -25,6 +26,84 @@ from .v4.transaction import TransactionIdProvider
 from .v4.warnings import warn_deprecated, warn_legacy_import_path
 
 logger = logging.getLogger(__name__)
+
+
+def _tweet_rest_id_from_raw(raw: Any) -> Optional[str]:
+    if not isinstance(raw, dict):
+        return None
+    value: Any = raw
+    if isinstance(raw.get("tweet"), dict):
+        value = raw["tweet"]
+    if not isinstance(value, dict):
+        return None
+
+    rest_id = value.get("rest_id") or value.get("tweet_id") or value.get("tweetId") or value.get("id")
+    if rest_id:
+        tid = str(rest_id).strip()
+        return tid or None
+
+    legacy = value.get("legacy")
+    if isinstance(legacy, dict) and legacy.get("id_str"):
+        tid = str(legacy["id_str"]).strip()
+        return tid or None
+    return None
+
+
+def _read_existing_tweet_ids_from_csv(path: str) -> set[str]:
+    candidates = ("tweet_id", "rest_id", "tweetId", "tweet_id_str", "id", "id_str", "Tweet ID", "TweetId")
+    try:
+        if not os.path.exists(path) or os.path.getsize(path) <= 0:
+            return set()
+    except Exception:
+        return set()
+
+    try:
+        with open(path, "r", encoding="utf-8", newline="") as handle:
+            reader = csv.reader(handle)
+            header = next(reader, None) or []
+            header = [str(col).lstrip("\ufeff") for col in header]
+            id_idx: Optional[int] = None
+            for candidate in candidates:
+                if candidate in header:
+                    id_idx = header.index(candidate)
+                    break
+            if id_idx is None:
+                return set()
+
+            out: set[str] = set()
+            for row in reader:
+                if not row or id_idx >= len(row):
+                    continue
+                value = str(row[id_idx]).strip()
+                if value:
+                    out.add(value)
+            return out
+    except Exception:
+        return set()
+
+
+def _read_existing_tweet_ids_from_json(path: str) -> set[str]:
+    try:
+        if not os.path.exists(path) or os.path.getsize(path) <= 0:
+            return set()
+    except Exception:
+        return set()
+
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except Exception:
+        return set()
+
+    if not isinstance(payload, list):
+        return set()
+
+    out: set[str] = set()
+    for item in payload:
+        tid = _tweet_rest_id_from_raw(item)
+        if tid:
+            out.add(tid)
+    return out
 
 
 class Scweet:
@@ -107,6 +186,13 @@ class Scweet:
     @property
     def init_warnings(self) -> list[str]:
         return list(self._v4_init_warnings)
+
+    @property
+    def db(self):
+        """Convenience accessor for DB maintenance APIs (ScweetDB)."""
+        from .v4.db import ScweetDB
+
+        return ScweetDB(self._v4_config.storage.db_path)
 
     def _init_v4_core(self) -> None:
         db_path = self._v4_config.storage.db_path
@@ -512,6 +598,49 @@ class Scweet:
         fmt = str(configured_format or "csv").strip().lower()
         if fmt not in {"csv", "json", "both", "none"}:
             fmt = "csv"
+
+        dedupe_on_resume = bool(
+            getattr(getattr(self._v4_config, "output", None), "dedupe_on_resume_by_tweet_id", False)
+        )
+        if resume and dedupe_on_resume and fmt != "none":
+            existing_ids: set[str] = set()
+            if fmt in {"csv", "both"}:
+                existing_ids.update(_read_existing_tweet_ids_from_csv(csv_filename))
+            json_path_for_dedupe: Optional[str] = None
+            if fmt in {"json", "both"}:
+                json_path_for_dedupe = str(Path(csv_filename).with_suffix(".json"))
+                existing_ids.update(_read_existing_tweet_ids_from_json(json_path_for_dedupe))
+
+            if existing_ids:
+                seen_ids = set(existing_ids)
+                filtered_raw: list[dict[str, Any]] = []
+                filtered_summary: list[dict[str, Any]] = []
+                filtered_compat: list[dict[str, Any]] = []
+                for raw, summary, compat in zip(raw_tweets, csv_rows_summary, csv_rows_compat):
+                    tid: Optional[str] = None
+                    try:
+                        tid = summary.get("tweet_id")  # type: ignore[assignment]
+                    except Exception:
+                        tid = None
+                    if tid is not None and not isinstance(tid, str):
+                        tid = str(tid)
+                    if isinstance(tid, str):
+                        tid = tid.strip() or None
+                    if not tid:
+                        tid = _tweet_rest_id_from_raw(raw)
+
+                    if tid and tid in seen_ids:
+                        continue
+                    if tid:
+                        seen_ids.add(tid)
+
+                    filtered_raw.append(raw)
+                    filtered_summary.append(summary)
+                    filtered_compat.append(compat)
+
+                raw_tweets = filtered_raw
+                csv_rows_summary = filtered_summary
+                csv_rows_compat = filtered_compat
 
         if fmt in {"csv", "both"}:
             write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"

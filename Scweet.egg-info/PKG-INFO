@@ -301,6 +301,33 @@ strict_scweet = Scweet(
 strict_scweet.provision_accounts(env_path=".env")
 ```
 
+### DB/state maintenance (ScweetDB)
+
+Scweet stores state in a local SQLite DB (`scweet_state.db` by default). You can inspect and maintain it via `ScweetDB`.
+
+By default, secrets are **redacted** (you get fingerprints and cookie key names). Pass `reveal_secrets=True` explicitly if
+you really want raw tokens/cookies returned.
+
+```python
+from Scweet import Scweet, ScweetDB
+
+# Option A: manage DB directly (no scraping)
+db = ScweetDB("scweet_state.db")
+print(db.accounts_summary())
+print(db.list_accounts(limit=10, eligible_only=True, include_cookies=True))
+
+# Fix common local-state issues
+db.clear_leases(expired_only=True)
+db.reset_account_cooldowns(clear_leases=True)
+
+# Opt-in maintenance: collapse duplicate DB rows by auth_token
+print(db.collapse_duplicates_by_auth_token(dry_run=True))
+
+# Option B: from an existing Scweet instance
+scweet = Scweet.from_sources(db_path="scweet_state.db", provision_on_init=False)
+print(scweet.db.accounts_summary())
+```
+
 ### Backward-compatible usage (legacy import path)
 
 ```python
