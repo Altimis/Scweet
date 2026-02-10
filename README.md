@@ -7,30 +7,141 @@
 
 > Note: Scweet is not affiliated with Twitter/X. Use responsibly and lawfully.
 
-Scweet is a Python library for scraping tweets via Twitter/X web GraphQL.
+Scweet is:
 
-What Scweet v4 is good for:
+- A hosted [**Apify Actor**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) (recommended for production runs and easy scaling).
+- A Python **library** (recommended when you want to embed scraping in your own codebase).
 
-- Search tweets by keywords, hashtags, mentions, accounts, and date windows.
-- Keep state locally (SQLite) so accounts + resume checkpoints persist across runs.
-- Build repeatable data pipelines where you can provision once and scrape many times.
-
-v4 notes:
-
-- Tweet search scraping is API-only (no browser scraping engine).
-- `nodriver` is used internally only for optional cookie bootstrap (credentials login -> cookies).
-- Profile/followers/following APIs are coming soon (v4 methods exist for compatibility but are not implemented yet).
+Tweet search scraping in v4 is **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
 
 Full documentation: `DOCUMENTATION.md`
 
-## Scweet on Apify (Hosted Option)
+## Recommended: Run Scweet on Apify (Hosted)
 
-If you prefer a hosted / no local setup option, Scweet is also available as an Apify Actor:
+If you want the fastest path to results (and the best option for production workflows), use the hosted Apify Actor:
 
-- Link: https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97
-- Fast, managed runs without maintaining local infrastructure.
+- Actor page: https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97
+- Apify offers a free plan/trial (plan limits can change); see the Actor page for current details.
 
 [![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
+
+### Apify Quickstart (UI)
+
+1. Open the Actor page and click "Run".
+2. Fill the comprehensive input form (recommended), or switch to JSON input and paste an input JSON (example below).
+3. Run, then download results from the dataset.
+
+Minimal input example:
+
+```json
+{
+  "source_mode": "auto",
+  "search_query": "openai",
+  "profile_urls": [],
+  "max_items": 1000,
+  "since": "2026-02-01",
+  "until": "2026-02-07",
+  "search_sort": "Latest",
+  "lang": "en"
+}
+```
+
+### Apify Quickstart (Python)
+
+Install:
+
+```bash
+pip install apify-client
+```
+
+Run the Actor:
+
+```python
+from __future__ import annotations
+
+import os
+
+from apify_client import ApifyClient
+
+client = ApifyClient(os.environ["APIFY_TOKEN"])
+
+run_input = {
+    "source_mode": "auto",
+    "search_query": "bitcoin from:elonmusk",
+    "profile_urls": ["elonmusk", "https://www.x.com/openai"],
+    "max_items": 1000,
+    "since": "2024-02-01",
+    "until": "2026-02-07",
+    "search_sort": "Latest",
+    "lang": "en",
+}
+
+run = client.actor("altimis/scweet").call(run_input=run_input)
+dataset_id = run["defaultDatasetId"]
+
+print("Dataset:", "https://console.apify.com/storage/datasets/" + dataset_id)
+for item in client.dataset(dataset_id).iterate_items():
+    print(item)
+```
+
+<details>
+<summary>Full Actor input example (all fields)</summary>
+
+```python
+run_input = {
+    "source_mode": "auto",
+    "search_query": "",
+    "profile_urls": [],
+    "max_items": 1000,
+    "since": "",
+    "until": "",
+    "search_sort": "Latest",
+    "all_words": [],
+    "any_words": [],
+    "exact_phrases": [],
+    "exclude_words": [],
+    "hashtags_any": [],
+    "hashtags_exclude": [],
+    "from_users": [],
+    "to_users": [],
+    "mentioning_users": [],
+    "lang": "",
+    "tweet_type": "all",
+    "verified_only": False,
+    "blue_verified_only": False,
+    "has_images": False,
+    "has_videos": False,
+    "has_links": False,
+    "has_mentions": False,
+    "has_hashtags": False,
+    "min_likes": 0,
+    "min_replies": 0,
+    "min_retweets": 0,
+    "place": "",
+    "geocode": "",
+    "near": "",
+    "within": "",
+}
+```
+
+</details>
+
+For more details, see Apify Python client quickstart: https://apify.com/altimis/scweet/api/python
+
+## Should I Use the Actor or the Library?
+
+| Use case | Recommended |
+| --- | --- |
+| You want hosted runs, scheduling, scalable execution, and datasets | Apify Actor |
+| You want to embed scraping inside your own Python pipeline/app | Python library |
+| You don’t want to manage local state DB / provisioning details | Apify Actor |
+| You need full control over provisioning/account leasing | Python library |
+
+## Trust & Expectations
+
+- This is scraping (Twitter/X web GraphQL), not an official API.
+- You need accounts/cookies. Rate limits and anti-bot controls vary.
+- For production workflows, the Apify Actor is usually the simplest and most reliable option.
 
 ## Installation
 
@@ -50,7 +161,7 @@ Legacy import path (supported in v4.x, deprecated):
 from Scweet.scweet import Scweet
 ```
 
-## Quickstart (Cookies -> Scrape)
+## Python Library Quickstart (Cookies -> Scrape)
 
 ```python
 from Scweet import Scweet
@@ -91,19 +202,19 @@ Example input templates (placeholders):
 - `examples/accounts.txt`
 - `examples/cookies.json`
 
-## Configure Scweet (Recommended: ScweetConfig)
+## Configure (Keep It Simple)
 
-If you want one place to control everything, build a config and pass it to `Scweet(config=...)`.
+If you want one place to control everything, build a config and pass it to `Scweet(config=...)`. Keep most advanced knobs in `DOCUMENTATION.md`.
 
 ```python
 from Scweet import Scweet, ScweetConfig
 
 cfg = ScweetConfig.from_sources(
     db_path="scweet_state.db",
-    cookies="YOUR_AUTH_TOKEN",
     cookies_file="cookies.json",       # optional provisioning source
     accounts_file="accounts.txt",      # optional provisioning source
     # cookies={"auth_token": "...", "ct0": "..."},  # optional provisioning source
+    # cookies="YOUR_AUTH_TOKEN",  # optional provisioning source
     bootstrap_strategy="auto",         # auto|token_only|nodriver_only|none
     provision_on_init=True,            # import sources during Scweet init
     output_format="both",              # csv|json|both|none
@@ -112,31 +223,34 @@ cfg = ScweetConfig.from_sources(
     proxy=None,                        # used for API calls and nodriver bootstrap
     overrides={
         "pool": {"concurrency": 4},
-            "operations": {
-                "account_lease_ttl_s": 300,
-                "account_requests_per_min": 30,
-                "account_min_delay_s": 2,
-                # Per-account daily caps (lease eligibility; resets by UTC day).
-                "account_daily_requests_limit": 30,
-                "account_daily_tweets_limit": 600,
-            },
-            "output": {"dedupe_on_resume_by_tweet_id": True},
+        "operations": {
+            "account_lease_ttl_s": 300,
+            "account_requests_per_min": 30,
+            "account_min_delay_s": 2,
+            "account_daily_requests_limit": 30,
+            "account_daily_tweets_limit": 600,
         },
-    )
+        "output": {"dedupe_on_resume_by_tweet_id": True},
+    },
+)
 
 scweet = Scweet(config=cfg)
 ```
 
-Daily caps:
+Key knobs most users care about:
 
-- `operations.account_daily_tweets_limit` and `operations.account_daily_requests_limit` control when an account becomes ineligible for leasing for the rest of the UTC day.
-- Counters reset automatically when the day changes (UTC), or you can reset them manually via `ScweetDB.reset_daily_counters()`.
+- `pool.concurrency`
+- `operations.account_requests_per_min`
+- `operations.account_min_delay_s`
+- `operations.account_daily_requests_limit` and `operations.account_daily_tweets_limit`
+- `output.format` and `output.dedupe_on_resume_by_tweet_id`
+- `resume.mode` (`legacy_csv`, `db_cursor`, `hybrid_safe`)
 
 ## Provision Accounts (DB-First)
 
 Scweet stores accounts in SQLite. Provisioning imports account sources into the DB and marks which accounts are eligible.
 
-Supported sources include:
+Supported sources:
 
 - `accounts.txt`
 - `cookies.json` (and Netscape `cookies.txt`)
@@ -160,6 +274,8 @@ result = scweet.provision_accounts(
 print(result)  # {"processed": ..., "eligible": ...}
 ```
 
+Account/proxy file formats live in `DOCUMENTATION.md` (kept out of README on purpose).
+
 ### accounts.txt format
 
 One account per line (colon-separated):
@@ -169,6 +285,17 @@ username:password:email:email_password:2fa:auth_token
 ```
 
 Missing trailing fields are allowed.
+
+### cookies.json format
+
+```json
+[
+  {
+    "username": "acct1",
+    "cookies": { "auth_token": "...", "ct0": "..." }
+  }
+]
+```
 
 ### Per-account proxy override (optional)
 
@@ -180,17 +307,17 @@ By default, `proxy=` (runtime proxy) applies to all accounts. If you need a diff
 
 Proxy credentials are supported:
 
-- API HTTP (curl_cffi) accepts either a URL string like `"http://user:pass@host:port"` or a dict like `{"host": "...", "port": 8080, "username": "...", "password": "..."}`.
+- API HTTP accepts either a URL string like `"http://user:pass@host:port"` or a dict like `{"host": "...", "port": 8080, "username": "...", "password": "..."}`.
 - nodriver bootstrap also supports authenticated proxies, but the dict form is recommended for proxy auth.
 
-Example `cookies.json` record:
+Example `cookies.json` record with proxy:
 
 ```json
 [
   {
     "username": "acct1",
-    "cookies": {"auth_token": "...", "ct0": "..."},
-    "proxy": {"host": "127.0.0.1", "port": 8080, "username": "proxyuser", "password": "proxypass"}
+    "cookies": { "auth_token": "...", "ct0": "..." },
+    "proxy": { "host": "127.0.0.1", "port": 8080, "username": "proxyuser", "password": "proxypass" }
   }
 ]
 ```
@@ -246,12 +373,24 @@ print(db.collapse_duplicates_by_auth_token(dry_run=True))
 
 ## Coming Soon
 
-- API-only profile info scraping
-- API-only followers/following scraping 
-- API-only login/provisioning from creds
-- API-only profile timeline scraping
-- Richer scraping query inputs.
+- Profile info scraping
+- Followers/following scraping
+- Profile timeline scraping
+- Richer search query inputs
 
 ## More Details
 
 See `DOCUMENTATION.md` for the full guide (cookies formats, logging setup, strict mode, manifest updates, advanced config knobs).
+
+## Hosted/Scale Option (Again)
+
+If you want hosted runs and easy scaling, use the Apify Actor:
+
+- https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97
+
+## Contribute
+We welcome **PRs**, bug reports, and feature suggestions!  
+If you find Scweet useful, consider **starring** the repo ⭐ 
+
+---
+MIT License • © 2020–2026 Altimis

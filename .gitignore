@@ -22,8 +22,8 @@ __pycache__/
 # Ignore IDE settings
 .idea/
 
-# Ignore images if not used in README
-images/
+# Images are used in README/docs
+# images/
 
 # Ignore specific files inside Scweet/
 Scweet/debug.log
