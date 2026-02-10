@@ -31,12 +31,26 @@ about: dict[str, str] = {}
 exec(read_text(ROOT / "Scweet" / "__version__.py"), about)
 version = about["__version__"]
 
+
+def read_text_optional(path: Path) -> str | None:
+    try:
+        return read_text(path)
+    except FileNotFoundError:
+        return None
+
+
+long_description = (
+    read_text_optional(ROOT / "DOCUMENTATION.md")
+    or read_text_optional(ROOT / "README.md")
+    or ""
+)
+
 setup(
     name="Scweet",
     version=version,
     license="MIT",
     description="API-only tweet search scraping (Twitter/X web GraphQL)",
-    long_description=read_text(ROOT / "README.md"),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     author="Yassine AIT JEDDI",
     author_email="aitjeddiyassine@gmail.com",

@@ -1,0 +1,8 @@
+include README.md
+include DOCUMENTATION.md
+include CHANGELOG.md
+include LICENSE.txt
+include requirements.txt
+include pyproject.toml
+
+recursive-include Scweet/v4 *.json
