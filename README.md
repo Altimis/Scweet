@@ -10,7 +10,7 @@
 Scweet is:
 
 - A hosted [**Apify Actor**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) (recommended for production runs and easy scaling).
-- A Python **library** (recommended when you want to embed scraping in your own codebase).
+- A Python [**library**](https://pypi.org/project/Scweet) (recommended when you want to embed scraping in your own codebase).
 
 Tweet search scraping in v4 is **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
 Use `search()/asearch()` for structured query inputs. `scrape()/ascrape()` remains for backward compatibility.
