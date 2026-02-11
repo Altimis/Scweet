@@ -8,11 +8,38 @@ from pydantic import BaseModel, Field
 class SearchRequest(BaseModel):
     since: str
     until: Optional[str] = None
+    # Legacy query surface kept for compatibility.
     words: Optional[list[str]] = None
     to_account: Optional[str] = None
     from_account: Optional[str] = None
     mention_account: Optional[str] = None
     hashtag: Optional[str] = None
+    # Canonical v4 search surface.
+    search_query: Optional[str] = None
+    all_words: Optional[list[str]] = None
+    any_words: Optional[list[str]] = None
+    exact_phrases: Optional[list[str]] = None
+    exclude_words: Optional[list[str]] = None
+    hashtags_any: Optional[list[str]] = None
+    hashtags_exclude: Optional[list[str]] = None
+    from_users: Optional[list[str]] = None
+    to_users: Optional[list[str]] = None
+    mentioning_users: Optional[list[str]] = None
+    tweet_type: Optional[str] = None
+    verified_only: Optional[bool] = None
+    blue_verified_only: Optional[bool] = None
+    has_images: Optional[bool] = None
+    has_videos: Optional[bool] = None
+    has_links: Optional[bool] = None
+    has_mentions: Optional[bool] = None
+    has_hashtags: Optional[bool] = None
+    min_likes: Optional[int] = None
+    min_replies: Optional[int] = None
+    min_retweets: Optional[int] = None
+    place: Optional[str] = None
+    geocode: Optional[str] = None
+    near: Optional[str] = None
+    within: Optional[str] = None
     lang: Optional[str] = None
     limit: Optional[int] = None
     display_type: str = "Top"

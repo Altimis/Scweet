@@ -18,6 +18,7 @@ from .v4.manifest import ManifestProvider
 from .v4.mappers import build_legacy_csv_filename
 from .v4.models import FollowsRequest, ProfileRequest, SearchRequest
 from .v4.outputs import write_csv, write_json_auto_append
+from .v4.query import normalize_search_input
 from .v4.resume import compute_query_hash, resolve_resume_start
 from .v4.repos import AccountsRepo, ResumeRepo, RunsRepo
 from .v4.runner import Runner
@@ -457,127 +458,25 @@ class Scweet:
             return mode_value.strip().lower()
         return "hybrid_safe"
 
-    def scrape(self, **scrape_kwargs):
-        return asyncio.run(self.ascrape(**scrape_kwargs))
+    @staticmethod
+    def _coerce_request_limit(limit: Any) -> Optional[int]:
+        if limit in (None, float("inf")):
+            return None
+        try:
+            return int(limit)
+        except Exception:
+            return None
 
-    async def ascrape(
+    async def _run_search_pipeline(
         self,
-        since: str,
-        until: str = None,
-        words: Union[str, list] = None,
-        to_account: str = None,
-        from_account: str = None,
-        mention_account: str = None,
-        lang: str = None,
-        limit: float = float("inf"),
-        display_type: str = "Top",
-        resume: bool = False,
-        hashtag: str = None,
-        save_dir: str = "outputs",
-        filter_replies: bool = False,
-        proximity: bool = False,
-        geocode: str = None,
-        minreplies=None,
-        minlikes=None,
-        minretweets=None,
-        custom_csv_name=None,
-    ):
-        if not until:
-            until = date.today().strftime("%Y-%m-%d")
-
-        if words and isinstance(words, str):
-            words = words.split("//")
-
-        csv_filename = build_legacy_csv_filename(
-            save_dir=save_dir,
-            custom_csv_name=custom_csv_name,
-            since=since,
-            until=until,
-            words=words,
-            from_account=from_account,
-            to_account=to_account,
-            mention_account=mention_account,
-            hashtag=hashtag,
-        )
-
-        requested_since = since
-        initial_cursor: Optional[str] = None
-        query_hash = compute_query_hash(
-            {
-                "since": requested_since,
-                "until": until,
-                "words": words,
-                "to_account": to_account,
-                "from_account": from_account,
-                "mention_account": mention_account,
-                "hashtag": hashtag,
-                "lang": lang,
-                "display_type": display_type,
-                "save_dir": save_dir,
-                "custom_csv_name": custom_csv_name,
-            }
-        )
-
-        if resume:
-            effective_since, initial_cursor = resolve_resume_start(
-                mode=self._effective_resume_mode(),
-                csv_path=csv_filename,
-                requested_since=requested_since,
-                resume_repo=self._resume_repo,
-                query_hash=query_hash,
-            )
-            since = effective_since
-
-        # Keep legacy helper invocation behavior intact even though routing is via Runner.
-        self.build_search_url(
-            since=since,
-            until=until,
-            lang=lang,
-            display_type=display_type,
-            words=words,
-            to_account=to_account,
-            from_account=from_account,
-            mention_account=mention_account,
-            hashtag=hashtag,
-            filter_replies=filter_replies,
-            proximity=proximity,
-            geocode=geocode,
-            minreplies=minreplies,
-            minlikes=minlikes,
-            minretweets=minretweets,
-            n=self.n_splits,
-        )
-
+        *,
+        search_request: SearchRequest,
+        csv_filename: str,
+        resume: bool,
+    ) -> list[dict[str, Any]]:
         _, logged_in, _, _ = await self.login()
         if not logged_in:
-            return {}
-
-        request_limit: Optional[int]
-        if limit in (None, float("inf")):
-            request_limit = None
-        else:
-            try:
-                request_limit = int(limit)
-            except Exception:
-                request_limit = None
-
-        search_request = SearchRequest(
-            since=since,
-            until=until,
-            words=words,
-            to_account=to_account,
-            from_account=from_account,
-            mention_account=mention_account,
-            hashtag=hashtag,
-            lang=lang,
-            limit=request_limit,
-            display_type=display_type,
-            resume=resume,
-            save_dir=save_dir,
-            custom_csv_name=custom_csv_name,
-            initial_cursor=initial_cursor,
-            query_hash=query_hash,
-        )
+            return []
 
         tweets = []
         try:
@@ -634,7 +533,6 @@ class Scweet:
             existing_ids: set[str] = set()
             if fmt in {"csv", "both"}:
                 existing_ids.update(_read_existing_tweet_ids_from_csv(csv_filename))
-            json_path_for_dedupe: Optional[str] = None
             if fmt in {"json", "both"}:
                 json_path_for_dedupe = str(Path(csv_filename).with_suffix(".json"))
                 existing_ids.update(_read_existing_tweet_ids_from_json(json_path_for_dedupe))
@@ -674,12 +572,9 @@ class Scweet:
             write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"
 
             if not csv_rows_summary:
-                # Preserve legacy behavior: when there are no rows, create an empty file (no header)
-                # so downstream resume helpers can still see the expected path.
                 if write_mode == "w" and not os.path.exists(csv_filename):
                     Path(csv_filename).parent.mkdir(parents=True, exist_ok=True)
                     Path(csv_filename).touch()
-                # Nothing to append when resume=True.
             else:
                 existing_header: Optional[list[str]] = None
                 if write_mode == "a" and os.path.exists(csv_filename) and os.path.getsize(csv_filename) > 0:
@@ -690,9 +585,6 @@ class Scweet:
                     except Exception:
                         existing_header = None
 
-                # For new files, write the stable "summary" schema with friendly column names.
-                # For existing files with a different schema, append using the existing header and
-                # a compat row mapping (so resume doesn't corrupt older CSVs).
                 if existing_header and existing_header != SUMMARY_CSV_HEADER:
                     write_csv(csv_filename, csv_rows_compat, existing_header, mode="a")
                 else:
@@ -705,6 +597,392 @@ class Scweet:
 
         await self.aclose()
         return raw_tweets
+
+    def scrape(self, **scrape_kwargs):
+        canonical_keys = {
+            "search_query",
+            "all_words",
+            "any_words",
+            "exact_phrases",
+            "exclude_words",
+            "hashtags_any",
+            "hashtags_exclude",
+            "from_users",
+            "to_users",
+            "mentioning_users",
+            "tweet_type",
+            "verified_only",
+            "blue_verified_only",
+            "has_images",
+            "has_videos",
+            "has_links",
+            "has_mentions",
+            "has_hashtags",
+            "min_likes",
+            "min_replies",
+            "min_retweets",
+            "place",
+            "near",
+            "within",
+        }
+        if any(key in scrape_kwargs for key in canonical_keys):
+            return asyncio.run(self.asearch(**scrape_kwargs))
+        return asyncio.run(self.ascrape(**scrape_kwargs))
+
+    def search(self, **search_kwargs):
+        return asyncio.run(self.asearch(**search_kwargs))
+
+    async def asearch(
+        self,
+        *,
+        since: str,
+        until: str = None,
+        search_query: Optional[str] = None,
+        all_words: Union[str, list, None] = None,
+        any_words: Union[str, list, None] = None,
+        exact_phrases: Union[str, list, None] = None,
+        exclude_words: Union[str, list, None] = None,
+        hashtags_any: Union[str, list, None] = None,
+        hashtags_exclude: Union[str, list, None] = None,
+        from_users: Union[str, list, None] = None,
+        to_users: Union[str, list, None] = None,
+        mentioning_users: Union[str, list, None] = None,
+        lang: Optional[str] = None,
+        tweet_type: str = "all",
+        verified_only: bool = False,
+        blue_verified_only: bool = False,
+        has_images: bool = False,
+        has_videos: bool = False,
+        has_links: bool = False,
+        has_mentions: bool = False,
+        has_hashtags: bool = False,
+        min_likes: int = 0,
+        min_replies: int = 0,
+        min_retweets: int = 0,
+        place: Optional[str] = None,
+        geocode: Optional[str] = None,
+        near: Optional[str] = None,
+        within: Optional[str] = None,
+        limit: float = float("inf"),
+        display_type: str = "Top",
+        resume: bool = False,
+        save_dir: str = "outputs",
+        custom_csv_name: Optional[str] = None,
+    ):
+        if not until:
+            until = date.today().strftime("%Y-%m-%d")
+
+        normalized_query, query_errors, query_warnings = normalize_search_input(
+            {
+                "since": since,
+                "until": until,
+                "search_query": search_query,
+                "all_words": all_words,
+                "any_words": any_words,
+                "exact_phrases": exact_phrases,
+                "exclude_words": exclude_words,
+                "hashtags_any": hashtags_any,
+                "hashtags_exclude": hashtags_exclude,
+                "from_users": from_users,
+                "to_users": to_users,
+                "mentioning_users": mentioning_users,
+                "lang": lang,
+                "tweet_type": tweet_type,
+                "verified_only": verified_only,
+                "blue_verified_only": blue_verified_only,
+                "has_images": has_images,
+                "has_videos": has_videos,
+                "has_links": has_links,
+                "has_mentions": has_mentions,
+                "has_hashtags": has_hashtags,
+                "min_likes": min_likes,
+                "min_replies": min_replies,
+                "min_retweets": min_retweets,
+                "place": place,
+                "geocode": geocode,
+                "near": near,
+                "within": within,
+            }
+        )
+
+        if query_warnings:
+            for message in query_warnings:
+                warn_deprecated(message)
+        if query_errors:
+            detail = "; ".join(query_errors)
+            if bool(getattr(self._v4_config.runtime, "strict", False)):
+                raise ValueError(f"Invalid search input: {detail}")
+            logger.warning("Search input had validation errors; continuing with normalized values: %s", detail)
+
+        first_from = next(iter(normalized_query.get("from_users") or []), None)
+        first_to = next(iter(normalized_query.get("to_users") or []), None)
+        first_mention = next(iter(normalized_query.get("mentioning_users") or []), None)
+        first_hashtag = next(iter(normalized_query.get("hashtags_any") or []), None)
+        filename_words = (
+            normalized_query.get("all_words")
+            or normalized_query.get("any_words")
+            or normalized_query.get("exact_phrases")
+            or []
+        )
+        csv_filename = build_legacy_csv_filename(
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            since=since,
+            until=until,
+            words=filename_words,
+            from_account=first_from,
+            to_account=first_to,
+            mention_account=first_mention,
+            hashtag=first_hashtag,
+        )
+
+        requested_since = since
+        initial_cursor: Optional[str] = None
+        query_hash = compute_query_hash(
+            {
+                "since": requested_since,
+                "until": until,
+                "lang": lang,
+                "display_type": display_type,
+                "query": normalized_query,
+                "save_dir": save_dir,
+                "custom_csv_name": custom_csv_name,
+            }
+        )
+        if resume:
+            effective_since, initial_cursor = resolve_resume_start(
+                mode=self._effective_resume_mode(),
+                csv_path=csv_filename,
+                requested_since=requested_since,
+                resume_repo=self._resume_repo,
+                query_hash=query_hash,
+            )
+            since = effective_since
+
+        request_limit = self._coerce_request_limit(limit)
+
+        search_request = SearchRequest(
+            since=since,
+            until=until,
+            words=filename_words or None,
+            to_account=first_to,
+            from_account=first_from,
+            mention_account=first_mention,
+            hashtag=first_hashtag,
+            search_query=normalized_query.get("search_query"),
+            all_words=normalized_query.get("all_words"),
+            any_words=normalized_query.get("any_words"),
+            exact_phrases=normalized_query.get("exact_phrases"),
+            exclude_words=normalized_query.get("exclude_words"),
+            hashtags_any=normalized_query.get("hashtags_any"),
+            hashtags_exclude=normalized_query.get("hashtags_exclude"),
+            from_users=normalized_query.get("from_users"),
+            to_users=normalized_query.get("to_users"),
+            mentioning_users=normalized_query.get("mentioning_users"),
+            tweet_type=normalized_query.get("tweet_type"),
+            verified_only=bool(normalized_query.get("verified_only", False)),
+            blue_verified_only=bool(normalized_query.get("blue_verified_only", False)),
+            has_images=bool(normalized_query.get("has_images", False)),
+            has_videos=bool(normalized_query.get("has_videos", False)),
+            has_links=bool(normalized_query.get("has_links", False)),
+            has_mentions=bool(normalized_query.get("has_mentions", False)),
+            has_hashtags=bool(normalized_query.get("has_hashtags", False)),
+            min_likes=int(normalized_query.get("min_likes") or 0),
+            min_replies=int(normalized_query.get("min_replies") or 0),
+            min_retweets=int(normalized_query.get("min_retweets") or 0),
+            place=normalized_query.get("place"),
+            geocode=normalized_query.get("geocode"),
+            near=normalized_query.get("near"),
+            within=normalized_query.get("within"),
+            lang=lang,
+            limit=request_limit,
+            display_type=display_type,
+            resume=resume,
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            initial_cursor=initial_cursor,
+            query_hash=query_hash,
+        )
+
+        return await self._run_search_pipeline(
+            search_request=search_request,
+            csv_filename=csv_filename,
+            resume=resume,
+        )
+
+    async def ascrape(
+        self,
+        since: str,
+        until: str = None,
+        words: Union[str, list] = None,
+        to_account: str = None,
+        from_account: str = None,
+        mention_account: str = None,
+        lang: str = None,
+        limit: float = float("inf"),
+        display_type: str = "Top",
+        resume: bool = False,
+        hashtag: str = None,
+        save_dir: str = "outputs",
+        filter_replies: bool = False,
+        proximity: bool = False,
+        geocode: str = None,
+        minreplies=None,
+        minlikes=None,
+        minretweets=None,
+        custom_csv_name=None,
+    ):
+        if not until:
+            until = date.today().strftime("%Y-%m-%d")
+
+        legacy_args_used = any(
+            [
+                words is not None,
+                to_account is not None,
+                from_account is not None,
+                mention_account is not None,
+                hashtag is not None,
+                bool(filter_replies),
+                minreplies is not None,
+                minlikes is not None,
+                minretweets is not None,
+            ]
+        )
+        if legacy_args_used:
+            warn_deprecated(
+                "Legacy query args (`words`, `from_account`, `to_account`, `mention_account`, `hashtag`, "
+                "`filter_replies`, `minlikes`, `minreplies`, `minretweets`) are deprecated in v4.x. "
+                "Use canonical fields via `search()` / `asearch()` (e.g. `search_query`, `all_words`, "
+                "`any_words`, `from_users`, `tweet_type`, `min_likes`)."
+            )
+
+        if words and isinstance(words, str):
+            words = words.split("//")
+
+        normalized_query, _query_errors, _query_warnings = normalize_search_input(
+            {
+                "since": since,
+                "until": until,
+                "words": words,
+                "to_account": to_account,
+                "from_account": from_account,
+                "mention_account": mention_account,
+                "hashtag": hashtag,
+                "lang": lang,
+                "filter_replies": filter_replies,
+                "geocode": geocode,
+                "minlikes": minlikes,
+                "minreplies": minreplies,
+                "minretweets": minretweets,
+            }
+        )
+
+        csv_filename = build_legacy_csv_filename(
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            since=since,
+            until=until,
+            words=words,
+            from_account=from_account,
+            to_account=to_account,
+            mention_account=mention_account,
+            hashtag=hashtag,
+        )
+
+        requested_since = since
+        initial_cursor: Optional[str] = None
+        query_hash = compute_query_hash(
+            {
+                "since": requested_since,
+                "until": until,
+                "query": normalized_query,
+                "lang": lang,
+                "display_type": display_type,
+                "save_dir": save_dir,
+                "custom_csv_name": custom_csv_name,
+            }
+        )
+
+        if resume:
+            effective_since, initial_cursor = resolve_resume_start(
+                mode=self._effective_resume_mode(),
+                csv_path=csv_filename,
+                requested_since=requested_since,
+                resume_repo=self._resume_repo,
+                query_hash=query_hash,
+            )
+            since = effective_since
+
+        # Keep legacy helper invocation behavior intact even though routing is via Runner.
+        self.build_search_url(
+            since=since,
+            until=until,
+            lang=lang,
+            display_type=display_type,
+            words=words,
+            to_account=to_account,
+            from_account=from_account,
+            mention_account=mention_account,
+            hashtag=hashtag,
+            filter_replies=filter_replies,
+            proximity=proximity,
+            geocode=geocode,
+            minreplies=minreplies,
+            minlikes=minlikes,
+            minretweets=minretweets,
+            n=self.n_splits,
+        )
+
+        request_limit = self._coerce_request_limit(limit)
+
+        search_request = SearchRequest(
+            since=since,
+            until=until,
+            words=words,
+            to_account=to_account,
+            from_account=from_account,
+            mention_account=mention_account,
+            hashtag=hashtag,
+            search_query=normalized_query.get("search_query"),
+            all_words=normalized_query.get("all_words"),
+            any_words=normalized_query.get("any_words"),
+            exact_phrases=normalized_query.get("exact_phrases"),
+            exclude_words=normalized_query.get("exclude_words"),
+            hashtags_any=normalized_query.get("hashtags_any"),
+            hashtags_exclude=normalized_query.get("hashtags_exclude"),
+            from_users=normalized_query.get("from_users"),
+            to_users=normalized_query.get("to_users"),
+            mentioning_users=normalized_query.get("mentioning_users"),
+            tweet_type=normalized_query.get("tweet_type"),
+            verified_only=bool(normalized_query.get("verified_only", False)),
+            blue_verified_only=bool(normalized_query.get("blue_verified_only", False)),
+            has_images=bool(normalized_query.get("has_images", False)),
+            has_videos=bool(normalized_query.get("has_videos", False)),
+            has_links=bool(normalized_query.get("has_links", False)),
+            has_mentions=bool(normalized_query.get("has_mentions", False)),
+            has_hashtags=bool(normalized_query.get("has_hashtags", False)),
+            min_likes=int(normalized_query.get("min_likes") or 0),
+            min_replies=int(normalized_query.get("min_replies") or 0),
+            min_retweets=int(normalized_query.get("min_retweets") or 0),
+            place=normalized_query.get("place"),
+            geocode=normalized_query.get("geocode"),
+            near=normalized_query.get("near"),
+            within=normalized_query.get("within"),
+            lang=lang,
+            limit=request_limit,
+            display_type=display_type,
+            resume=resume,
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            initial_cursor=initial_cursor,
+            query_hash=query_hash,
+        )
+
+        return await self._run_search_pipeline(
+            search_request=search_request,
+            csv_filename=csv_filename,
+            resume=resume,
+        )
 
     def get_follows(self, **scrape_kwargs):
         return asyncio.run(self.aget_follows(**scrape_kwargs))

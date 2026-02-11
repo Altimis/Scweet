@@ -1,6 +1,6 @@
 # Scweet v4 Documentation
 
-Scweet v4 preserves the familiar v3 surface (`Scweet(...)`, `scrape/ascrape`, output filenames, resume flags) while moving tweet search scraping to an **API-only** core and introducing **DB-first account provisioning** (SQLite).
+Scweet v4 preserves the familiar v3 surface (`Scweet(...)`, `scrape/ascrape`, output filenames, resume flags) while moving tweet search scraping to an **API-only** core and introducing **DB-first account provisioning** (SQLite). For new code, prefer `search(...)` / `asearch(...)` for structured query inputs.
 
 ## What’s In v4 (and What Isn’t)
 
@@ -13,10 +13,9 @@ Supported:
 
 Not implemented (v4.x):
 
-- Profile scraping and follower/following scraping are **stubbed** (methods exist for signature compatibility, but engines return `501 Not implemented`).
-- API Login/provisioning using creds
+- Profile scraping and follower/following scraping currently return `501 Not implemented`.
+- API login/provisioning with credentials
 - API profile timeline scraping
-- Richer scraping query input 
 
 ## Installation
 
@@ -42,10 +41,11 @@ scweet = Scweet.from_sources(
     cookies={"auth_token": "...", "ct0": "..."}, # ct0 is optional here.
 )
 
-tweets = scweet.scrape(
+tweets = scweet.search(
     since="2026-02-01",
     until="2026-02-07",
-    words=["bitcoin"],
+    search_query="bitcoin",
+    has_images=True,
     limit=200,
     resume=True,
     save_dir="outputs",
@@ -57,7 +57,7 @@ print(len(tweets))  # list[dict] of raw GraphQL tweet objects
 
 ## Notebook Usage (Async)
 
-In notebooks/Jupyter, you almost always have an active event loop. Use `await ascrape(...)` instead of `scrape(...)`.
+In notebooks/Jupyter, you almost always have an active event loop. Use `await asearch(...)` (or `await ascrape(...)` for legacy code) instead of `scrape(...)`.
 
 ```python
 from Scweet import Scweet
@@ -68,10 +68,12 @@ scweet = Scweet.from_sources(
     provision_on_init=True,
 )
 
-tweets = await scweet.ascrape(
+tweets = await scweet.asearch(
     since="2026-02-01",
     until="2026-02-07",
-    words=["bitcoin"],
+    search_query="bitcoin",
+    any_words=["btc", "bitcoin"],
+    min_likes=20,
     limit=50,
     resume=True,
     save_dir="outputs",
@@ -155,7 +157,7 @@ Controls API HTTP behavior and keeps legacy compatibility fields.
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `engine.kind` | `"api" \| "browser" \| "auto"` | `"browser"` | Legacy/compat field. v4 tweet search scraping is API-only, so you should treat this as `"api"`. |
-| `engine.api_http_mode` | `"auto" \| "sync" \| "async"` | `"auto"` | How HTTP calls are executed under the hood. `auto` prefers async sessions when available and falls back to sync. Use `ascrape()` in async environments; use `scrape()` in sync scripts. |
+| `engine.api_http_mode` | `"auto" \| "sync" \| "async"` | `"auto"` | How HTTP calls are executed under the hood. `auto` prefers async sessions when available and falls back to sync. Use `asearch()` in async environments; use `search()` in sync scripts. |
 | `engine.api_http_impersonate` | `str \| None` | `None` | `curl_cffi` impersonation string (example: `"chrome124"`). Affects API sessions and transaction-id bootstrap. If unset, `curl_cffi` defaults are used (or `SCWEET_HTTP_IMPERSONATE`). |
 
 #### `storage`
@@ -290,33 +292,47 @@ Controls how Scweet can create missing auth material:
 
 - `auto` (default): allow auth_token bootstrap and credentials (nodriver) bootstrap
 - `token_only`: allow auth_token bootstrap only
-- `nodriver_only`: allow credentials bootstrap only # not recommended. API login coming soon. 
+- `nodriver_only`: allow credentials bootstrap only (uses optional nodriver bootstrap)
 - `none`: do not bootstrap; accounts missing auth are imported but marked unusable
 
 Credentials bootstrap requires `nodriver` and a record containing a login identifier + password (`email` or `username` + `password`).
 
-## Scraping API
+## Search API
 
-### `scrape(...)` and `ascrape(...)`
+### `search(...)` and `asearch(...)` (recommended)
 
-- `scrape(...)` is sync (good for normal scripts)
-- `ascrape(...)` is async (required in notebooks/async apps)
+- `search(...)` is sync (good for normal scripts)
+- `asearch(...)` is async (required in notebooks/async apps)
 
 Important parameters:
 
 - `since`, `until`: date bounds (YYYY-MM-DD); v4 normalizes internally.
-- `words`: list of keywords (OR query) or `"a//b"` string (legacy split).
-- `from_account`, `to_account`, `mention_account`, `hashtag`, `lang`
+- `search_query`: free-form Twitter query text (operators supported).
+- `all_words`, `any_words`, `exact_phrases`, `exclude_words`
+- `from_users`, `to_users`, `mentioning_users`
+- `hashtags_any`, `hashtags_exclude`
+- `tweet_type`: `all`, `originals_only`, `replies_only`, `retweets_only`, `exclude_replies`, `exclude_retweets`
+- `verified_only`, `blue_verified_only`
+- `has_images`, `has_videos`, `has_links`, `has_mentions`, `has_hashtags`
+- `min_likes`, `min_replies`, `min_retweets`
+- `place`, `geocode`, `near`, `within`
+- `lang`
 - `display_type`: `"Top"` or `"Latest"` (legacy value `"Recent"` is treated as `"Latest"`).
 - `limit`: best-effort per-run cap. Due to concurrency/page size, you may overshoot slightly.
 - `resume`: append to existing outputs + attempt continuation using resume mode policy.
-- More scraping params coming soon.
 
-Accepted-but-ignored (v3 compatibility):
+### `scrape(...)` and `ascrape(...)` (compat wrappers)
 
-- `filter_replies`, `proximity`, `geocode`, `minreplies`, `minlikes`, `minretweets`
+- Legacy signatures are preserved for backward compatibility.
+- If canonical keys are passed to `scrape(...)`, it routes to `asearch(...)`.
+- Legacy keys are still accepted and normalized, with deprecation warnings.
 
-These parameters remain in the public signature for backward compatibility, but are not currently applied to the v4 API search query.
+Deprecated legacy query keys:
+
+- `words`, `from_account`, `to_account`, `mention_account`, `hashtag`
+- `minlikes`, `minreplies`, `minretweets`
+- `filter_replies` (mapped to `tweet_type=exclude_replies`)
+- legacy aliases like `query`, `words_and`, `words_or`, `verified`, `images`, `videos`, `links`
 
 ### How many tweets will I get?
 
@@ -326,7 +342,7 @@ These parameters remain in the public signature for backward compatibility, but 
 
 Return value:
 
-- `scrape/ascrape` returns `list[dict]` of **raw GraphQL tweet objects** (`tweet_results.result`).
+- `search/asearch/scrape/ascrape` returns `list[dict]` of **raw GraphQL tweet objects** (`tweet_results.result`).
 
 File outputs are controlled by `config.output.format`:
 
@@ -461,7 +477,10 @@ Twitter’s web GraphQL layer changes frequently. Scweet externalizes the most c
 
 - GraphQL `query_id` for SearchTimeline
 - endpoint template
-- `features` dict passed to GraphQL
+- global `features` dict passed to GraphQL
+- optional per-operation overrides:
+  - `operation_features[operation]` merged on top of global `features`
+  - `operation_field_toggles[operation]` sent as `fieldToggles`
 
 Defaults:
 

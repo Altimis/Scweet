@@ -8,7 +8,7 @@ Use this pattern in:
 
 Important:
 - In an async environment, do NOT call `scrape()` because it uses asyncio.run(...).
-- Use `await ascrape(...)` instead.
+- Use `await asearch(...)` (or `await ascrape(...)` for legacy code) instead.
 """
 
 from __future__ import annotations
@@ -44,10 +44,13 @@ async def main() -> None:
     # Optional: set/override a per-account proxy in the DB (applies to API calls for that account).
     # ScweetDB(str(db_path)).set_account_proxy("acct-a", {"host": "127.0.0.1", "port": 8080})
 
-    tweets = await scweet.ascrape(
+    tweets = await scweet.asearch(
         since="2026-02-01",
         until="2026-02-07",
-        words=["bitcoin"],
+        search_query="bitcoin",
+        any_words=["btc", "bitcoin"],
+        min_likes=20,
+        has_images=True,
         limit=50,
         resume=True,
         save_dir=str(outputs_dir),

@@ -4,7 +4,7 @@ Scweet v4 (sync) example.
 What it demonstrates:
 - Build a ScweetConfig (recommended) and initialize Scweet
 - Provision accounts into the local SQLite DB
-- Scrape tweets and write outputs (CSV/JSON) with resume
+- Search tweets and write outputs (CSV/JSON) with resume
 - Inspect DB state via ScweetDB
 
 Notes:
@@ -31,8 +31,8 @@ def main() -> None:
     # - accounts_file="accounts.txt" ex: username:password:email:email_password:2fa:auth_token
     # - cookies_file="cookies.json" (or "cookies.txt" Netscape export)
     # - cookies={"auth_token": "...", "ct0": "..."}  (direct cookie dict)
-    # - currently the most reliable way of provisioning is providing the auth_token directly in the config, or in accounts.txt or in cookies.json
-    # - login in with username/password is still not reliable. Login using API is coming soon in future release
+    # - auth_token provisioning is the most stable path (direct `cookies=`, accounts.txt, or cookies.json)
+    # - credentials-based provisioning may require nodriver bootstrap
     cfg = ScweetConfig.from_sources(
         db_path=str(db_path),
         accounts_file=str(examples_dir / "accounts.txt"),
@@ -67,20 +67,24 @@ def main() -> None:
     )
     print("provision:", provision_result)
 
-    # 3) Scrape tweets (sync)
-    tweets = scweet.scrape(
+    # 3) Search tweets (sync, canonical structured API)
+    tweets = scweet.search(
         since="2026-02-01",
         until="2026-02-07",
-        words=["bitcoin"],
+        search_query="bitcoin",
+        any_words=["btc", "bitcoin"],
+        tweet_type="exclude_replies",
+        min_likes=10,
+        has_links=True,
         limit=200,  # per-run target
         resume=True,  # appends to existing outputs and continues based on resume mode
         save_dir=str(outputs_dir),
         custom_csv_name="sync_bitcoin.csv",
         display_type="Latest",
-        # Optional search args:
-        # from_account="elonmusk",
-        # mention_account="elonmusk",
-        # hashtag="btc",
+        # Optional structured filters:
+        # from_users=["elonmusk"],
+        # mentioning_users=["OpenAI"],
+        # hashtags_any=["btc"],
         # lang="en",
     )
     print("tweets:", len(tweets))

@@ -9,6 +9,7 @@ from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
 from .models import SearchRequest, SearchResult, TweetMedia, TweetRecord, TweetUser
+from .query import build_effective_search_query, normalize_search_input
 
 JSON_DECODE_STATUS = 598
 NETWORK_ERROR_STATUS = 599
@@ -166,10 +167,23 @@ class ApiEngine:
         runtime_hints: Optional[dict[str, Optional[int]]] = None,
     ) -> dict[str, str]:
         variables = self._build_variables(request, cursor, runtime_hints=runtime_hints)
-        return {
+        features_payload = (
+            manifest.features_for("search_timeline")
+            if hasattr(manifest, "features_for")
+            else (manifest.features or {})
+        )
+        params: dict[str, str] = {
             "variables": json.dumps(variables, separators=(",", ":")),
-            "features": json.dumps(manifest.features or {}, separators=(",", ":")),
+            "features": json.dumps(features_payload or {}, separators=(",", ":")),
         }
+        field_toggles_payload = (
+            manifest.field_toggles_for("search_timeline")
+            if hasattr(manifest, "field_toggles_for")
+            else None
+        )
+        if field_toggles_payload:
+            params["fieldToggles"] = json.dumps(field_toggles_payload, separators=(",", ":"))
+        return params
 
     def _build_variables(
         self,
@@ -178,34 +192,20 @@ class ApiEngine:
         *,
         runtime_hints: Optional[dict[str, Optional[int]]] = None,
     ) -> dict[str, Any]:
-        query_parts: list[str] = []
-
-        words = [word.strip() for word in (request.words or []) if str(word).strip()]
-        if words:
-            if len(words) == 1:
-                query_parts.append(f"({words[0]})")
-            else:
-                query_parts.append("(" + " OR ".join(words) + ")")
-
-        if request.from_account:
-            query_parts.append(f"(from:{request.from_account})")
-        if request.to_account:
-            query_parts.append(f"(to:{request.to_account})")
-        if request.mention_account:
-            mention = request.mention_account.lstrip("@")
-            query_parts.append(f"(@{mention})")
-        if request.hashtag:
-            hashtag = request.hashtag if request.hashtag.startswith("#") else f"#{request.hashtag}"
-            query_parts.append(f"({hashtag})")
-        if request.lang:
-            query_parts.append(f"lang:{request.lang}")
+        request_payload = request.model_dump(mode="python")
+        normalized_query, _errors, _warnings = normalize_search_input(request_payload)
         if request.since:
-            query_parts.append(f"since:{request.since}")
+            normalized_query["since"] = request.since
         if request.until:
-            query_parts.append(f"until:{request.until}")
+            normalized_query["until"] = request.until
+        if request.lang and not normalized_query.get("lang"):
+            normalized_query["lang"] = request.lang
+        if request.display_type and not normalized_query.get("search_sort"):
+            normalized_query["search_sort"] = request.display_type
 
-        if not query_parts:
-            query_parts.append("from:elonmusk")
+        raw_query = build_effective_search_query(normalized_query).strip()
+        if not raw_query:
+            raw_query = "from:elonmusk"
 
         display = (request.display_type or "Latest").strip().lower()
         product = "Latest" if display in {"recent", "latest"} else "Top"
@@ -213,7 +213,7 @@ class ApiEngine:
         count = self._resolve_page_size(runtime_hints=runtime_hints)
 
         variables = {
-            "rawQuery": " ".join(query_parts).strip(),
+            "rawQuery": raw_query,
             "count": count,
             "querySource": "typed_query",
             "product": product,

@@ -19,6 +19,8 @@ _DEFAULT_MANIFEST = {
     "endpoints": {
         "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline",
     },
+    "operation_features": {},
+    "operation_field_toggles": {},
     "features": {
         "rweb_video_screen_enabled": False,
         "profile_label_improvements_pcf_label_in_post_enabled": True,
@@ -65,8 +67,28 @@ class ManifestModel(BaseModel):
     fingerprint: Optional[str] = None
     query_ids: dict[str, str] = Field(default_factory=dict)
     endpoints: dict[str, str] = Field(default_factory=dict)
+    # Optional per-operation overrides (op -> dict). Useful as X introduces operation-specific toggles.
+    operation_features: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    operation_field_toggles: dict[str, dict[str, Any]] = Field(default_factory=dict)
     features: dict[str, Any] = Field(default_factory=dict)
     timeout_s: int = 20
+
+    def features_for(self, operation: str) -> dict[str, Any]:
+        """Return the effective `features` dict for a given operation key."""
+
+        out = dict(self.features or {})
+        override = self.operation_features.get(str(operation or "").strip()) or {}
+        if isinstance(override, dict) and override:
+            out.update(override)
+        return out
+
+    def field_toggles_for(self, operation: str) -> Optional[dict[str, Any]]:
+        """Return the `fieldToggles` dict for a given operation key (or None)."""
+
+        override = self.operation_field_toggles.get(str(operation or "").strip())
+        if not isinstance(override, dict) or not override:
+            return None
+        return dict(override)
 
     @model_validator(mode="after")
     def _validate_required_fields(self):
@@ -80,6 +102,8 @@ class ManifestModel(BaseModel):
                 "version": self.version,
                 "query_ids": self.query_ids,
                 "endpoints": self.endpoints,
+                "operation_features": self.operation_features,
+                "operation_field_toggles": self.operation_field_toggles,
                 "features": self.features,
             }
             self.fingerprint = hashlib.sha1(

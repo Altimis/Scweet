@@ -13,6 +13,7 @@ Scweet is:
 - A Python **library** (recommended when you want to embed scraping in your own codebase).
 
 Tweet search scraping in v4 is **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
+Use `search()/asearch()` for structured query inputs. `scrape()/ascrape()` remains for backward compatibility.
 
 Full documentation: `DOCUMENTATION.md`
 
@@ -81,7 +82,7 @@ Legacy import path (supported in v4.x, deprecated):
 from Scweet.scweet import Scweet
 ```
 
-## Python Library Quickstart (Cookies -> Scrape)
+## Python Library Quickstart (Cookies -> Search)
 
 ```python
 from Scweet import Scweet
@@ -97,10 +98,11 @@ scweet = Scweet.from_sources(
     output_format="both",  # csv|json|both|none
 )
 
-tweets = scweet.scrape(
+tweets = scweet.search(
     since="2026-02-01",
     until="2026-02-07",
-    words=["openai"],
+    search_query="openai",
+    display_type="Latest",
     limit=200,
     resume=True,
     save_dir="outputs",
@@ -253,16 +255,36 @@ Example `accounts.txt` line with a proxy (tab-separated):
 alice:::::AUTH_TOKEN_HERE	{"host":"127.0.0.1","port":8080}
 ```
 
-## Scrape (Inputs + Outputs)
+## Search (Inputs + Outputs)
 
-Key scrape inputs:
+Recommended methods:
+
+- `search(...)`: sync structured search API.
+- `asearch(...)`: async structured search API.
+- `scrape(...)` and `ascrape(...)`: backward-compatible wrappers.
+
+Key canonical search inputs:
 
 - `since`, `until` (YYYY-MM-DD)
-- `words` (list or legacy string split by `//`)
-- `from_account`, `to_account`, `mention_account`, `hashtag`, `lang`
+- `search_query`
+- `all_words`, `any_words`, `exact_phrases`, `exclude_words`
+- `from_users`, `to_users`, `mentioning_users`
+- `hashtags_any`, `hashtags_exclude`
+- `tweet_type` (`all`, `originals_only`, `replies_only`, `retweets_only`, `exclude_replies`, `exclude_retweets`)
+- `verified_only`, `blue_verified_only`
+- `has_images`, `has_videos`, `has_links`, `has_mentions`, `has_hashtags`
+- `min_likes`, `min_replies`, `min_retweets`
+- `place`, `geocode`, `near`, `within`
+- `lang`
 - `display_type` ("Top" or "Latest")
 - `limit` (best-effort per run)
 - `resume=True` appends to outputs and continues using the configured resume mode
+
+Legacy query aliases still accepted (deprecated in v4.x):
+
+- `words`, `from_account`, `to_account`, `mention_account`, `hashtag`
+- `minlikes`, `minreplies`, `minretweets`
+- `filter_replies` (mapped to `tweet_type="exclude_replies"`)
 
 The return value is always `list[dict]` of raw GraphQL tweet objects.
 
@@ -301,7 +323,6 @@ print(db.collapse_duplicates_by_auth_token(dry_run=True))
 - Profile info scraping
 - Followers/following scraping
 - Profile timeline scraping
-- Richer search query inputs
 
 ## More Details
 

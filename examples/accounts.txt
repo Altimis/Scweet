@@ -11,7 +11,7 @@
 # Token-only (recommended if you already have it)
 alice:::::YOUR_AUTH_TOKEN_HERE
 
-# Credentials (used only for optional nodriver bootstrap; API login is not implemented yet)
+# Credentials (used only for optional nodriver bootstrap)
 bob:YOUR_PASSWORD:bob@example.com:YOUR_EMAIL_PASSWORD:YOUR_TOTP_SECRET:
 
 # Token + per-account proxy (TAB then proxy JSON dict OR proxy URL)

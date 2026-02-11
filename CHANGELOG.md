@@ -10,7 +10,7 @@ All notable changes to this project are documented in this file.
 - Async runner orchestration with in-memory task queue.
 - SQLite-backed state for account lifecycle, runs, resume checkpoints, and manifest cache.
 - API-first scraping core (GraphQL) with async runner orchestration.
-- Phase 1 provisioning scaffolding and config knobs for DB-first account provisioning.
+- DB-first account provisioning and related configuration knobs.
 - Public DB/state helper: `ScweetDB` (inspect accounts, reset cooldowns/leases, collapse duplicates).
 - Output resume dedupe: `output.dedupe_on_resume_by_tweet_id` (skip writing duplicates on resume for CSV and JSON).
 - Per-account proxy override stored in SQLite: `accounts.proxy_json` (set via `cookies.json` / `accounts.txt` / `ScweetDB.set_account_proxy`).
@@ -26,6 +26,18 @@ All notable changes to this project are documented in this file.
   - `hybrid_safe`
 - Output format controls:
   - `config.output.format` (`csv|json|both|none`)
+- Canonical structured search methods:
+  - `Scweet.search(...)` (sync)
+  - `Scweet.asearch(...)` (async)
+- Structured query normalization/builder for SearchTimeline:
+  - `search_query`, `all_words`, `any_words`, `exact_phrases`, `exclude_words`
+  - `from_users`, `to_users`, `mentioning_users`
+  - `hashtags_any`, `hashtags_exclude`
+  - `tweet_type`, media/verification filters, min engagement filters, geo filters
+- `scrape(...)` now auto-routes to canonical search when canonical query keys are provided.
+- Manifest schema extension for operation-specific GraphQL flags:
+  - `operation_features`
+  - `operation_field_toggles` (serialized as `fieldToggles`)
 
 ### Breaking (vs v3)
 
@@ -45,10 +57,14 @@ All notable changes to this project are documented in this file.
 - Legacy import path `Scweet.scweet`.
 - Constructor arg `n_splits` (use `config.pool.n_splits`).
 - Constructor arg `concurrency` (use `config.pool.concurrency`).
+- Legacy query input keys on `scrape/ascrape`:
+  - `words`, `from_account`, `to_account`, `mention_account`, `hashtag`
+  - `minlikes`, `minreplies`, `minretweets`
+  - `filter_replies` (use `tweet_type="exclude_replies"`)
 
 ### Known limitations
 
-- Profile/follow endpoints may be stubbed or incomplete while v4 internals are being migrated.
+- Profile/follow endpoints are not implemented yet and currently return `501`.
 - X/Twitter behavior and anti-bot controls can still affect reliability depending on account quality and request patterns.
 
 ### Removed

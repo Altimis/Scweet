@@ -6,6 +6,8 @@
   "endpoints": {
     "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline"
   },
+  "operation_features": {},
+  "operation_field_toggles": {},
   "features": {
     "rweb_video_screen_enabled": false,
     "profile_label_improvements_pcf_label_in_post_enabled": true,
