@@ -53,11 +53,17 @@ class SearchRequest(BaseModel):
 
 class ProfileRequest(BaseModel):
     handles: list[str] = Field(default_factory=list)
+    user_ids: list[str] = Field(default_factory=list)
+    profile_urls: list[str] = Field(default_factory=list)
+    targets: list[dict[str, Any]] = Field(default_factory=list)
     login: bool = False
 
 
 class FollowsRequest(BaseModel):
-    handle: str
+    handle: Optional[str] = None
+    user_id: Optional[str] = None
+    profile_url: Optional[str] = None
+    target: Optional[dict[str, Any]] = None
     type: Literal["followers", "verified_followers", "following"] = "following"
     login: bool = True
     stay_logged_in: bool = True

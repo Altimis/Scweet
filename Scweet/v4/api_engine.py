@@ -127,7 +127,7 @@ class ApiEngine:
         return {
             "profiles": {},
             "status_code": 501,
-            "detail": "Not implemented in Phase 4",
+            "detail": "Not implemented yet",
             "request": request,
         }
 
@@ -135,7 +135,7 @@ class ApiEngine:
         return {
             "follows": [],
             "status_code": 501,
-            "detail": "Not implemented in Phase 4",
+            "detail": "Not implemented yet",
             "request": request,
         }
 

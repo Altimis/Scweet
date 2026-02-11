@@ -22,6 +22,7 @@ from .v4.query import normalize_search_input
 from .v4.resume import compute_query_hash, resolve_resume_start
 from .v4.repos import AccountsRepo, ResumeRepo, RunsRepo
 from .v4.runner import Runner
+from .v4.user_identity import normalize_user_targets
 from .v4.tweet_csv import SUMMARY_CSV_HEADER, tweet_to_csv_rows
 from .v4.transaction import TransactionIdProvider
 from .v4.warnings import warn_deprecated, warn_legacy_import_path
@@ -996,38 +997,127 @@ class Scweet:
     def get_verified_followers(self, **scrape_kwargs):
         return asyncio.run(self.aget_verified_followers(**scrape_kwargs))
 
-    async def aget_followers(self, handle, login=True, stay_logged_in=True, sleep=2):
+    async def aget_followers(
+        self,
+        handle=None,
+        login=True,
+        stay_logged_in=True,
+        sleep=2,
+        user_id=None,
+        profile_url=None,
+        users=None,
+        usernames=None,
+        user_ids=None,
+        profile_urls=None,
+    ):
         return await self.aget_follows(
             handle=handle,
             type="followers",
             login=login,
             stay_logged_in=stay_logged_in,
             sleep=sleep,
+            user_id=user_id,
+            profile_url=profile_url,
+            users=users,
+            usernames=usernames,
+            user_ids=user_ids,
+            profile_urls=profile_urls,
         )
 
-    async def aget_following(self, handle, login=True, stay_logged_in=True, sleep=2):
+    async def aget_following(
+        self,
+        handle=None,
+        login=True,
+        stay_logged_in=True,
+        sleep=2,
+        user_id=None,
+        profile_url=None,
+        users=None,
+        usernames=None,
+        user_ids=None,
+        profile_urls=None,
+    ):
         return await self.aget_follows(
             handle=handle,
             type="following",
             login=login,
             stay_logged_in=stay_logged_in,
             sleep=sleep,
+            user_id=user_id,
+            profile_url=profile_url,
+            users=users,
+            usernames=usernames,
+            user_ids=user_ids,
+            profile_urls=profile_urls,
         )
 
-    async def aget_verified_followers(self, handle, login=True, stay_logged_in=True, sleep=2):
+    async def aget_verified_followers(
+        self,
+        handle=None,
+        login=True,
+        stay_logged_in=True,
+        sleep=2,
+        user_id=None,
+        profile_url=None,
+        users=None,
+        usernames=None,
+        user_ids=None,
+        profile_urls=None,
+    ):
         return await self.aget_follows(
             handle=handle,
             type="verified_followers",
             login=login,
             stay_logged_in=stay_logged_in,
             sleep=sleep,
+            user_id=user_id,
+            profile_url=profile_url,
+            users=users,
+            usernames=usernames,
+            user_ids=user_ids,
+            profile_urls=profile_urls,
         )
 
-    async def aget_follows(self, handle, type="following", login=True, stay_logged_in=True, sleep=2):
+    async def aget_follows(
+        self,
+        handle=None,
+        type="following",
+        login=True,
+        stay_logged_in=True,
+        sleep=2,
+        user_id=None,
+        profile_url=None,
+        users=None,
+        usernames=None,
+        user_ids=None,
+        profile_urls=None,
+    ):
         assert type in ["followers", "verified_followers", "following"]
+        normalized = normalize_user_targets(
+            users=users,
+            handles=[handle] if handle is not None else None,
+            usernames=usernames,
+            user_ids=([user_id] if user_id is not None else None) or user_ids,
+            profile_urls=([profile_url] if profile_url is not None else None) or profile_urls,
+            context=f"follows:{type}",
+        )
+        targets = list(normalized.get("targets") or [])
+        if not targets:
+            logger.info("No valid user target provided for follows request type=%s", type)
+            return []
+        if len(targets) > 1:
+            logger.info(
+                "Follows request type=%s received %s targets; using the first target for compatibility",
+                type,
+                len(targets),
+            )
+        primary = targets[0]
         response = await self._runner.run_follows(
             FollowsRequest(
-                handle=handle,
+                handle=primary.get("username"),
+                user_id=primary.get("user_id"),
+                profile_url=primary.get("profile_url"),
+                target=primary,
                 type=type,
                 login=login,
                 stay_logged_in=stay_logged_in,
@@ -1043,10 +1133,33 @@ class Scweet:
     def get_user_information(self, **profiles_kwargs):
         return asyncio.run(self.aget_user_information(**profiles_kwargs))
 
-    async def aget_user_information(self, handles, login=False):
+    async def aget_user_information(
+        self,
+        handles=None,
+        login=False,
+        usernames=None,
+        user_ids=None,
+        profile_urls=None,
+        users=None,
+    ):
+        normalized = normalize_user_targets(
+            users=users,
+            handles=handles,
+            usernames=usernames,
+            user_ids=user_ids,
+            profile_urls=profile_urls,
+            context="profiles",
+        )
+        targets = list(normalized.get("targets") or [])
+        if not targets:
+            logger.info("No valid user target provided for profiles request")
+            return {}
         response = await self._runner.run_profiles(
             ProfileRequest(
-                handles=list(handles),
+                handles=list(normalized.get("usernames") or []),
+                user_ids=list(normalized.get("user_ids") or []),
+                profile_urls=list(normalized.get("profile_urls") or []),
+                targets=targets,
                 login=login,
             )
         )
