@@ -53,7 +53,6 @@ class SearchRequest(BaseModel):
 
 class ProfileRequest(BaseModel):
     handles: list[str] = Field(default_factory=list)
-    user_ids: list[str] = Field(default_factory=list)
     profile_urls: list[str] = Field(default_factory=list)
     targets: list[dict[str, Any]] = Field(default_factory=list)
     login: bool = False
@@ -108,4 +107,6 @@ class SearchResult(BaseModel):
 
 
 class ProfileResult(BaseModel):
-    profiles: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    items: list[dict[str, Any]] = Field(default_factory=list)
+    status_code: int = 200
+    meta: dict[str, Any] = Field(default_factory=dict)

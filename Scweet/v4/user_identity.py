@@ -221,3 +221,90 @@ def normalize_user_targets(
         "profile_urls": profile_urls_out,
     }
 
+
+def normalize_profile_targets_explicit(
+    *,
+    usernames: Any = None,
+    profile_urls: Any = None,
+    context: str = "profiles",
+) -> dict[str, Any]:
+    """Normalize profile targets from explicit inputs only.
+
+    Supported sources:
+    - `usernames`: x handles (letters/digits/underscore, 1..15), optional `@` prefix
+    - `profile_urls`: profile URL (`x.com/<handle>`)
+    """
+
+    targets: list[dict[str, str]] = []
+    skipped: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    def _append_target(*, raw: str, source: str, username: Optional[str] = None, profile_url: Optional[str] = None) -> None:
+        norm_username = _as_str(username).lstrip("@")
+        norm_profile_url = _as_str(profile_url)
+
+        dedupe_key: Optional[str] = f"username:{norm_username.lower()}" if norm_username else None
+        if not dedupe_key:
+            skipped.append({"raw": raw, "source": source, "reason": "unresolved"})
+            return
+        if dedupe_key in seen:
+            skipped.append({"raw": raw, "source": source, "reason": "duplicate"})
+            return
+        seen.add(dedupe_key)
+
+        row: dict[str, str] = {"raw": raw, "source": source}
+        if norm_username:
+            row["username"] = norm_username
+        if norm_profile_url:
+            row["profile_url"] = norm_profile_url
+        targets.append(row)
+
+    for raw_value in _normalize_input_list(usernames):
+        value = _as_str(raw_value)
+        normalized = value.lstrip("@")
+        if not _HANDLE_PATTERN.fullmatch(normalized):
+            skipped.append({"raw": raw_value, "source": "usernames", "reason": "invalid_username"})
+            continue
+        _append_target(raw=value, source="usernames", username=normalized)
+
+    for raw_value in _normalize_input_list(profile_urls):
+        parsed_url, reason = _parse_profile_url(raw_value)
+        if not parsed_url:
+            skipped.append({"raw": _as_str(raw_value), "source": "profile_urls", "reason": reason or "invalid_profile_url"})
+            continue
+        if _as_str(parsed_url.get("user_id")):
+            skipped.append({"raw": _as_str(raw_value), "source": "profile_urls", "reason": "user_id_url_not_supported"})
+            continue
+        _append_target(
+            raw=_as_str(raw_value),
+            source="profile_urls",
+            username=_as_str(parsed_url.get("username")) or None,
+            profile_url=_as_str(parsed_url.get("normalized_url")) or None,
+        )
+
+    usernames_out = [target["username"] for target in targets if target.get("username")]
+    profile_urls_out = [target["profile_url"] for target in targets if target.get("profile_url")]
+
+    if usernames is not None or profile_urls is not None:
+        logger.info(
+            "Profile targets normalized context=%s accepted=%s skipped=%s usernames=%s",
+            context,
+            len(targets),
+            len(skipped),
+            len(usernames_out),
+        )
+        for row in skipped:
+            logger.debug(
+                "Profile target skipped context=%s raw=%r source=%s reason=%s",
+                context,
+                row.get("raw"),
+                row.get("source"),
+                row.get("reason"),
+            )
+
+    return {
+        "targets": targets,
+        "skipped": skipped,
+        "usernames": usernames_out,
+        "profile_urls": profile_urls_out,
+    }

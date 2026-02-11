@@ -22,7 +22,7 @@ from .v4.query import normalize_search_input
 from .v4.resume import compute_query_hash, resolve_resume_start
 from .v4.repos import AccountsRepo, ResumeRepo, RunsRepo
 from .v4.runner import Runner
-from .v4.user_identity import normalize_user_targets
+from .v4.user_identity import normalize_profile_targets_explicit, normalize_user_targets
 from .v4.tweet_csv import SUMMARY_CSV_HEADER, tweet_to_csv_rows
 from .v4.transaction import TransactionIdProvider
 from .v4.warnings import warn_deprecated, warn_legacy_import_path
@@ -288,7 +288,7 @@ class Scweet:
             session_builder_kwargs["user_agent"] = configured_api_user_agent.strip()
         self._account_session_builder = AccountSessionBuilder(**session_builder_kwargs)
 
-        # Phase 5: Tweet search scraping is API-only regardless of legacy mode/engine selection.
+        # Tweet search scraping is API-only regardless of legacy mode/engine selection.
         self._browser_engine = None
         self._selected_engine = self._api_engine
 
@@ -417,6 +417,31 @@ class Scweet:
             repo = AccountsRepo(effective_db_path, require_auth_material=True)
         repo.upsert_account(normalized)
         return normalized
+
+    def repair_account(
+        self,
+        username: str,
+        *,
+        refresh_from_auth_token: bool = True,
+        force_refresh: bool = False,
+        bootstrap_timeout_s: int = 30,
+        clear_leases: bool = True,
+        include_unusable: bool = True,
+        reset_daily: bool = True,
+        mark_unusable_if_still_invalid: bool = False,
+    ) -> dict[str, Any]:
+        """Repair a specific account username (state reset + optional token refresh)."""
+
+        return self.db.repair_account(
+            username,
+            refresh_from_auth_token=bool(refresh_from_auth_token),
+            force_refresh=bool(force_refresh),
+            bootstrap_timeout_s=int(bootstrap_timeout_s),
+            clear_leases=bool(clear_leases),
+            include_unusable=bool(include_unusable),
+            reset_daily=bool(reset_daily),
+            mark_unusable_if_still_invalid=bool(mark_unusable_if_still_invalid),
+        )
 
     async def init_nodriver(self):
         """Legacy no-op hook retained for compatibility."""
@@ -1135,40 +1160,62 @@ class Scweet:
 
     async def aget_user_information(
         self,
-        handles=None,
         login=False,
         usernames=None,
-        user_ids=None,
         profile_urls=None,
-        users=None,
+        include_meta: bool = False,
+        **legacy_kwargs,
     ):
-        normalized = normalize_user_targets(
-            users=users,
-            handles=handles,
+        if legacy_kwargs:
+            unsupported = sorted(legacy_kwargs.keys())
+            raise TypeError(
+                "aget_user_information supports only explicit inputs: "
+                "`usernames`, `profile_urls`"
+                f" (unsupported: {', '.join(unsupported)})"
+            )
+
+        normalized = normalize_profile_targets_explicit(
             usernames=usernames,
-            user_ids=user_ids,
             profile_urls=profile_urls,
             context="profiles",
         )
         targets = list(normalized.get("targets") or [])
         if not targets:
             logger.info("No valid user target provided for profiles request")
-            return {}
+            if include_meta:
+                return {
+                    "items": [],
+                    "status_code": 400,
+                    "meta": {
+                        "requested": 0,
+                        "resolved": 0,
+                        "failed": 0,
+                        "skipped": list(normalized.get("skipped") or []),
+                        "errors": [],
+                    },
+                }
+            return []
         response = await self._runner.run_profiles(
             ProfileRequest(
-                handles=list(normalized.get("usernames") or []),
-                user_ids=list(normalized.get("user_ids") or []),
-                profile_urls=list(normalized.get("profile_urls") or []),
                 targets=targets,
                 login=login,
             )
         )
+        if include_meta and isinstance(response, dict):
+            initial_skipped = list(normalized.get("skipped") or [])
+            if initial_skipped:
+                meta = response.get("meta")
+                if not isinstance(meta, dict):
+                    meta = {}
+                    response["meta"] = meta
+                merged_skipped = list(meta.get("skipped") or [])
+                merged_skipped.extend(initial_skipped)
+                meta["skipped"] = merged_skipped
+            return response
         if isinstance(response, dict):
-            if isinstance(response.get("profiles"), dict):
-                return response["profiles"]
-            if all(isinstance(key, str) for key in response.keys()) and "status_code" not in response:
-                return response
-        return {}
+            if isinstance(response.get("items"), list):
+                return response["items"]
+        return []
 
     def get_last_date_from_csv(self, path):
         max_dt = None

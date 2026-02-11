@@ -233,6 +233,98 @@ class AccountsRepo:
             count = session.execute(stmt).scalar_one()
             return int(count)
 
+    def eligibility_diagnostics(self, *, now_ts: Optional[float] = None, sample_limit: int = 5) -> dict[str, Any]:
+        """Return a compact eligibility breakdown to explain lease failures."""
+
+        now_ts = float(now_ts or time.time())
+        today = _today_string()
+        sample_limit = max(1, int(sample_limit or 5))
+        blocked_counts: dict[str, int] = {}
+        blocked_samples: list[dict[str, Any]] = []
+        eligible = 0
+
+        with session_scope(self.db_path) as session:
+            rows = [
+                _account_to_dict(row)
+                for row in session.execute(select(AccountTable).order_by(AccountTable.id.asc())).scalars().all()
+            ]
+
+        for row in rows:
+            reasons: list[str] = []
+            status_value = _as_int(row.get("status"))
+            if status_value is not None and status_value not in _REUSABLE_STATUSES:
+                reasons.append("status")
+
+            available_til = row.get("available_til")
+            try:
+                if available_til is not None and float(available_til) > now_ts:
+                    reasons.append("cooldown")
+            except Exception:
+                pass
+
+            lease_id = _as_str(row.get("lease_id"))
+            lease_expires_at = row.get("lease_expires_at")
+            lease_active = False
+            if lease_id:
+                try:
+                    lease_active = lease_expires_at is None or float(lease_expires_at) > now_ts
+                except Exception:
+                    lease_active = True
+            if lease_active:
+                reasons.append("leased")
+
+            last_reset_date = _as_str(row.get("last_reset_date"))
+            daily_requests = int(row.get("daily_requests", 0) or 0)
+            daily_tweets = int(row.get("daily_tweets", 0) or 0)
+            if (
+                last_reset_date == today
+                and (
+                    daily_requests >= int(self.daily_pages_limit)
+                    or daily_tweets >= int(self.daily_tweets_limit)
+                )
+            ):
+                reasons.append("daily_limit")
+
+            if self.require_auth_material:
+                if not _as_str(row.get("auth_token")):
+                    reasons.append("missing_auth_token")
+                if not _as_str(row.get("csrf")):
+                    reasons.append("missing_csrf")
+                if not _as_str(row.get("cookies_json")):
+                    reasons.append("missing_cookies")
+                if not self.default_bearer_token and not _as_str(row.get("bearer")):
+                    reasons.append("missing_bearer")
+
+            if not reasons:
+                eligible += 1
+                continue
+
+            for reason in reasons:
+                blocked_counts[reason] = blocked_counts.get(reason, 0) + 1
+
+            if len(blocked_samples) < sample_limit:
+                blocked_samples.append(
+                    {
+                        "id": row.get("id"),
+                        "username": row.get("username"),
+                        "status": status_value,
+                        "available_til": available_til,
+                        "daily_requests": daily_requests,
+                        "daily_tweets": daily_tweets,
+                        "has_token": bool(_as_str(row.get("auth_token"))),
+                        "has_csrf": bool(_as_str(row.get("csrf"))),
+                        "has_cookies": bool(_as_str(row.get("cookies_json"))),
+                        "reasons": reasons,
+                    }
+                )
+
+        return {
+            "total": len(rows),
+            "eligible": int(eligible),
+            "blocked_counts": blocked_counts,
+            "blocked_samples": blocked_samples,
+        }
+
     def heartbeat(self, lease_id: str, extend_by_s: int) -> bool:
         now_ts = time.time()
         with session_scope(self.db_path) as session:

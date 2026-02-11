@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import time
 from datetime import datetime, timezone
 from typing import Any, Iterable, Optional
 
 from sqlalchemy import delete, func, select
 
+from .account_session import prepare_account_auth_material
 from .repos import AccountsRepo, ResumeRepo
 from .schema import AccountTable, ResumeStateTable, RunTable
 from .storage import init_db, session_scope
+
+logger = logging.getLogger(__name__)
 
 
 def _today_string() -> str:
@@ -319,6 +323,179 @@ class ScweetDB:
             updated = 1
 
         return {"updated": updated}
+
+    def repair_account(
+        self,
+        username: str,
+        *,
+        refresh_from_auth_token: bool = True,
+        force_refresh: bool = False,
+        bootstrap_timeout_s: int = 30,
+        clear_leases: bool = True,
+        include_unusable: bool = True,
+        reset_daily: bool = True,
+        mark_unusable_if_still_invalid: bool = False,
+    ) -> dict[str, Any]:
+        """Repair a specific account by username (state reset + optional auth refresh)."""
+
+        name = _as_str(username)
+        if not name:
+            raise ValueError("username is required")
+
+        current: Optional[dict[str, Any]] = None
+        with session_scope(self.db_path) as session:
+            stmt = select(AccountTable).where(AccountTable.username == name).limit(1)
+            account = session.execute(stmt).scalar_one_or_none()
+            if account is None:
+                return {"updated": 0, "username": name, "reason": "not_found"}
+            current = _row_to_dict(account, AccountTable)
+
+        assert current is not None
+        current_cookies = _cookies_to_dict(current.get("cookies_json"))
+        auth_token = _as_str(current.get("auth_token")) or _as_str(current_cookies.get("auth_token"))
+        material_before, reason_before = prepare_account_auth_material(current)
+
+        token_bootstrap_attempted = False
+        token_bootstrap_success = False
+        token_bootstrap_reason: Optional[str] = None
+        refreshed_payload: Optional[dict[str, Any]] = None
+
+        should_try_token_bootstrap = bool(
+            refresh_from_auth_token
+            and auth_token
+            and (force_refresh or material_before is None)
+        )
+        if refresh_from_auth_token and not auth_token:
+            token_bootstrap_reason = "missing_auth_token"
+
+        if should_try_token_bootstrap:
+            token_bootstrap_attempted = True
+            try:
+                from .auth import bootstrap_cookies_from_auth_token, normalize_account_record
+
+                proxy_payload = _proxy_from_db_value(current.get("proxy_json"))
+                bootstrapped = bootstrap_cookies_from_auth_token(
+                    auth_token,
+                    timeout_s=max(1, int(bootstrap_timeout_s or 30)),
+                    proxy=proxy_payload,
+                )
+                cookies_dict = _cookies_to_dict(bootstrapped)
+                if cookies_dict:
+                    normalized = normalize_account_record(
+                        {
+                            "username": name,
+                            "auth_token": auth_token,
+                            "cookies_json": cookies_dict,
+                            "proxy_json": current.get("proxy_json"),
+                            "bearer": current.get("bearer"),
+                            "status": current.get("status", 1),
+                        }
+                    )
+                    refreshed_payload = {
+                        "auth_token": normalized.get("auth_token"),
+                        "csrf": normalized.get("csrf"),
+                        "bearer": normalized.get("bearer"),
+                        "cookies_json": normalized.get("cookies_json"),
+                    }
+                    token_bootstrap_success = True
+                    token_bootstrap_reason = None
+                else:
+                    token_bootstrap_reason = "token_bootstrap_empty_cookies"
+            except Exception as exc:
+                token_bootstrap_reason = f"token_bootstrap_exception:{str(exc)}"
+                logger.warning("repair_account token bootstrap failed username=%s detail=%s", name, str(exc))
+
+        changed: list[str] = []
+        with session_scope(self.db_path) as session:
+            stmt = select(AccountTable).where(AccountTable.username == name).limit(1)
+            account = session.execute(stmt).scalar_one_or_none()
+            if account is None:
+                return {"updated": 0, "username": name, "reason": "not_found_after_refresh"}
+
+            if refreshed_payload:
+                if _as_str(refreshed_payload.get("auth_token")):
+                    account.auth_token = _as_str(refreshed_payload.get("auth_token"))
+                if _as_str(refreshed_payload.get("csrf")):
+                    account.csrf = _as_str(refreshed_payload.get("csrf"))
+                if _as_str(refreshed_payload.get("bearer")):
+                    account.bearer = _as_str(refreshed_payload.get("bearer"))
+                cookies_value = refreshed_payload.get("cookies_json")
+                cookies_dict = _cookies_to_dict(cookies_value)
+                if cookies_dict:
+                    account.cookies_json = json.dumps(cookies_dict, separators=(",", ":"))
+                changed.append("auth_refreshed_from_auth_token")
+
+            cookies = _cookies_to_dict(getattr(account, "cookies_json", None))
+
+            if not _as_str(getattr(account, "auth_token", None)):
+                token_from_cookies = _as_str(cookies.get("auth_token"))
+                if token_from_cookies:
+                    account.auth_token = token_from_cookies
+                    changed.append("auth_token_from_cookies")
+
+            if not _as_str(getattr(account, "csrf", None)):
+                csrf_from_cookies = _as_str(cookies.get("ct0"))
+                if csrf_from_cookies:
+                    account.csrf = csrf_from_cookies
+                    changed.append("csrf_from_cookies")
+
+            if include_unusable and int(getattr(account, "status", 1) or 0) == 0:
+                account.status = 1
+                changed.append("status_reactivated")
+
+            account.available_til = 0.0
+            account.cooldown_reason = None
+            account.last_error_code = None
+            changed.append("cooldown_cleared")
+
+            if clear_leases:
+                account.busy = False
+                account.lease_id = None
+                account.lease_run_id = None
+                account.lease_worker_id = None
+                account.lease_acquired_at = None
+                account.lease_expires_at = None
+                changed.append("lease_cleared")
+
+            if reset_daily:
+                account.daily_requests = 0
+                account.daily_tweets = 0
+                account.last_reset_date = _today_string()
+                changed.append("daily_counters_reset")
+
+            session.flush()
+            snapshot = _row_to_dict(account, AccountTable)
+            auth_material, auth_reason = prepare_account_auth_material(snapshot)
+
+            if mark_unusable_if_still_invalid and auth_material is None:
+                account.status = 0
+                account.available_til = 0.0
+                account.cooldown_reason = f"unusable:{auth_reason or 'missing_auth_material'}"
+                account.last_error_code = 401
+                changed.append("marked_unusable")
+                session.flush()
+                snapshot = _row_to_dict(account, AccountTable)
+                auth_material, auth_reason = prepare_account_auth_material(snapshot)
+
+        logger.info(
+            "repair_account username=%s refreshed=%s auth_ready=%s reason=%s",
+            name,
+            token_bootstrap_success,
+            bool(auth_material is not None),
+            auth_reason,
+        )
+        return {
+            "updated": 1,
+            "username": name,
+            "changes": changed,
+            "token_bootstrap_attempted": token_bootstrap_attempted,
+            "token_bootstrap_success": token_bootstrap_success,
+            "token_bootstrap_reason": token_bootstrap_reason,
+            "auth_before_ready": bool(material_before is not None),
+            "auth_before_reason": reason_before,
+            "auth_ready": bool(auth_material is not None),
+            "auth_reason": auth_reason,
+        }
 
     def reset_account_cooldowns(
         self,

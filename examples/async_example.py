@@ -44,6 +44,9 @@ async def main() -> None:
     # Optional: set/override a per-account proxy in the DB (applies to API calls for that account).
     # ScweetDB(str(db_path)).set_account_proxy("acct-a", {"host": "127.0.0.1", "port": 8080})
 
+    # If you don't want to save the tweets (keep in memory), set
+    # scweet.config.output.format = "none"
+
     tweets = await scweet.asearch(
         since="2026-02-01",
         until="2026-02-07",
@@ -58,6 +61,14 @@ async def main() -> None:
         display_type="Latest",
     )
     print("tweets:", len(tweets))
+
+    profile_result = await scweet.aget_user_information(
+        usernames=["elonmusk"],
+        profile_urls=["https://x.com/OpenAI"],
+        include_meta=True,
+    )
+    print("user_info.items:", len(profile_result.get("items") or []))
+    print("user_info.resolved:", (profile_result.get("meta") or {}).get("resolved"))
 
     # Optional: explicitly close the underlying HTTP engine/session pool.
     await scweet.aclose()

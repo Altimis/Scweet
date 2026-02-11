@@ -1,13 +1,29 @@
 {
   "version": "v4-default-1",
   "query_ids": {
-    "search_timeline": "f_A-Gyo204PRxixpkrchJg"
+    "search_timeline": "f_A-Gyo204PRxixpkrchJg",
+    "user_lookup_screen_name": "-oaLodhGbbnzJBACb1kk2Q"
   },
   "endpoints": {
-    "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline"
+    "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline",
+    "user_lookup_screen_name": "https://x.com/i/api/graphql/{query_id}/UserByScreenName"
   },
-  "operation_features": {},
-  "operation_field_toggles": {},
+  "operation_features": {
+    "user_lookup_screen_name": {
+      "hidden_profile_subscriptions_enabled": true,
+      "subscriptions_verification_info_is_identity_verified_enabled": true,
+      "subscriptions_verification_info_verified_since_enabled": true,
+      "highlights_tweets_tab_ui_enabled": true,
+      "responsive_web_twitter_article_notes_tab_enabled": true,
+      "subscriptions_feature_can_gift_premium": true
+    }
+  },
+  "operation_field_toggles": {
+    "user_lookup_screen_name": {
+      "withPayments": false,
+      "withAuxiliaryUserLabels": true
+    }
+  },
   "features": {
     "rweb_video_screen_enabled": false,
     "profile_label_improvements_pcf_label_in_post_enabled": true,

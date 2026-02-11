@@ -5,10 +5,12 @@ import inspect
 import json
 import logging
 import threading
+import uuid
 from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
-from .models import SearchRequest, SearchResult, TweetMedia, TweetRecord, TweetUser
+from .account_session import AccountSessionBuilder
+from .models import ProfileRequest, SearchRequest, SearchResult, TweetMedia, TweetRecord, TweetUser
 from .query import build_effective_search_query, normalize_search_input
 
 JSON_DECODE_STATUS = 598
@@ -16,6 +18,9 @@ NETWORK_ERROR_STATUS = 599
 HTTP_MODE_AUTO = "auto"
 HTTP_MODE_ASYNC = "async"
 HTTP_MODE_SYNC = "sync"
+DEFAULT_USER_LOOKUP_QUERY_ID = "-oaLodhGbbnzJBACb1kk2Q"
+DEFAULT_USER_LOOKUP_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/UserByScreenName"
+USER_LOOKUP_OPERATION = "user_lookup_screen_name"
 logger = logging.getLogger(__name__)
 
 
@@ -124,12 +129,147 @@ class ApiEngine:
         }
 
     async def get_profiles(self, request):
-        return {
-            "profiles": {},
-            "status_code": 501,
-            "detail": "Not implemented yet",
-            "request": request,
-        }
+        profile_request = self._coerce_profile_request(request)
+        provided_session, account_context, _runtime_hints = self._extract_runtime_context(request)
+        manifest = await self.manifest_provider.get_manifest()
+        targets = self._collect_profile_targets(profile_request)
+        if not targets:
+            logger.info("Profiles request received no valid targets")
+            return {
+                "items": [],
+                "status_code": 400,
+                "detail": "No valid targets provided",
+                "meta": {"requested": 0, "resolved": 0, "failed": 0, "skipped": []},
+            }
+
+        active_session = provided_session
+        leased_account: Optional[dict[str, Any]] = account_context
+        lease_id: Optional[str] = None
+        builder: Optional[AccountSessionBuilder] = None
+        owns_session = provided_session is None
+
+        if active_session is None:
+            active_session, leased_account, lease_id, builder = await self._acquire_profile_session()
+            if active_session is None:
+                logger.warning("Profiles request failed: no eligible account could be leased")
+                return {
+                    "items": [],
+                    "status_code": 503,
+                    "detail": "No eligible account available",
+                    "meta": {"requested": len(targets), "resolved": 0, "failed": len(targets), "skipped": []},
+                }
+
+        logger.info(
+            "Profiles request started targets=%s account=%s",
+            len(targets),
+            self._account_label(leased_account),
+        )
+        items: list[dict[str, Any]] = []
+        skipped: list[dict[str, Any]] = []
+        errors: list[dict[str, Any]] = []
+        last_error_status: Optional[int] = None
+
+        try:
+            for idx, target in enumerate(targets):
+                resolved_username = await self._resolve_target_username(
+                    target=target,
+                )
+                if not resolved_username:
+                    skipped_row = {
+                        "index": idx,
+                        "input": target.get("raw") or target.get("username"),
+                        "reason": "unresolved_username",
+                    }
+                    skipped.append(skipped_row)
+                    logger.debug("Profiles target skipped index=%s reason=%s target=%r", idx, "unresolved_username", target)
+                    continue
+
+                url = self._resolve_user_lookup_url(manifest)
+                params = self._build_user_lookup_params(resolved_username, manifest)
+                data, status_code, headers, text_snippet = await self._graphql_get(
+                    url=url,
+                    params=params,
+                    timeout_s=manifest.timeout_s,
+                    session=active_session,
+                    account_context=leased_account,
+                )
+                if status_code != 200 or data is None:
+                    last_error_status = status_code
+                    errors.append(
+                        {
+                            "index": idx,
+                            "input": target.get("raw") or resolved_username,
+                            "username": resolved_username,
+                            "status_code": status_code,
+                            "snippet": text_snippet,
+                            "headers": headers,
+                        }
+                    )
+                    logger.debug(
+                        "Profiles lookup failed index=%s username=%s status=%s",
+                        idx,
+                        resolved_username,
+                        status_code,
+                    )
+                    continue
+
+                user_result = self._extract_user_result(data)
+                if not isinstance(user_result, dict) or not user_result:
+                    last_error_status = 404
+                    errors.append(
+                        {
+                            "index": idx,
+                            "input": target.get("raw") or resolved_username,
+                            "username": resolved_username,
+                            "status_code": 404,
+                            "reason": "user_not_found",
+                        }
+                    )
+                    logger.debug("Profiles lookup returned no user for username=%s", resolved_username)
+                    continue
+
+                profile_record = self._map_user_result_to_profile_record(user_result, target=target, username=resolved_username)
+                items.append(profile_record)
+
+            resolved_count = len(items)
+            failed_count = len(errors)
+            skipped_count = len(skipped)
+            if resolved_count > 0:
+                status_code = 200
+            elif last_error_status is not None:
+                status_code = int(last_error_status)
+            else:
+                status_code = 404
+
+            logger.info(
+                "Profiles request finished requested=%s resolved=%s failed=%s skipped=%s account=%s",
+                len(targets),
+                resolved_count,
+                failed_count,
+                skipped_count,
+                self._account_label(leased_account),
+            )
+            return {
+                "items": items,
+                "status_code": status_code,
+                "meta": {
+                    "requested": len(targets),
+                    "resolved": resolved_count,
+                    "failed": failed_count,
+                    "skipped": skipped,
+                    "errors": errors,
+                },
+            }
+        finally:
+            if owns_session and active_session is not None:
+                if builder is not None and hasattr(builder, "close"):
+                    await self._maybe_await(builder.close(active_session))
+                else:
+                    await self._close_session(active_session)
+            if lease_id and self.accounts_repo is not None and hasattr(self.accounts_repo, "release"):
+                release_set = {}
+                release_inc = {"daily_requests": max(1, len(targets))}
+                await self._maybe_await(self.accounts_repo.release(lease_id, fields_to_set=release_set, fields_to_inc=release_inc))
 
     async def get_follows(self, request):
         return {
@@ -137,6 +277,230 @@ class ApiEngine:
             "status_code": 501,
             "detail": "Not implemented yet",
             "request": request,
+        }
+
+    def _coerce_profile_request(self, request: Any) -> ProfileRequest:
+        if isinstance(request, ProfileRequest):
+            return request
+        if isinstance(request, dict):
+            payload = {
+                "handles": request.get("handles") or [],
+                "profile_urls": request.get("profile_urls") or [],
+                "targets": request.get("targets") or [],
+                "login": request.get("login", False),
+            }
+            return ProfileRequest.model_validate(payload)
+        return ProfileRequest.model_validate(request)
+
+    def _collect_profile_targets(self, request: ProfileRequest) -> list[dict[str, str]]:
+        out: list[dict[str, str]] = []
+        seen: set[str] = set()
+
+        def _append(target: dict[str, Any]) -> None:
+            username = str(target.get("username") or "").strip()
+            profile_url = str(target.get("profile_url") or "").strip()
+
+            key = ""
+            if username:
+                key = f"username:{username.lower()}"
+            elif profile_url:
+                key = f"url:{profile_url.lower()}"
+            if not key or key in seen:
+                return
+            seen.add(key)
+
+            row: dict[str, str] = {}
+            raw = str(target.get("raw") or "").strip()
+            source = str(target.get("source") or "").strip()
+            if raw:
+                row["raw"] = raw
+            if source:
+                row["source"] = source
+            if username:
+                row["username"] = username
+            if profile_url:
+                row["profile_url"] = profile_url
+            out.append(row)
+
+        for target in list(request.targets or []):
+            if isinstance(target, dict):
+                _append(target)
+        for handle in list(request.handles or []):
+            _append({"raw": str(handle), "source": "handles", "username": str(handle).strip().lstrip("@")})
+        for profile_url in list(request.profile_urls or []):
+            _append({"raw": str(profile_url), "source": "profile_urls", "profile_url": str(profile_url).strip()})
+
+        return out
+
+    async def _acquire_profile_session(self) -> tuple[Optional[Any], Optional[dict[str, Any]], Optional[str], Optional[AccountSessionBuilder]]:
+        if self.accounts_repo is None or not hasattr(self.accounts_repo, "acquire_leases"):
+            return None, None, None, None
+
+        run_id = f"profiles:{uuid.uuid4()}"
+        leases = await self._maybe_await(
+            self.accounts_repo.acquire_leases(
+                count=1,
+                run_id=run_id,
+                worker_id_prefix="profiles",
+            )
+        )
+        leases = list(leases or [])
+        if not leases:
+            diagnostics = None
+            if hasattr(self.accounts_repo, "eligibility_diagnostics"):
+                try:
+                    diagnostics = await self._maybe_await(
+                        self.accounts_repo.eligibility_diagnostics(sample_limit=5)
+                    )
+                except Exception:
+                    diagnostics = None
+            if isinstance(diagnostics, dict):
+                logger.warning(
+                    "Profiles lease unavailable total=%s eligible=%s blocked=%s sample=%s",
+                    diagnostics.get("total"),
+                    diagnostics.get("eligible"),
+                    diagnostics.get("blocked_counts"),
+                    diagnostics.get("blocked_samples"),
+                )
+            return None, None, None, None
+
+        account = dict(leases[0])
+        lease_id = str(account.get("lease_id") or "").strip() or None
+        builder = AccountSessionBuilder(
+            session_factory=self.session_factory,
+            api_http_mode=self.http_mode,
+            proxy=_config_value(self.config, "proxy", None),
+            user_agent=_config_value(self.config, "api_user_agent", None),
+            impersonate=str(_config_value(self.config, "api_http_impersonate", "chrome120") or "chrome120"),
+        )
+        try:
+            built = await self._maybe_await(builder.build(account))
+            if isinstance(built, tuple):
+                session = built[0]
+            else:
+                session = built
+            context = {
+                "id": account.get("id"),
+                "username": account.get("username"),
+                "lease_id": lease_id,
+            }
+            return session, context, lease_id, builder
+        except Exception:
+            if lease_id and hasattr(self.accounts_repo, "release"):
+                await self._maybe_await(self.accounts_repo.release(lease_id, fields_to_set={}, fields_to_inc={}))
+            return None, None, None, None
+
+    async def _resolve_target_username(
+        self,
+        *,
+        target: dict[str, str],
+    ) -> Optional[str]:
+        username = str(target.get("username") or "").strip().lstrip("@")
+        if username:
+            return username
+
+        profile_url = str(target.get("profile_url") or "").strip()
+        if profile_url:
+            parsed = urlparse(profile_url if "://" in profile_url else f"https://{profile_url}")
+            path_parts = [part for part in str(parsed.path or "").split("/") if part]
+            if len(path_parts) == 1:
+                handle = path_parts[0].strip().lstrip("@")
+                if handle:
+                    return handle
+
+        return None
+
+    def _resolve_user_lookup_url(self, manifest) -> str:
+        query_id = (manifest.query_ids or {}).get(USER_LOOKUP_OPERATION) or DEFAULT_USER_LOOKUP_QUERY_ID
+        endpoint = (manifest.endpoints or {}).get(USER_LOOKUP_OPERATION) or DEFAULT_USER_LOOKUP_ENDPOINT
+        if "{query_id}" in endpoint:
+            return endpoint.format(query_id=query_id)
+        return endpoint
+
+    def _build_user_lookup_params(self, username: str, manifest) -> dict[str, str]:
+        variables = {
+            "screen_name": username,
+            "withGrokTranslatedBio": False,
+        }
+        features_payload = (
+            manifest.features_for(USER_LOOKUP_OPERATION)
+            if hasattr(manifest, "features_for")
+            else (manifest.features or {})
+        )
+        params: dict[str, str] = {
+            "variables": json.dumps(variables, separators=(",", ":")),
+            "features": json.dumps(features_payload or {}, separators=(",", ":")),
+        }
+        field_toggles_payload = (
+            manifest.field_toggles_for(USER_LOOKUP_OPERATION)
+            if hasattr(manifest, "field_toggles_for")
+            else None
+        )
+        if field_toggles_payload:
+            params["fieldToggles"] = json.dumps(field_toggles_payload, separators=(",", ":"))
+        return params
+
+    @staticmethod
+    def _extract_user_result(payload: Any) -> Optional[dict[str, Any]]:
+        if not isinstance(payload, dict):
+            return None
+        data_node = payload.get("data")
+        if not isinstance(data_node, dict):
+            return None
+        user_node = data_node.get("user")
+        if not isinstance(user_node, dict):
+            return None
+        result = user_node.get("result")
+        if isinstance(result, dict):
+            return result
+        return None
+
+    @staticmethod
+    def _as_int(value: Any) -> int:
+        try:
+            return int(value)
+        except Exception:
+            return 0
+
+    def _map_user_result_to_profile_record(
+        self,
+        user_result: dict[str, Any],
+        *,
+        target: dict[str, str],
+        username: str,
+    ) -> dict[str, Any]:
+        legacy = user_result.get("legacy") if isinstance(user_result.get("legacy"), dict) else {}
+        rest_id = str(
+            user_result.get("rest_id")
+            or user_result.get("id")
+            or legacy.get("id_str")
+            or ""
+        ).strip()
+        screen_name = str(legacy.get("screen_name") or username or "").strip()
+        return {
+            "input": {
+                "raw": target.get("raw"),
+                "source": target.get("source"),
+            },
+            "user_id": rest_id or None,
+            "username": screen_name or None,
+            "name": legacy.get("name"),
+            "description": legacy.get("description"),
+            "location": legacy.get("location"),
+            "created_at": legacy.get("created_at"),
+            "followers_count": self._as_int(legacy.get("followers_count")),
+            "following_count": self._as_int(legacy.get("friends_count")),
+            "statuses_count": self._as_int(legacy.get("statuses_count")),
+            "favourites_count": self._as_int(legacy.get("favourites_count")),
+            "media_count": self._as_int(legacy.get("media_count")),
+            "listed_count": self._as_int(legacy.get("listed_count")),
+            "verified": bool(legacy.get("verified", False)),
+            "blue_verified": bool(user_result.get("is_blue_verified", False)),
+            "protected": bool(legacy.get("protected", False)),
+            "profile_image_url": legacy.get("profile_image_url_https") or legacy.get("profile_image_url"),
+            "profile_banner_url": legacy.get("profile_banner_url"),
+            "url": legacy.get("url"),
+            "raw": user_result,
         }
 
     def _coerce_search_request(self, request: Any) -> SearchRequest:
@@ -157,6 +521,12 @@ class ApiEngine:
                 return session, account_context, runtime_hints
             return session, None, runtime_hints
         return None, None, runtime_hints
+
+    @staticmethod
+    async def _maybe_await(value: Any):
+        if inspect.isawaitable(value):
+            return await value
+        return value
 
     def _build_graphql_params(
         self,

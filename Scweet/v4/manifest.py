@@ -15,12 +15,30 @@ logger = logging.getLogger(__name__)
 
 _DEFAULT_MANIFEST = {
     "version": "v4-default-1",
-    "query_ids": {"search_timeline": "f_A-Gyo204PRxixpkrchJg"},
+    "query_ids": {
+        "search_timeline": "f_A-Gyo204PRxixpkrchJg",
+        "user_lookup_screen_name": "-oaLodhGbbnzJBACb1kk2Q",
+    },
     "endpoints": {
         "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline",
+        "user_lookup_screen_name": "https://x.com/i/api/graphql/{query_id}/UserByScreenName",
     },
-    "operation_features": {},
-    "operation_field_toggles": {},
+    "operation_features": {
+        "user_lookup_screen_name": {
+            "hidden_profile_subscriptions_enabled": True,
+            "subscriptions_verification_info_is_identity_verified_enabled": True,
+            "subscriptions_verification_info_verified_since_enabled": True,
+            "highlights_tweets_tab_ui_enabled": True,
+            "responsive_web_twitter_article_notes_tab_enabled": True,
+            "subscriptions_feature_can_gift_premium": True,
+        }
+    },
+    "operation_field_toggles": {
+        "user_lookup_screen_name": {
+            "withPayments": False,
+            "withAuxiliaryUserLabels": True,
+        }
+    },
     "features": {
         "rweb_video_screen_enabled": False,
         "profile_label_improvements_pcf_label_in_post_enabled": True,

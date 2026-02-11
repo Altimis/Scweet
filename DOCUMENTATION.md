@@ -13,7 +13,7 @@ Supported:
 
 Not implemented (v4.x):
 
-- Profile scraping and follower/following scraping currently return `501 Not implemented`.
+- Followers/following APIs currently return `501 Not implemented`.
 - API login/provisioning with credentials
 - API profile timeline scraping
 
@@ -338,6 +338,42 @@ Deprecated legacy query keys:
 
 `limit` is a per-run target, not “total across runs”. If you run the same query multiple times with `resume=True`, outputs will append unless you use dedupe (below).
 
+## Profile Information API
+
+Use `get_user_information(...)` / `aget_user_information(...)` to fetch profile info in batches.
+
+Accepted input fields (explicit only):
+
+- `usernames=[...]`
+- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
+
+Simple usage:
+
+```python
+items = scweet.get_user_information(
+    usernames=["OpenAI", "elonmusk"],
+    profile_urls=["https://x.com/OpenAI"],
+)
+print(items)
+```
+
+Include metadata/errors:
+
+```python
+result = scweet.get_user_information(
+    usernames=["OpenAI", "elonmusk"],
+    profile_urls=["https://x.com/OpenAI"],
+    include_meta=True,
+)
+print(result["items"])  # list of profile records
+print(result["meta"])   # requested/resolved/failed/skipped/errors
+```
+
+Notes:
+
+- The default return value is `list[dict]` profile records (`result["items"]` when `include_meta=True`).
+- Set `include_meta=True` to get the response envelope `{items, meta, status_code}`.
+
 ## Output (Return + Files)
 
 Return value:
@@ -411,6 +447,7 @@ Common messages:
 - `Import account reuse ...`: DB already had usable auth for that token/username.
 - `Import account creds bootstrap ...`: account needs nodriver login bootstrap.
 - `No usable accounts available ...`: scraping can’t lease an eligible account (set `runtime.strict=True` to raise).
+- `Profiles lease unavailable ... blocked=... sample=...`: profile lease failed; logs include blocker counts (`status`, `daily_limit`, `missing_csrf`, etc.) and sample accounts.
 
 ## Local DB Maintenance (ScweetDB)
 
@@ -422,12 +459,20 @@ from Scweet import ScweetDB
 db = ScweetDB("scweet_state.db")
 print(db.accounts_summary())
 print(db.list_accounts(limit=10, eligible_only=True, include_cookies=True))
+print(db.repair_account("acct1", force_refresh=True))
 print(db.clear_leases(expired_only=True))
 print(db.reset_account_cooldowns(clear_leases=True, include_unusable=True))
 print(db.collapse_duplicates_by_auth_token(dry_run=True))
 ```
 
 Secrets are redacted by default (fingerprints + cookie keys). Use `reveal_secrets=True` only when necessary.
+
+`repair_account(...)` is a targeted per-username recovery helper. It can:
+
+- refresh cookies from `auth_token` (API bootstrap; no browser login fallback),
+- clear lease/cooldown state,
+- reset daily counters,
+- optionally mark the account unusable if auth is still invalid.
 
 ## Proxy, User-Agent, HTTP Mode, Impersonation
 
@@ -475,8 +520,8 @@ Control via `engine.api_http_impersonate` (e.g. `"chrome124"`).
 
 Twitter’s web GraphQL layer changes frequently. Scweet externalizes the most common drift points into a small manifest:
 
-- GraphQL `query_id` for SearchTimeline
-- endpoint template
+- GraphQL `query_id`s for operations (for example: `search_timeline`, `user_lookup_screen_name`)
+- endpoint templates per operation
 - global `features` dict passed to GraphQL
 - optional per-operation overrides:
   - `operation_features[operation]` merged on top of global `features`
@@ -519,7 +564,6 @@ Strict mode:
 
 ## Future Work (Planned)
 
-- Implement profile/follows APIs (API-only) to replace legacy browser behavior.
-- Improve resume semantics for “total tweets across runs” and stronger cross-run dedupe.
+- Implement follows APIs (API-only) to replace legacy browser behavior.
+- Implement API-based login for accounts provision using username/password + email/2fa.
 - Expand manifest coverage (variable schema, optional toggles) where possible.
-- Add first-class docs website (recommendation: MkDocs Material).

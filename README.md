@@ -274,6 +274,29 @@ Files are controlled by `output_format`:
 - `both`: write both
 - `none`: return only
 
+## Profile Information
+
+Use `get_user_information(...)` / `aget_user_information(...)` with explicit user target types.
+
+Accepted input fields:
+
+- `usernames=[...]`
+- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
+
+Example:
+
+```python
+result = scweet.get_user_information(
+    usernames=["OpenAI", "elonmusk"],
+    profile_urls=["https://x.com/OpenAI"],
+    include_meta=True,  # return items + request meta/errors
+)
+print(result["items"])
+print(result["meta"])
+```
+
+`get_user_information(...)` returns `list[dict]` by default. Set `include_meta=True` to get `{items, meta, status_code}`.
+
 ## Resume + Dedupe
 
 - `resume=True` appends to existing CSV and JSON outputs.
@@ -291,6 +314,7 @@ db = ScweetDB("scweet_state.db")
 print(db.accounts_summary())
 print(db.list_accounts(limit=10, eligible_only=True))
 print(db.set_account_proxy("acct1", {"host": "127.0.0.1", "port": 8080}))
+print(db.repair_account("acct1", force_refresh=True))
 print(db.reset_daily_counters())
 print(db.clear_leases(expired_only=True))
 print(db.reset_account_cooldowns(clear_leases=True, include_unusable=True))
@@ -299,7 +323,6 @@ print(db.collapse_duplicates_by_auth_token(dry_run=True))
 
 ## Coming Soon
 
-- Profile info scraping
 - Followers/following scraping
 - Profile timeline scraping
 

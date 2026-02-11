@@ -91,7 +91,16 @@ def main() -> None:
     if tweets and isinstance(tweets[0], dict):
         print("first_tweet_id:", tweets[0].get("rest_id") or (tweets[0].get("tweet") or {}).get("rest_id"))
 
-    # 4) Inspect DB state / maintenance helpers
+    # 4) Fetch profile information from explicit user target fields
+    profile_result = scweet.get_user_information(
+        usernames=["OpenAI", "elonmusk"],
+        profile_urls=["https://x.com/OpenAI"],
+        include_meta=True,
+    )
+    print("user_info.items:", len(profile_result.get("items") or []))
+    print("user_info.resolved:", (profile_result.get("meta") or {}).get("resolved"))
+
+    # 5) Inspect DB state / maintenance helpers
     db = ScweetDB(str(db_path))
     print("db.accounts_summary:", db.accounts_summary())
     print("db.list_accounts:", db.list_accounts(limit=5, eligible_only=True))

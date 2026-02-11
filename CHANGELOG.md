@@ -35,6 +35,13 @@ All notable changes to this project are documented in this file.
   - `hashtags_any`, `hashtags_exclude`
   - `tweet_type`, media/verification filters, min engagement filters, geo filters
 - `scrape(...)` now auto-routes to canonical search when canonical query keys are provided.
+- Profile information retrieval via `get_user_information(...)` / `aget_user_information(...)`:
+  - accepts explicit targets (`usernames`, `profile_urls`)
+  - default return is `list[dict]` profile records (`items`)
+  - optional response envelope via `include_meta=True` (`{items, meta, status_code}`)
+- Account recovery and diagnostics:
+  - `repair_account(username, ...)` for targeted per-account recovery (optional auth_token cookie refresh + state reset)
+  - richer lease-failure diagnostics in logs when no account is eligible (blocked reason counts + sample rows)
 - Manifest schema extension for operation-specific GraphQL flags:
   - `operation_features`
   - `operation_field_toggles` (serialized as `fieldToggles`)
@@ -64,7 +71,8 @@ All notable changes to this project are documented in this file.
 
 ### Known limitations
 
-- Profile/follow endpoints are not implemented yet and currently return `501`.
+- Follow endpoints are not implemented yet and currently return `501`.
+- Login via API is not implemented yet. Only nodriver based login is available.
 - X/Twitter behavior and anti-bot controls can still affect reliability depending on account quality and request patterns.
 
 ### Removed
