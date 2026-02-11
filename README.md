@@ -17,7 +17,7 @@ Use `search()/asearch()` for structured query inputs. `scrape()/ascrape()` remai
 
 Full documentation: `DOCUMENTATION.md`
 
-## Recommended: Run Scweet on Apify (Hosted)
+## Run Scweet on Apify (Hosted)
 
 If you want the fastest path to results (and the best option for production workflows), use the hosted Apify Actor:
 
@@ -25,27 +25,6 @@ If you want the fastest path to results (and the best option for production work
 - Apify offers a free plan/trial (plan limits can change); see the Actor page for current details.
 
 [![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
-
-### Apify Quickstart (UI)
-
-1. Open the Actor page and click "Run".
-2. Fill the comprehensive input form (recommended), or switch to JSON input and paste an input JSON (example below).
-3. Run, then download results from the dataset.
-
-Minimal input example:
-
-```json
-{
-  "source_mode": "auto",
-  "search_query": "openai",
-  "profile_urls": [],
-  "max_items": 1000,
-  "since": "2026-02-01",
-  "until": "2026-02-07",
-  "search_sort": "Latest",
-  "lang": "en"
-}
-```
 
 For more details, see Apify Python client quickstart: https://apify.com/altimis/scweet/api/python
 
@@ -327,12 +306,6 @@ print(db.collapse_duplicates_by_auth_token(dry_run=True))
 ## More Details
 
 See `DOCUMENTATION.md` for the full guide (cookies formats, logging setup, strict mode, manifest updates, advanced config knobs).
-
-## Hosted/Scale Option (Again)
-
-If you want hosted runs and easy scaling, use the Apify Actor:
-
-- https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97
 
 ## Contribute
 We welcome **PRs**, bug reports, and feature suggestions!  
