@@ -167,6 +167,8 @@ class OperationalConfig(BaseModel):
     max_task_attempts: int = Field(default=3, ge=1)
     max_fallback_attempts: int = Field(default=3, ge=1)
     max_account_switches: int = Field(default=2, ge=0)
+    # Allow unauthenticated profile timeline scraping (best-effort, typically limited depth/pages).
+    profile_timeline_allow_anonymous: bool = False
     scheduler_min_interval_s: int = Field(default=300, ge=1)
     priority: int = 1
 

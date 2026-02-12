@@ -5,6 +5,7 @@ import csv
 import json
 import logging
 import os
+import re
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional, Union, List
@@ -16,7 +17,7 @@ from .v4.config import ScweetConfig, build_config_from_legacy_init_kwargs
 from .v4.exceptions import AccountPoolExhausted
 from .v4.manifest import ManifestProvider
 from .v4.mappers import build_legacy_csv_filename
-from .v4.models import FollowsRequest, ProfileRequest, SearchRequest
+from .v4.models import FollowsRequest, ProfileRequest, ProfileTimelineRequest, SearchRequest
 from .v4.outputs import write_csv, write_json_auto_append
 from .v4.query import normalize_search_input
 from .v4.resume import compute_query_hash, resolve_resume_start
@@ -493,39 +494,13 @@ class Scweet:
         except Exception:
             return None
 
-    async def _run_search_pipeline(
+    def _persist_tweet_outputs(
         self,
         *,
-        search_request: SearchRequest,
+        tweets: list[Any],
         csv_filename: str,
         resume: bool,
     ) -> list[dict[str, Any]]:
-        _, logged_in, _, _ = await self.login()
-        if not logged_in:
-            return []
-
-        tweets = []
-        try:
-            run_result = await self._runner.run_search(search_request)
-            tweets = list(getattr(run_result, "tweets", []) or [])
-        except AccountPoolExhausted as exc:
-            strict = bool(getattr(self._v4_config.runtime, "strict", False))
-            detail = (
-                "No usable accounts available for API scraping. "
-                "Provide accounts via `accounts_file` (accounts.txt), `cookies_file` (cookies.json), "
-                "`env_path` (.env), or `cookies=` (cookie dict/list/header/token)."
-            )
-            if strict:
-                raise AccountPoolExhausted(detail) from exc
-            logger.error("%s (%s)", detail, str(exc))
-            tweets = []
-        except Exception as exc:
-            strict = bool(getattr(self._v4_config.runtime, "strict", False))
-            if strict:
-                raise
-            logger.error("Scrape failed detail=%s (set strict=True to raise)", str(exc))
-            tweets = []
-
         raw_tweets: list[dict[str, Any]] = []
         csv_rows_summary: list[dict[str, Any]] = []
         csv_rows_compat: list[dict[str, Any]] = []
@@ -620,6 +595,197 @@ class Scweet:
             json_path = str(Path(csv_filename).with_suffix(".json"))
             json_mode = "a" if (resume and os.path.exists(json_path)) else "w"
             write_json_auto_append(json_path, raw_tweets, mode=json_mode)
+
+        return raw_tweets
+
+    @staticmethod
+    def _build_profile_timeline_csv_filename(
+        *,
+        save_dir: str,
+        custom_csv_name: Optional[str],
+        targets: list[dict[str, Any]],
+    ) -> str:
+        if custom_csv_name:
+            return os.path.join(save_dir, str(custom_csv_name))
+
+        username = ""
+        if len(targets) == 1:
+            username = str(targets[0].get("username") or "").strip().lstrip("@")
+
+        stem = f"profile_timeline_{username or 'batch'}"
+        stem = re.sub(r"[^A-Za-z0-9_]+", "_", stem).strip("_") or "profile_timeline_batch"
+        return os.path.join(save_dir, f"{stem}.csv")
+
+    def _load_profile_timeline_resume_cursors(self, *, query_hash: str) -> dict[str, str]:
+        if not query_hash:
+            return {}
+        if self._resume_repo is None or not hasattr(self._resume_repo, "get_checkpoint"):
+            return {}
+        checkpoint = self._resume_repo.get_checkpoint(query_hash)
+        if not isinstance(checkpoint, dict):
+            return {}
+        raw_cursor = checkpoint.get("cursor")
+        if isinstance(raw_cursor, dict):
+            payload = raw_cursor
+        elif isinstance(raw_cursor, str):
+            stripped = raw_cursor.strip()
+            if not stripped:
+                return {}
+            try:
+                decoded = json.loads(stripped)
+            except Exception:
+                return {}
+            payload = decoded if isinstance(decoded, dict) else {}
+        else:
+            return {}
+        out: dict[str, str] = {}
+        for key, value in payload.items():
+            cursor_key = str(key or "").strip()
+            cursor_value = str(value or "").strip()
+            if cursor_key and cursor_value:
+                out[cursor_key] = cursor_value
+        return out
+
+    def _save_profile_timeline_resume_state(
+        self,
+        *,
+        query_hash: str,
+        resume_cursors: dict[str, str],
+        completed: bool,
+        limit_reached: bool,
+    ) -> None:
+        if not query_hash:
+            return
+        if self._resume_repo is None:
+            return
+        if completed and not limit_reached and not resume_cursors:
+            if hasattr(self._resume_repo, "clear_checkpoint"):
+                try:
+                    self._resume_repo.clear_checkpoint(query_hash)
+                except Exception:
+                    pass
+            return
+
+        if not hasattr(self._resume_repo, "save_checkpoint"):
+            return
+        cursor_payload = json.dumps(resume_cursors or {}, separators=(",", ":"))
+        try:
+            self._resume_repo.save_checkpoint(
+                query_hash,
+                cursor_payload,
+                "profile_timeline",
+                "profile_timeline",
+            )
+        except Exception:
+            pass
+
+    async def _run_search_pipeline(
+        self,
+        *,
+        search_request: SearchRequest,
+        csv_filename: str,
+        resume: bool,
+    ) -> list[dict[str, Any]]:
+        _, logged_in, _, _ = await self.login()
+        if not logged_in:
+            return []
+
+        tweets = []
+        try:
+            run_result = await self._runner.run_search(search_request)
+            tweets = list(getattr(run_result, "tweets", []) or [])
+        except AccountPoolExhausted as exc:
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            detail = (
+                "No usable accounts available for API scraping. "
+                "Provide accounts via `accounts_file` (accounts.txt), `cookies_file` (cookies.json), "
+                "`env_path` (.env), or `cookies=` (cookie dict/list/header/token)."
+            )
+            if strict:
+                raise AccountPoolExhausted(detail) from exc
+            logger.error("%s (%s)", detail, str(exc))
+            tweets = []
+        except Exception as exc:
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            if strict:
+                raise
+            logger.error("Scrape failed detail=%s (set strict=True to raise)", str(exc))
+            tweets = []
+
+        raw_tweets = self._persist_tweet_outputs(
+            tweets=tweets,
+            csv_filename=csv_filename,
+            resume=resume,
+        )
+
+        await self.aclose()
+        return raw_tweets
+
+    async def _run_profile_timeline_pipeline(
+        self,
+        *,
+        profile_timeline_request: ProfileTimelineRequest,
+        csv_filename: str,
+        resume: bool,
+        query_hash: str,
+    ) -> list[dict[str, Any]]:
+        _, logged_in, _, _ = await self.login()
+        if not logged_in:
+            return []
+
+        run_response: dict[str, Any] = {}
+        tweets: list[Any] = []
+        resume_cursors: dict[str, str] = dict(profile_timeline_request.initial_cursors or {})
+        completed = False
+        limit_reached = False
+
+        try:
+            raw_response = await self._runner.run_profile_tweets(profile_timeline_request)
+            if isinstance(raw_response, dict):
+                run_response = dict(raw_response)
+            result = run_response.get("result")
+            tweets = list(getattr(result, "tweets", []) or [])
+            raw_resume = run_response.get("resume_cursors")
+            if isinstance(raw_resume, dict):
+                resume_cursors = {}
+                for key, value in raw_resume.items():
+                    cursor_key = str(key or "").strip()
+                    cursor_value = str(value or "").strip()
+                    if cursor_key and cursor_value:
+                        resume_cursors[cursor_key] = cursor_value
+            completed = bool(run_response.get("completed", False))
+            limit_reached = bool(run_response.get("limit_reached", False))
+        except AccountPoolExhausted as exc:
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            detail = (
+                "No usable accounts available for API scraping. "
+                "Provide accounts via `accounts_file` (accounts.txt), `cookies_file` (cookies.json), "
+                "`env_path` (.env), or `cookies=` (cookie dict/list/header/token)."
+            )
+            if strict:
+                raise AccountPoolExhausted(detail) from exc
+            logger.error("%s (%s)", detail, str(exc))
+            tweets = []
+        except Exception as exc:
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            if strict:
+                raise
+            logger.error("Profile timeline scrape failed detail=%s (set strict=True to raise)", str(exc))
+            tweets = []
+
+        if resume:
+            self._save_profile_timeline_resume_state(
+                query_hash=query_hash,
+                resume_cursors=resume_cursors,
+                completed=completed,
+                limit_reached=limit_reached,
+            )
+
+        raw_tweets = self._persist_tweet_outputs(
+            tweets=tweets,
+            csv_filename=csv_filename,
+            resume=resume,
+        )
 
         await self.aclose()
         return raw_tweets
@@ -1008,6 +1174,101 @@ class Scweet:
             search_request=search_request,
             csv_filename=csv_filename,
             resume=resume,
+        )
+
+    def profile_tweets(self, **profile_kwargs):
+        return asyncio.run(self.aprofile_tweets(**profile_kwargs))
+
+    def get_profile_timeline(self, **profile_kwargs):
+        return asyncio.run(self.aprofile_tweets(**profile_kwargs))
+
+    async def aget_profile_timeline(self, **profile_kwargs):
+        return await self.aprofile_tweets(**profile_kwargs)
+
+    async def aprofile_tweets(
+        self,
+        *,
+        usernames=None,
+        profile_urls=None,
+        limit: float = float("inf"),
+        per_profile_limit: Optional[int] = None,
+        max_pages_per_profile: Optional[int] = None,
+        resume: bool = False,
+        save_dir: str = "outputs",
+        custom_csv_name: Optional[str] = None,
+        cursor_handoff: bool = False,
+        max_account_switches: Optional[int] = None,
+        offline: Optional[bool] = None,
+        **legacy_kwargs,
+    ):
+        if legacy_kwargs:
+            unsupported = sorted(legacy_kwargs.keys())
+            raise TypeError(
+                "aprofile_tweets supports only explicit inputs: "
+                "`usernames`, `profile_urls`, `limit`, `per_profile_limit`, `max_pages_per_profile`, "
+                "`resume`, `save_dir`, `custom_csv_name`, `cursor_handoff`, `max_account_switches`, `offline`"
+                f" (unsupported: {', '.join(unsupported)})"
+            )
+
+        normalized = normalize_profile_targets_explicit(
+            usernames=usernames,
+            profile_urls=profile_urls,
+            context="profile_timeline",
+        )
+        targets = list(normalized.get("targets") or [])
+        if not targets:
+            logger.info("No valid user target provided for profile timeline request")
+            return []
+
+        csv_filename = self._build_profile_timeline_csv_filename(
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            targets=targets,
+        )
+
+        request_limit = self._coerce_request_limit(limit)
+        request_per_profile_limit = self._coerce_request_limit(per_profile_limit)
+        request_max_pages = self._coerce_request_limit(max_pages_per_profile)
+        request_max_switches = self._coerce_request_limit(max_account_switches)
+        configured_allow_anonymous = bool(getattr(self._v4_config.operations, "profile_timeline_allow_anonymous", False))
+        allow_anonymous = bool(configured_allow_anonymous if offline is None else offline)
+
+        query_hash = compute_query_hash(
+            {
+                "mode": "profile_timeline",
+                "targets": targets,
+                "limit": request_limit,
+                "per_profile_limit": request_per_profile_limit,
+                "max_pages_per_profile": request_max_pages,
+                "cursor_handoff": bool(cursor_handoff),
+                "max_account_switches": request_max_switches,
+                "allow_anonymous": allow_anonymous,
+                "save_dir": save_dir,
+                "custom_csv_name": custom_csv_name,
+            }
+        )
+        initial_cursors: dict[str, str] = {}
+        if resume:
+            initial_cursors = self._load_profile_timeline_resume_cursors(query_hash=query_hash)
+
+        profile_timeline_request = ProfileTimelineRequest(
+            targets=targets,
+            limit=request_limit,
+            per_profile_limit=request_per_profile_limit,
+            max_pages_per_profile=request_max_pages,
+            resume=resume,
+            query_hash=query_hash,
+            initial_cursors=initial_cursors,
+            cursor_handoff=bool(cursor_handoff),
+            max_account_switches=request_max_switches,
+            allow_anonymous=allow_anonymous,
+        )
+
+        return await self._run_profile_timeline_pipeline(
+            profile_timeline_request=profile_timeline_request,
+            csv_filename=csv_filename,
+            resume=resume,
+            query_hash=query_hash,
         )
 
     def get_follows(self, **scrape_kwargs):

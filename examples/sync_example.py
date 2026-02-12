@@ -100,7 +100,23 @@ def main() -> None:
     print("user_info.items:", len(profile_result.get("items") or []))
     print("user_info.resolved:", (profile_result.get("meta") or {}).get("resolved"))
 
-    # 5) Inspect DB state / maintenance helpers
+    # 5) Profile timeline scraping (explicit inputs only: usernames / profile_urls)
+    profile_tweets = scweet.profile_tweets(
+        usernames=["OpenAI", "elonmusk"],
+        profile_urls=["https://x.com/OpenAI"],
+        limit=200,
+        per_profile_limit=100,
+        max_pages_per_profile=20,
+        resume=True,
+        # offline=True,  # optional: scrape without accounts (best-effort, usually limited pages)
+        cursor_handoff=True,
+        max_account_switches=2,
+        save_dir=str(outputs_dir),
+        custom_csv_name="profiles_timeline.csv",
+    )
+    print("profile_tweets:", len(profile_tweets))
+
+    # 6) Inspect DB state / maintenance helpers
     db = ScweetDB(str(db_path))
     print("db.accounts_summary:", db.accounts_summary())
     print("db.list_accounts:", db.list_accounts(limit=5, eligible_only=True))

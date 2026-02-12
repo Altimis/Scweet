@@ -10,7 +10,7 @@ from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
 from .account_session import AccountSessionBuilder
-from .models import ProfileRequest, SearchRequest, SearchResult, TweetMedia, TweetRecord, TweetUser
+from .models import ProfileRequest, ProfileTimelineRequest, RunStats, SearchRequest, SearchResult, TweetMedia, TweetRecord, TweetUser
 from .query import build_effective_search_query, normalize_search_input
 
 JSON_DECODE_STATUS = 598
@@ -20,7 +20,10 @@ HTTP_MODE_ASYNC = "async"
 HTTP_MODE_SYNC = "sync"
 DEFAULT_USER_LOOKUP_QUERY_ID = "-oaLodhGbbnzJBACb1kk2Q"
 DEFAULT_USER_LOOKUP_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/UserByScreenName"
+DEFAULT_PROFILE_TIMELINE_QUERY_ID = "a3SQAz_VP9k8VWDr9bMcXQ"
+DEFAULT_PROFILE_TIMELINE_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/UserTweets"
 USER_LOOKUP_OPERATION = "user_lookup_screen_name"
+PROFILE_TIMELINE_OPERATION = "profile_timeline"
 logger = logging.getLogger(__name__)
 
 
@@ -271,6 +274,304 @@ class ApiEngine:
                 release_inc = {"daily_requests": max(1, len(targets))}
                 await self._maybe_await(self.accounts_repo.release(lease_id, fields_to_set=release_set, fields_to_inc=release_inc))
 
+    async def get_profile_tweets(self, request):
+        timeline_request = self._coerce_profile_timeline_request(request)
+        manifest = await self.manifest_provider.get_manifest()
+        targets = self._collect_profile_timeline_targets(timeline_request)
+        if not targets:
+            logger.info("Profile timeline request received no valid targets")
+            return {
+                "result": SearchResult(),
+                "resume_cursors": {},
+                "completed": True,
+                "limit_reached": False,
+            }
+
+        global_limit = self._coerce_positive_int(timeline_request.limit)
+        per_profile_limit = self._coerce_positive_int(timeline_request.per_profile_limit)
+        max_pages_per_profile = self._coerce_positive_int(timeline_request.max_pages_per_profile) or 30
+        cursor_handoff = bool(timeline_request.cursor_handoff)
+        allow_anonymous = bool(timeline_request.allow_anonymous)
+        if allow_anonymous:
+            cursor_handoff = False
+        configured_switches_raw = _config_value(self.config, "max_account_switches", 2)
+        try:
+            configured_switches = max(0, int(configured_switches_raw))
+        except Exception:
+            configured_switches = 2
+        if timeline_request.max_account_switches is None:
+            max_account_switches = configured_switches
+        else:
+            try:
+                max_account_switches = max(0, int(timeline_request.max_account_switches))
+            except Exception:
+                max_account_switches = configured_switches
+
+        resume_cursors = self._normalize_resume_cursors(timeline_request.initial_cursors)
+        collected_tweets: list[TweetRecord] = []
+        seen_tweet_ids: set[str] = set()
+        tasks_done = 0
+        tasks_failed = 0
+        retries = 0
+        limit_reached = False
+        exhausted_accounts = False
+
+        user_lookup_url = self._resolve_user_lookup_url(manifest)
+        timeline_url = self._resolve_profile_timeline_url(manifest)
+        timeout_s = int(getattr(manifest, "timeout_s", 20) or 20)
+
+        logger.info(
+            "Profile timeline request started targets=%s limit=%s per_profile_limit=%s max_pages_per_profile=%s cursor_handoff=%s allow_anonymous=%s",
+            len(targets),
+            global_limit if global_limit is not None else "inf",
+            per_profile_limit if per_profile_limit is not None else "inf",
+            max_pages_per_profile,
+            cursor_handoff,
+            allow_anonymous,
+        )
+
+        for idx, target in enumerate(targets):
+            if global_limit is not None and len(collected_tweets) >= global_limit:
+                limit_reached = True
+                break
+
+            target_key = self._profile_target_key(target)
+            starting_cursor = resume_cursors.get(target_key)
+            cursor = starting_cursor
+            username = await self._resolve_target_username(target=target)
+            if not username:
+                tasks_failed += 1
+                logger.warning(
+                    "Profile timeline target skipped index=%s reason=unresolved_username target=%r",
+                    idx,
+                    target,
+                )
+                continue
+
+            user_id: Optional[str] = None
+            target_done = False
+            target_pages = 0
+            target_tweets = 0
+            account_switches = 0
+            last_status = 200
+
+            active_session = None
+            leased_account: Optional[dict[str, Any]] = None
+            lease_id: Optional[str] = None
+            builder: Optional[AccountSessionBuilder] = None
+
+            logger.info(
+                "Profile timeline target start index=%s username=%s cursor=%s",
+                idx,
+                username,
+                bool(cursor),
+            )
+
+            try:
+                while target_pages < max_pages_per_profile:
+                    if global_limit is not None and len(collected_tweets) >= global_limit:
+                        limit_reached = True
+                        break
+                    if per_profile_limit is not None and target_tweets >= per_profile_limit:
+                        break
+
+                    if active_session is None:
+                        if allow_anonymous:
+                            try:
+                                built = self.session_factory()
+                                active_session = await self._maybe_await(built)
+                            except Exception:
+                                active_session = None
+                            leased_account = None
+                            lease_id = None
+                            builder = None
+                            if active_session is None:
+                                last_status = 503
+                                logger.warning("Profile timeline anonymous session could not be created")
+                                break
+                        else:
+                            active_session, leased_account, lease_id, builder = await self._acquire_profile_session()
+                            if active_session is None:
+                                exhausted_accounts = True
+                                last_status = 503
+                                logger.warning("Profile timeline request failed: no eligible account could be leased")
+                                break
+
+                    if not user_id:
+                        lookup_params = self._build_user_lookup_params(username, manifest)
+                        lookup_data, lookup_status, lookup_headers, lookup_snippet = await self._graphql_get(
+                            url=user_lookup_url,
+                            params=lookup_params,
+                            timeout_s=timeout_s,
+                            session=active_session,
+                            account_context=leased_account,
+                        )
+                        if self.accounts_repo is not None and lease_id and hasattr(self.accounts_repo, "record_usage"):
+                            await self._maybe_await(self.accounts_repo.record_usage(lease_id, pages=1, tweets=0))
+                        if lookup_status != 200 or lookup_data is None:
+                            last_status = int(lookup_status)
+                            if cursor_handoff and self._is_handoff_eligible_status(last_status) and account_switches < max_account_switches:
+                                retries += 1
+                                account_switches += 1
+                                logger.info(
+                                    "Profile timeline cursor handoff username=%s stage=user_lookup status=%s switch=%s/%s",
+                                    username,
+                                    last_status,
+                                    account_switches,
+                                    max_account_switches,
+                                )
+                                await self._close_profile_timeline_session(
+                                    session=active_session,
+                                    builder=builder,
+                                    lease_id=lease_id,
+                                    status_code=last_status,
+                                )
+                                active_session = None
+                                leased_account = None
+                                lease_id = None
+                                builder = None
+                                continue
+                            logger.warning(
+                                "Profile user lookup failed username=%s status=%s snippet=%s headers=%s",
+                                username,
+                                last_status,
+                                lookup_snippet,
+                                lookup_headers,
+                            )
+                            break
+
+                        user_result = self._extract_user_result(lookup_data)
+                        if not isinstance(user_result, dict):
+                            last_status = 404
+                            logger.warning("Profile user lookup failed username=%s status=404 reason=user_not_found", username)
+                            break
+
+                        resolved_user_id = str(user_result.get("rest_id") or user_result.get("id") or "").strip()
+                        if not resolved_user_id:
+                            legacy = user_result.get("legacy") if isinstance(user_result.get("legacy"), dict) else {}
+                            resolved_user_id = str(legacy.get("id_str") or "").strip()
+                        if not resolved_user_id:
+                            last_status = 404
+                            logger.warning("Profile user lookup failed username=%s status=404 reason=missing_user_id", username)
+                            break
+                        user_id = resolved_user_id
+
+                    timeline_params = self._build_profile_timeline_params(
+                        user_id=user_id,
+                        cursor=cursor,
+                        manifest=manifest,
+                        runtime_hints=None,
+                    )
+                    data, status_code, _headers, _snippet = await self._graphql_get(
+                        url=timeline_url,
+                        params=timeline_params,
+                        timeout_s=timeout_s,
+                        session=active_session,
+                        account_context=leased_account,
+                    )
+
+                    last_status = int(status_code)
+                    if status_code != 200 or data is None:
+                        if self.accounts_repo is not None and lease_id and hasattr(self.accounts_repo, "record_usage"):
+                            await self._maybe_await(self.accounts_repo.record_usage(lease_id, pages=1, tweets=0))
+                        if cursor_handoff and self._is_handoff_eligible_status(last_status) and account_switches < max_account_switches:
+                            retries += 1
+                            account_switches += 1
+                            logger.info(
+                                "Profile timeline cursor handoff username=%s stage=timeline status=%s switch=%s/%s",
+                                username,
+                                last_status,
+                                account_switches,
+                                max_account_switches,
+                            )
+                            await self._close_profile_timeline_session(
+                                session=active_session,
+                                builder=builder,
+                                lease_id=lease_id,
+                                status_code=last_status,
+                            )
+                            active_session = None
+                            leased_account = None
+                            lease_id = None
+                            builder = None
+                            continue
+                        break
+
+                    page_tweets, next_cursor = self._extract_profile_tweets_and_cursor(data)
+                    unique_added = 0
+                    for tweet in page_tweets:
+                        tweet_id = self._tweet_record_id(tweet)
+                        if tweet_id and tweet_id in seen_tweet_ids:
+                            continue
+                        if tweet_id:
+                            seen_tweet_ids.add(tweet_id)
+                        collected_tweets.append(tweet)
+                        unique_added += 1
+                        target_tweets += 1
+                        if global_limit is not None and len(collected_tweets) >= global_limit:
+                            limit_reached = True
+                            break
+                        if per_profile_limit is not None and target_tweets >= per_profile_limit:
+                            break
+
+                    target_pages += 1
+                    if self.accounts_repo is not None and lease_id and hasattr(self.accounts_repo, "record_usage"):
+                        await self._maybe_await(self.accounts_repo.record_usage(lease_id, pages=1, tweets=unique_added))
+                    cursor = next_cursor
+                    if limit_reached:
+                        break
+                    if per_profile_limit is not None and target_tweets >= per_profile_limit:
+                        break
+                    if not next_cursor:
+                        target_done = True
+                        break
+
+                resume_cursor_value = str(cursor).strip() if cursor else ""
+                if target_done or not resume_cursor_value:
+                    resume_cursors.pop(target_key, None)
+                else:
+                    resume_cursors[target_key] = resume_cursor_value
+
+                if target_done:
+                    tasks_done += 1
+                elif exhausted_accounts:
+                    break
+                elif last_status == 200:
+                    tasks_done += 1
+                else:
+                    tasks_failed += 1
+            finally:
+                await self._close_profile_timeline_session(
+                    session=active_session,
+                    builder=builder,
+                    lease_id=lease_id,
+                    status_code=last_status,
+                )
+
+        stats = RunStats(
+            tweets_count=len(collected_tweets),
+            tasks_total=len(targets),
+            tasks_done=tasks_done,
+            tasks_failed=tasks_failed,
+            retries=retries,
+        )
+        completed = not exhausted_accounts and not limit_reached and not resume_cursors
+
+        logger.info(
+            "Profile timeline request finished targets=%s tweets=%s completed=%s limit_reached=%s resumable_targets=%s",
+            len(targets),
+            len(collected_tweets),
+            completed,
+            limit_reached,
+            len(resume_cursors),
+        )
+        return {
+            "result": SearchResult(tweets=collected_tweets, stats=stats),
+            "resume_cursors": resume_cursors,
+            "completed": completed,
+            "limit_reached": limit_reached,
+        }
+
     async def get_follows(self, request):
         return {
             "follows": [],
@@ -291,6 +592,25 @@ class ApiEngine:
             }
             return ProfileRequest.model_validate(payload)
         return ProfileRequest.model_validate(request)
+
+    def _coerce_profile_timeline_request(self, request: Any) -> ProfileTimelineRequest:
+        if isinstance(request, ProfileTimelineRequest):
+            return request
+        if isinstance(request, dict):
+            payload = {
+                "targets": request.get("targets") or [],
+                "limit": request.get("limit"),
+                "per_profile_limit": request.get("per_profile_limit"),
+                "max_pages_per_profile": request.get("max_pages_per_profile"),
+                "resume": bool(request.get("resume", False)),
+                "query_hash": request.get("query_hash"),
+                "initial_cursors": request.get("initial_cursors") or {},
+                "cursor_handoff": bool(request.get("cursor_handoff", False)),
+                "max_account_switches": request.get("max_account_switches"),
+                "allow_anonymous": bool(request.get("allow_anonymous", False)),
+            }
+            return ProfileTimelineRequest.model_validate(payload)
+        return ProfileTimelineRequest.model_validate(request)
 
     def _collect_profile_targets(self, request: ProfileRequest) -> list[dict[str, str]]:
         out: list[dict[str, str]] = []
@@ -331,6 +651,52 @@ class ApiEngine:
             _append({"raw": str(profile_url), "source": "profile_urls", "profile_url": str(profile_url).strip()})
 
         return out
+
+    def _collect_profile_timeline_targets(self, request: ProfileTimelineRequest) -> list[dict[str, str]]:
+        out: list[dict[str, str]] = []
+        seen: set[str] = set()
+
+        for target in list(request.targets or []):
+            if not isinstance(target, dict):
+                continue
+            row = {
+                "raw": str(target.get("raw") or "").strip(),
+                "source": str(target.get("source") or "").strip(),
+                "username": str(target.get("username") or "").strip().lstrip("@"),
+                "profile_url": str(target.get("profile_url") or "").strip(),
+            }
+            key = self._profile_target_key(row)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            out.append(row)
+        return out
+
+    @staticmethod
+    def _normalize_resume_cursors(value: Any) -> dict[str, str]:
+        if not isinstance(value, dict):
+            return {}
+        out: dict[str, str] = {}
+        for key, cursor in value.items():
+            normalized_key = str(key or "").strip()
+            normalized_cursor = str(cursor or "").strip()
+            if not normalized_key or not normalized_cursor:
+                continue
+            out[normalized_key] = normalized_cursor
+        return out
+
+    @staticmethod
+    def _profile_target_key(target: dict[str, Any]) -> str:
+        username = str(target.get("username") or "").strip().lstrip("@")
+        if username:
+            return f"username:{username.lower()}"
+        profile_url = str(target.get("profile_url") or "").strip().lower()
+        if profile_url:
+            return f"url:{profile_url}"
+        raw = str(target.get("raw") or "").strip().lower()
+        if raw:
+            return f"raw:{raw}"
+        return ""
 
     async def _acquire_profile_session(self) -> tuple[Optional[Any], Optional[dict[str, Any]], Optional[str], Optional[AccountSessionBuilder]]:
         if self.accounts_repo is None or not hasattr(self.accounts_repo, "acquire_leases"):
@@ -390,6 +756,43 @@ class ApiEngine:
                 await self._maybe_await(self.accounts_repo.release(lease_id, fields_to_set={}, fields_to_inc={}))
             return None, None, None, None
 
+    async def _close_profile_timeline_session(
+        self,
+        *,
+        session: Any,
+        builder: Optional[AccountSessionBuilder],
+        lease_id: Optional[str],
+        status_code: int,
+    ) -> None:
+        if session is not None:
+            try:
+                if builder is not None and hasattr(builder, "close"):
+                    await self._maybe_await(builder.close(session))
+                else:
+                    await self._close_session(session)
+            except Exception:
+                pass
+
+        if lease_id and self.accounts_repo is not None and hasattr(self.accounts_repo, "release"):
+            fields_to_set: dict[str, Any] = {}
+            if status_code in {401, 403}:
+                fields_to_set["status"] = int(status_code)
+                fields_to_set["last_error_code"] = int(status_code)
+            elif status_code and status_code != 200:
+                fields_to_set["last_error_code"] = int(status_code)
+            else:
+                fields_to_set["last_error_code"] = None
+            try:
+                await self._maybe_await(self.accounts_repo.release(lease_id, fields_to_set=fields_to_set, fields_to_inc={}))
+            except Exception:
+                pass
+
+    @staticmethod
+    def _is_handoff_eligible_status(status_code: int) -> bool:
+        if status_code in {401, 403, 429, JSON_DECODE_STATUS, NETWORK_ERROR_STATUS}:
+            return True
+        return 500 <= int(status_code or 0) < 600
+
     async def _resolve_target_username(
         self,
         *,
@@ -417,6 +820,13 @@ class ApiEngine:
             return endpoint.format(query_id=query_id)
         return endpoint
 
+    def _resolve_profile_timeline_url(self, manifest) -> str:
+        query_id = (manifest.query_ids or {}).get(PROFILE_TIMELINE_OPERATION) or DEFAULT_PROFILE_TIMELINE_QUERY_ID
+        endpoint = (manifest.endpoints or {}).get(PROFILE_TIMELINE_OPERATION) or DEFAULT_PROFILE_TIMELINE_ENDPOINT
+        if "{query_id}" in endpoint:
+            return endpoint.format(query_id=query_id)
+        return endpoint
+
     def _build_user_lookup_params(self, username: str, manifest) -> dict[str, str]:
         variables = {
             "screen_name": username,
@@ -433,6 +843,43 @@ class ApiEngine:
         }
         field_toggles_payload = (
             manifest.field_toggles_for(USER_LOOKUP_OPERATION)
+            if hasattr(manifest, "field_toggles_for")
+            else None
+        )
+        if field_toggles_payload:
+            params["fieldToggles"] = json.dumps(field_toggles_payload, separators=(",", ":"))
+        return params
+
+    def _build_profile_timeline_params(
+        self,
+        *,
+        user_id: str,
+        cursor: Optional[str],
+        manifest,
+        runtime_hints: Optional[dict[str, Optional[int]]] = None,
+    ) -> dict[str, str]:
+        count = self._resolve_page_size(runtime_hints=runtime_hints)
+        variables: dict[str, Any] = {
+            "userId": str(user_id),
+            "count": int(count),
+            "includePromotedContent": True,
+            "withQuickPromoteEligibilityTweetFields": True,
+            "withVoice": True,
+        }
+        if cursor:
+            variables["cursor"] = cursor
+
+        features_payload = (
+            manifest.features_for(PROFILE_TIMELINE_OPERATION)
+            if hasattr(manifest, "features_for")
+            else (manifest.features or {})
+        )
+        params: dict[str, str] = {
+            "variables": json.dumps(variables, separators=(",", ":")),
+            "features": json.dumps(features_payload or {}, separators=(",", ":")),
+        }
+        field_toggles_payload = (
+            manifest.field_toggles_for(PROFILE_TIMELINE_OPERATION)
             if hasattr(manifest, "field_toggles_for")
             else None
         )
@@ -923,6 +1370,129 @@ class ApiEngine:
                 )
 
         return tweets, cursor
+
+    def _extract_profile_tweets_and_cursor(self, data: dict[str, Any]) -> Tuple[list[TweetRecord], Optional[str]]:
+        tweets: list[TweetRecord] = []
+        cursor: Optional[str] = None
+        instructions = self._extract_profile_timeline_instructions(data)
+
+        for instruction in instructions:
+            entries: list[dict[str, Any]] = []
+            if isinstance(instruction, dict):
+                instruction_entries = instruction.get("entries")
+                if isinstance(instruction_entries, list):
+                    entries.extend(item for item in instruction_entries if isinstance(item, dict))
+                instruction_entry = instruction.get("entry")
+                if isinstance(instruction_entry, dict):
+                    entries.append(instruction_entry)
+
+            for entry in entries:
+                entry_id = str(entry.get("entryId") or "")
+                content = entry.get("content", {}) if isinstance(entry.get("content"), dict) else {}
+                cursor_value = content.get("value")
+                cursor_type = str(content.get("cursorType") or "").strip().lower()
+                if cursor_value and isinstance(cursor_value, str):
+                    if entry_id.startswith("cursor-bottom-") or cursor_type == "bottom":
+                        cursor = cursor_value
+                    elif cursor is None and (entry_id.startswith("cursor-") or cursor_type):
+                        cursor = cursor_value
+
+                if not entry_id.startswith("tweet-"):
+                    continue
+
+                item_content = content.get("itemContent", {}) if isinstance(content.get("itemContent"), dict) else {}
+                tweet_result_raw = (
+                    item_content.get("tweet_results", {})
+                    .get("result", {})
+                )
+                if not isinstance(tweet_result_raw, dict):
+                    continue
+
+                tweet_result = tweet_result_raw
+                if "tweet" in tweet_result_raw and isinstance(tweet_result_raw.get("tweet"), dict):
+                    tweet_result = tweet_result_raw["tweet"]
+
+                legacy = tweet_result.get("legacy", {}) if isinstance(tweet_result.get("legacy"), dict) else {}
+                user_result = (
+                    tweet_result.get("core", {})
+                    .get("user_results", {})
+                    .get("result", {})
+                )
+                user_legacy = user_result.get("legacy", {}) if isinstance(user_result, dict) else {}
+
+                screen_name = user_legacy.get("screen_name") if isinstance(user_legacy, dict) else None
+                user_name = user_legacy.get("name") if isinstance(user_legacy, dict) else None
+
+                tweet_id = (
+                    legacy.get("id_str")
+                    or tweet_result.get("rest_id")
+                    or entry_id.replace("tweet-", "")
+                )
+
+                note_text = (
+                    tweet_result.get("note_tweet", {})
+                    .get("note_tweet_results", {})
+                    .get("result", {})
+                    .get("text")
+                )
+                text = note_text or legacy.get("full_text") or ""
+
+                media_urls: list[str] = []
+                for media in (legacy.get("extended_entities", {}) or {}).get("media", []) or []:
+                    if not isinstance(media, dict):
+                        continue
+                    url = media.get("media_url_https")
+                    if isinstance(url, str) and url:
+                        media_urls.append(url)
+
+                tweet_url = None
+                if screen_name and tweet_id:
+                    tweet_url = f"https://x.com/{screen_name}/status/{tweet_id}"
+
+                tweets.append(
+                    TweetRecord(
+                        tweet_id=str(tweet_id),
+                        user=TweetUser(screen_name=screen_name, name=user_name),
+                        timestamp=legacy.get("created_at"),
+                        text=text,
+                        comments=self._safe_int(legacy.get("reply_count")),
+                        likes=self._safe_int(legacy.get("favorite_count")),
+                        retweets=self._safe_int(legacy.get("retweet_count")),
+                        media=TweetMedia(image_links=media_urls),
+                        tweet_url=tweet_url,
+                        raw=tweet_result_raw,
+                    )
+                )
+
+        return tweets, cursor
+
+    @staticmethod
+    def _extract_profile_timeline_instructions(data: dict[str, Any]) -> list[dict[str, Any]]:
+        instructions = (
+            data.get("data", {})
+            .get("user", {})
+            .get("result", {})
+            .get("timeline", {})
+            .get("timeline", {})
+            .get("instructions", [])
+        )
+        if isinstance(instructions, list):
+            return instructions
+        return []
+
+    @staticmethod
+    def _tweet_record_id(tweet: Any) -> Optional[str]:
+        if tweet is None:
+            return None
+        if isinstance(tweet, dict):
+            value = tweet.get("tweet_id") or tweet.get("id")
+            if value:
+                return str(value)
+            return None
+        value = getattr(tweet, "tweet_id", None)
+        if value:
+            return str(value)
+        return None
 
     @staticmethod
     def _safe_int(value: Any) -> int:

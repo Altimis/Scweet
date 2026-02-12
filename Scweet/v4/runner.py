@@ -20,7 +20,7 @@ from .exceptions import (
 )
 from .http_utils import apply_proxies_to_session, normalize_http_proxies
 from .limiter import TokenBucketLimiter
-from .models import RunStats, SearchRequest, SearchResult
+from .models import ProfileTimelineRequest, RunStats, SearchRequest, SearchResult
 from .queue import InMemoryTaskQueue
 from .scheduler import build_tasks_for_intervals, split_time_intervals
 
@@ -172,6 +172,7 @@ class Runner:
 
         self.search_engine = self._resolve_engine(engines, "search_tweets")
         self.profile_engine = self._resolve_engine(engines, "get_profiles")
+        self.profile_timeline_engine = self._resolve_engine(engines, "get_profile_tweets")
         self.follows_engine = self._resolve_engine(engines, "get_follows")
         self.account_session_builder = _resolve(engines, "account_session_builder", "session_builder")
 
@@ -578,6 +579,32 @@ class Runner:
         if self.profile_engine is None:
             raise EngineError("No engine available for run_profiles")
         return await _maybe_await(self.profile_engine.get_profiles(profile_request))
+
+    async def run_profile_tweets(self, profile_timeline_request):
+        if self.profile_timeline_engine is None:
+            raise EngineError("No engine available for run_profile_tweets")
+        request = self._coerce_profile_timeline_request(profile_timeline_request)
+        response = await _maybe_await(self.profile_timeline_engine.get_profile_tweets(request))
+        if isinstance(response, dict):
+            payload = dict(response)
+            result_obj = payload.get("result")
+            if isinstance(result_obj, SearchResult):
+                return payload
+            payload["result"] = SearchResult()
+            return payload
+        if isinstance(response, SearchResult):
+            return {
+                "result": response,
+                "resume_cursors": {},
+                "completed": True,
+                "limit_reached": False,
+            }
+        return {
+            "result": SearchResult(),
+            "resume_cursors": {},
+            "completed": True,
+            "limit_reached": False,
+        }
 
     async def run_follows(self, follows_request):
         if self.follows_engine is None:
@@ -1117,6 +1144,14 @@ class Runner:
         if isinstance(search_request, dict):
             return SearchRequest.model_validate(search_request)
         return SearchRequest.model_validate(search_request)
+
+    @staticmethod
+    def _coerce_profile_timeline_request(profile_timeline_request: Any) -> ProfileTimelineRequest:
+        if isinstance(profile_timeline_request, ProfileTimelineRequest):
+            return profile_timeline_request
+        if isinstance(profile_timeline_request, dict):
+            return ProfileTimelineRequest.model_validate(profile_timeline_request)
+        return ProfileTimelineRequest.model_validate(profile_timeline_request)
 
     @staticmethod
     def _query_hash(payload: dict[str, Any]) -> str:

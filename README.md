@@ -12,8 +12,8 @@ Scweet is:
 - A hosted [**Apify Actor**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) (recommended for production runs and easy scaling).
 - A Python **library** (recommended when you want to embed scraping in your own codebase).
 
-Tweet search scraping in v4 is **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
-Use `search()/asearch()` for structured query inputs. `scrape()/ascrape()` remains for backward compatibility.
+Tweet search and profile timeline scraping in v4 are **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
+Use `search()/asearch()` for structured query inputs. Use `profile_tweets()/aprofile_tweets()` for profile timeline scraping. `scrape()/ascrape()` remains for backward compatibility.
 
 Full documentation: `DOCUMENTATION.md`
 
@@ -297,6 +297,53 @@ print(result["meta"])
 
 `get_user_information(...)` returns `list[dict]` by default. Set `include_meta=True` to get `{items, meta, status_code}`.
 
+## Profile Timeline
+
+Use `profile_tweets(...)` / `aprofile_tweets(...)` to scrape tweets directly from profile timelines (`UserTweets` endpoint).
+
+Accepted input fields:
+
+- `usernames=[...]`
+- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
+
+Main controls:
+
+- `limit`: global cap across all requested profiles
+- `per_profile_limit`: cap per profile target
+- `max_pages_per_profile`: hard page cap per profile
+- `resume=True`: continue from saved cursor state
+- `offline=True`: scrape profile timelines without leasing an account (best-effort, usually limited pages)
+- `cursor_handoff=True`: allow cursor continuation on another account for transient/rate/auth issues
+- `max_account_switches`: cap cursor handoffs per target
+
+Example:
+
+```python
+tweets = scweet.profile_tweets(
+    usernames=["OpenAI", "elonmusk"],
+    profile_urls=["https://x.com/OpenAI"],
+    limit=500,
+    per_profile_limit=250,
+    max_pages_per_profile=50,
+    resume=True,
+    offline=False,
+    cursor_handoff=True,
+    max_account_switches=2,
+    save_dir="outputs",
+    custom_csv_name="profiles_timeline.csv",
+)
+print(len(tweets))  # list[dict] of raw GraphQL tweet objects
+```
+
+You can also set a default via config:
+
+`overrides={"operations": {"profile_timeline_allow_anonymous": True}}`
+
+Aliases:
+
+- `get_profile_timeline(...)` (sync)
+- `aget_profile_timeline(...)` (async)
+
 ## Resume + Dedupe
 
 - `resume=True` appends to existing CSV and JSON outputs.
@@ -324,7 +371,6 @@ print(db.collapse_duplicates_by_auth_token(dry_run=True))
 ## Coming Soon
 
 - Followers/following scraping
-- Profile timeline scraping
 
 ## More Details
 

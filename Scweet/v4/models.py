@@ -58,6 +58,19 @@ class ProfileRequest(BaseModel):
     login: bool = False
 
 
+class ProfileTimelineRequest(BaseModel):
+    targets: list[dict[str, Any]] = Field(default_factory=list)
+    limit: Optional[int] = None
+    per_profile_limit: Optional[int] = None
+    max_pages_per_profile: Optional[int] = None
+    resume: bool = False
+    query_hash: Optional[str] = None
+    initial_cursors: dict[str, str] = Field(default_factory=dict)
+    cursor_handoff: bool = False
+    max_account_switches: Optional[int] = None
+    allow_anonymous: bool = False
+
+
 class FollowsRequest(BaseModel):
     handle: Optional[str] = None
     user_id: Optional[str] = None

@@ -1,12 +1,13 @@
 # Scweet v4 Documentation
 
-Scweet v4 preserves the familiar v3 surface (`Scweet(...)`, `scrape/ascrape`, output filenames, resume flags) while moving tweet search scraping to an **API-only** core and introducing **DB-first account provisioning** (SQLite). For new code, prefer `search(...)` / `asearch(...)` for structured query inputs.
+Scweet v4 preserves the familiar v3 surface (`Scweet(...)`, `scrape/ascrape`, output filenames, resume flags) while moving tweet scraping to an **API-only** core and introducing **DB-first account provisioning** (SQLite). For new code, prefer `search(...)` / `asearch(...)` for structured query inputs and `profile_tweets(...)` / `aprofile_tweets(...)` for profile timeline scraping.
 
 ## What’s In v4 (and What Isn’t)
 
 Supported:
 
 - Tweet search scraping (GraphQL SearchTimeline), API-only.
+- Profile timeline scraping (GraphQL UserTweets), API-only.
 - Multiple provisioning sources: `.env`, `accounts.txt`, `cookies.json`, Netscape `cookies.txt`, direct `cookies=` payload.
 - Local SQLite state: accounts leasing/cooldowns, resume checkpoints, run stats, manifest cache.
 - Optional internal cookie bootstrap with `nodriver` (credentials -> cookies). No scraping via browser.
@@ -15,7 +16,6 @@ Not implemented (v4.x):
 
 - Followers/following APIs currently return `501 Not implemented`.
 - API login/provisioning with credentials
-- API profile timeline scraping
 
 ## Installation
 
@@ -374,11 +374,59 @@ Notes:
 - The default return value is `list[dict]` profile records (`result["items"]` when `include_meta=True`).
 - Set `include_meta=True` to get the response envelope `{items, meta, status_code}`.
 
+## Profile Timeline API
+
+Use `profile_tweets(...)` / `aprofile_tweets(...)` to scrape tweets directly from profile timelines (`UserTweets`).
+
+Accepted input fields (explicit only):
+
+- `usernames=[...]`
+- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
+
+Main parameters:
+
+- `limit`: global cap across all requested profiles.
+- `per_profile_limit`: cap per profile target.
+- `max_pages_per_profile`: hard page cap per profile.
+- `resume`: continue from saved per-profile cursors.
+- `offline`: scrape without leasing an account (best-effort; X usually limits depth/pages for anonymous access).
+- `cursor_handoff`: allow same-cursor continuation on another account for retryable failures.
+- `max_account_switches`: max handoffs per profile target.
+- `save_dir`, `custom_csv_name`: output path controls, same as search.
+
+Simple usage:
+
+```python
+tweets = scweet.profile_tweets(
+    usernames=["OpenAI", "elonmusk"],
+    profile_urls=["https://x.com/OpenAI"],
+    limit=500,
+    per_profile_limit=250,
+    max_pages_per_profile=50,
+    resume=True,
+    offline=False,
+    cursor_handoff=True,
+    max_account_switches=2,
+    save_dir="outputs",
+    custom_csv_name="profiles_timeline.csv",
+)
+print(len(tweets))
+```
+
+Aliases:
+
+- `get_profile_timeline(...)` (sync)
+- `aget_profile_timeline(...)` (async)
+
+Default config knob:
+
+- `operations.profile_timeline_allow_anonymous` (`False` by default). When enabled, profile timeline scraping can run without leasing accounts unless overridden per call (`offline=`).
+
 ## Output (Return + Files)
 
 Return value:
 
-- `search/asearch/scrape/ascrape` returns `list[dict]` of **raw GraphQL tweet objects** (`tweet_results.result`).
+- `search/asearch/scrape/ascrape/profile_tweets/aprofile_tweets/get_profile_timeline/aget_profile_timeline` return `list[dict]` of **raw GraphQL tweet objects** (`tweet_results.result`).
 
 File outputs are controlled by `config.output.format`:
 
@@ -520,7 +568,7 @@ Control via `engine.api_http_impersonate` (e.g. `"chrome124"`).
 
 Twitter’s web GraphQL layer changes frequently. Scweet externalizes the most common drift points into a small manifest:
 
-- GraphQL `query_id`s for operations (for example: `search_timeline`, `user_lookup_screen_name`)
+- GraphQL `query_id`s for operations (for example: `search_timeline`, `user_lookup_screen_name`, `profile_timeline`)
 - endpoint templates per operation
 - global `features` dict passed to GraphQL
 - optional per-operation overrides:

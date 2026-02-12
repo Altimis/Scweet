@@ -18,10 +18,12 @@ _DEFAULT_MANIFEST = {
     "query_ids": {
         "search_timeline": "f_A-Gyo204PRxixpkrchJg",
         "user_lookup_screen_name": "-oaLodhGbbnzJBACb1kk2Q",
+        "profile_timeline": "a3SQAz_VP9k8VWDr9bMcXQ",
     },
     "endpoints": {
         "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline",
         "user_lookup_screen_name": "https://x.com/i/api/graphql/{query_id}/UserByScreenName",
+        "profile_timeline": "https://x.com/i/api/graphql/{query_id}/UserTweets",
     },
     "operation_features": {
         "user_lookup_screen_name": {
@@ -37,7 +39,10 @@ _DEFAULT_MANIFEST = {
         "user_lookup_screen_name": {
             "withPayments": False,
             "withAuxiliaryUserLabels": True,
-        }
+        },
+        "profile_timeline": {
+            "withArticlePlainText": False,
+        },
     },
     "features": {
         "rweb_video_screen_enabled": False,

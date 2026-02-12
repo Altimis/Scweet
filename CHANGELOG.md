@@ -39,6 +39,13 @@ All notable changes to this project are documented in this file.
   - accepts explicit targets (`usernames`, `profile_urls`)
   - default return is `list[dict]` profile records (`items`)
   - optional response envelope via `include_meta=True` (`{items, meta, status_code}`)
+- Profile timeline scraping via:
+  - `profile_tweets(...)` / `aprofile_tweets(...)` (primary API)
+  - `get_profile_timeline(...)` / `aget_profile_timeline(...)` (aliases)
+  - accepts explicit targets (`usernames`, `profile_urls`)
+  - supports cursor resume, per-profile/page limits, and optional cursor handoff across accounts
+  - supports optional anonymous mode (`offline=True`) for best-effort profile timeline scraping without account leasing
+  - returns `list[dict]` raw tweet objects and uses the same output writing path as search APIs
 - Account recovery and diagnostics:
   - `repair_account(username, ...)` for targeted per-account recovery (optional auth_token cookie refresh + state reset)
   - richer lease-failure diagnostics in logs when no account is eligible (blocked reason counts + sample rows)
