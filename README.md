@@ -102,10 +102,9 @@ Example input templates (placeholders):
 - `examples/accounts.txt`
 - `examples/cookies.json`
 
-## Configure (Keep It Simple)
+## Config:
 
-If you want one place to control everything, build a config and pass it to `Scweet(config=...)`. Keep most advanced knobs in `DOCUMENTATION.md`.
-
+If you want one place to control everything, build a config and pass it to `Scweet(config=...)`.
 ```python
 from Scweet import Scweet, ScweetConfig
 
@@ -137,7 +136,7 @@ cfg = ScweetConfig.from_sources(
 scweet = Scweet(config=cfg)
 ```
 
-Key knobs most users care about:
+Key knobs:
 
 - `pool.concurrency`
 - `operations.account_requests_per_min`
