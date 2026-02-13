@@ -11,7 +11,8 @@
 - A Python [**library**](https://pypi.org/project/Scweet) (recommended when you want to embed scraping in your own codebase).
 
 Tweet search and profile timeline scraping in v4 are **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
-Use `search()/asearch()` for structured query inputs. Use `profile_tweets()/aprofile_tweets()` for profile timeline scraping. `scrape()/ascrape()` remains for backward compatibility.
+- Use `search()/asearch()` for structured query inputs.
+- Use `profile_tweets()/aprofile_tweets()` for profile timeline scraping. 
 
 Full documentation: `DOCUMENTATION.md`
 
