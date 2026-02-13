@@ -5,7 +5,7 @@
 
 > Note: Scweet is not affiliated with Twitter/X. Use responsibly and lawfully.
 
-# Scweet is:
+**Scweet is**:
 
 - A hosted [**Apify Actor**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) (recommended for production runs and easy scaling).
 - A Python [**library**](https://pypi.org/project/Scweet) (recommended when you want to embed scraping in your own codebase).
@@ -25,15 +25,6 @@ If you want the fastest path to results (and the best option for production work
 [![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
 
 For more details, see Apify Python client quickstart: https://apify.com/altimis/scweet/api/python
-
-## Should I Use the Actor or the Library?
-
-| Use case | Recommended |
-| --- | --- |
-| You want hosted runs, scheduling, scalable execution, and datasets | Apify Actor |
-| You want to embed scraping inside your own Python pipeline/app | Python library |
-| You don’t want to manage local state DB / provisioning details | Apify Actor |
-| You need full control over provisioning/account leasing | Python library |
 
 ## Trust & Expectations
 
