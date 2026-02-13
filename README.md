@@ -1,5 +1,3 @@
-# Scweet v4: Twitter/X Scraper
-
 [![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
 [![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
 [![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
@@ -7,7 +5,7 @@
 
 > Note: Scweet is not affiliated with Twitter/X. Use responsibly and lawfully.
 
-Scweet is:
+# Scweet is:
 
 - A hosted [**Apify Actor**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) (recommended for production runs and easy scaling).
 - A Python [**library**](https://pypi.org/project/Scweet) (recommended when you want to embed scraping in your own codebase).
