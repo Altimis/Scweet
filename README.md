@@ -1,5 +1,3 @@
-# Scweet v4: Twitter/X Scraper
-
 [![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
 [![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
 [![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
@@ -13,11 +11,12 @@ Scweet is:
 - A Python [**library**](https://pypi.org/project/Scweet) (recommended when you want to embed scraping in your own codebase).
 
 Tweet search, profile timeline, and follows scraping in v4 are **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
-Use `search()/asearch()` for structured query inputs, `profile_tweets()/aprofile_tweets()` for profile timelines, and `get_followers()/get_following()/...` for follows. `scrape()/ascrape()` remains for backward compatibility.
+Use `search()/asearch()` for structured query inputs, `profile_tweets()/aprofile_tweets()` for profile timelines, and `get_followers()/get_following()/...` for follows.
 
 Full documentation: `DOCUMENTATION.md`
 
-## Run Scweet on Apify (Hosted)
+## Run Scweet on Apify, *free plan included*: 
+> No accounts/orchestration/proxies headache: provide your search details and download your data in one click.
 
 If you want the fastest path to results (and the best option for production workflows), use the hosted Apify Actor:
 
@@ -27,21 +26,6 @@ If you want the fastest path to results (and the best option for production work
 [![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
 
 For more details, see Apify Python client quickstart: https://apify.com/altimis/scweet/api/python
-
-## Should I Use the Actor or the Library?
-
-| Use case | Recommended |
-| --- | --- |
-| You want hosted runs, scheduling, scalable execution, and datasets | Apify Actor |
-| You want to embed scraping inside your own Python pipeline/app | Python library |
-| You don’t want to manage local state DB / provisioning details | Apify Actor |
-| You need full control over provisioning/account leasing | Python library |
-
-## Trust & Expectations
-
-- This is scraping (Twitter/X web GraphQL), not an official API.
-- You need accounts/cookies. Rate limits and anti-bot controls vary.
-- For production workflows, the Apify Actor is usually the simplest and most reliable option.
 
 ## Installation (Scweet library)
 
@@ -104,7 +88,7 @@ Example input templates (placeholders):
 - `examples/accounts.txt`
 - `examples/cookies.json`
 
-## Configure (Keep It Simple)
+## Config
 
 If you want one place to control everything, build a config and pass it to `Scweet(config=...)`. Keep most advanced knobs in `DOCUMENTATION.md`.
 
@@ -140,7 +124,7 @@ cfg = ScweetConfig.from_sources(
 scweet = Scweet(config=cfg)
 ```
 
-Key knobs most users care about:
+Key knobs:
 
 - `pool.concurrency`
 - `operations.account_requests_per_min`
@@ -246,25 +230,15 @@ Recommended methods:
 - `asearch(...)`: async structured search API.
 - `scrape(...)` and `ascrape(...)`: backward-compatible wrappers.
 
-Key canonical search inputs:
+Most-used search inputs:
 
-- `since`, `until` (YYYY-MM-DD)
-- `search_query`
-- `all_words`, `any_words`, `exact_phrases`, `exclude_words`
-- `from_users`, `to_users`, `mentioning_users`
-- `hashtags_any`, `hashtags_exclude`
-- `tweet_type` (`all`, `originals_only`, `replies_only`, `retweets_only`, `exclude_replies`, `exclude_retweets`)
-- `verified_only`, `blue_verified_only`
-- `has_images`, `has_videos`, `has_links`, `has_mentions`, `has_hashtags`
-- `min_likes`, `min_replies`, `min_retweets`
-- `place`, `geocode`, `near`, `within`
-- `lang`
-- `display_type` ("Top" or "Latest")
-- `limit` (best-effort per run)
-- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results
-- `resume=True` appends to outputs and continues using the configured resume mode
-- `save` (`False` by default): enable file writing for this call
-- `save_format` (`csv|json|both|none`): used only when `save=True`
+- `since`, `until` (YYYY-MM-DD), `search_query`
+- query filters: `all_words`, `any_words`, `exact_phrases`, `exclude_words`, user filters, hashtag filters
+- quality filters: `tweet_type`, media/link/mention/hashtag flags, `verified_only`, minimum engagement fields
+- run controls: `limit`, `resume`, `max_empty_pages`
+- output controls: `save` (`False` by default), `save_format` (`csv|json|both|none`, only used when `save=True`)
+
+For the full input matrix and advanced behavior notes, see `DOCUMENTATION.md`.
 
 Legacy query aliases still accepted (deprecated in v4.x):
 
@@ -282,6 +256,24 @@ File writing is controlled per call via `save` + `save_format`:
 - `none`: return only
 
 Writing happens only when `save=True`. If `save=True` and `save_format` is omitted, Scweet uses config `output.format` (if not set or `none`, it won't write).
+
+Tiny examples:
+
+```python
+# In-memory only (default)
+tweets = scweet.search(since="2026-02-01", until="2026-02-02", search_query="openai")
+
+# Write to disk
+tweets = scweet.search(
+    since="2026-02-01",
+    until="2026-02-02",
+    search_query="openai",
+    save=True,
+    save_format="csv",
+    save_dir="outputs",
+    custom_csv_name="openai.csv",
+)
+```
 
 ## Profile Information
 
@@ -398,9 +390,7 @@ Main controls:
 - `save` (`False` by default): enable file writing for this call
 - `save_format` (`csv|json|both|none`): used only when `save=True`
 - `raw_json` (`False` by default): for follows JSON/output, choose curated rows (`False`) or raw user payload rows (`True`)
-- account pacing/cooldown uses the same knobs as search: `operations.account_requests_per_min`, `operations.account_min_delay_s`, and cooldown policy (`cooldown_*`)
-- `x-rate-limit-remaining` is enforced preemptively: when a `200` response reports exhausted remaining budget, the account is treated as rate-limited (cooldown from `x-rate-limit-reset` when present), then handoff/stop logic is applied
-- follows page usage increments per-account item pressure using `unique_results` (recorded through the same daily counter field used by search)
+- account pacing/cooldown and rate-limit handling follow the same protections as search
 
 Example:
 
@@ -431,7 +421,7 @@ Return value is `list[dict]`. Each item includes:
 - user fields (`user_id`, `username`, counts, verification flags, `raw`) when `raw_json=False` (default)
 - raw payload rows (`follow_key`, `type`, `target`, `raw`) when `raw_json=True`
 
-Follows methods use the same per-call `save_format` contract:
+Follows methods use the same per-call `save` + `save_format` contract:
 
 - `csv`: write follows CSV
 - `json`: write follows JSON rows (`raw_json=False`: curated rows, `raw_json=True`: full payload rows)
@@ -465,6 +455,12 @@ print(db.collapse_duplicates_by_auth_token(dry_run=True))
 ## More Details
 
 See `DOCUMENTATION.md` for the full guide (cookies formats, logging setup, strict mode, manifest updates, advanced config knobs).
+
+## Trust & Expectations
+
+- This is scraping (Twitter/X web GraphQL), not an official API.
+- You need accounts/cookies. Rate limits and anti-bot controls vary.
+- For production workflows, the Apify Actor is usually the simplest and most reliable option.
 
 ## Contribute
 We welcome **PRs**, bug reports, and feature suggestions!  

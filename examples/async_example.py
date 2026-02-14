@@ -96,6 +96,7 @@ async def main() -> None:
     followers = await scweet.aget_followers(
         usernames=["OpenAI", "elonmusk"],
         profile_urls=["https://x.com/OpenAI"],
+        user_ids=["44196397"],  # optional: target by id directly
         limit=200,
         per_profile_limit=100,
         max_pages_per_profile=20,

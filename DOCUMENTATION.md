@@ -15,7 +15,7 @@ Supported:
 
 Not implemented (v4.x):
 
-- API login/provisioning with credentials
+- Browserless API login/provisioning with credentials (nodriver bootstrap is available)
 
 ## Installation
 
@@ -50,6 +50,8 @@ tweets = scweet.search(
     resume=True,
     save_dir="outputs",
     custom_csv_name="bitcoin.csv",
+    save=True,
+    save_format="csv",
 )
 
 print(len(tweets))  # list[dict] of raw GraphQL tweet objects
@@ -76,8 +78,7 @@ tweets = await scweet.asearch(
     min_likes=20,
     limit=50,
     resume=True,
-    save_dir="outputs",
-    custom_csv_name="nb_bitcoin.csv",
+    # in-memory only by default (`save=False`)
 )
 ```
 
@@ -216,7 +217,7 @@ Account leasing, rate limiting, retries, and cooldown policy.
 | `operations.account_lease_ttl_s` | `int` | `120`                        | How long a leased account stays reserved before expiring (crash safety). |
 | `operations.account_lease_heartbeat_s` | `float` | `30.0`                       | How often workers extend the lease while running. Set `0` to disable heartbeats. |
 | `operations.proxy_check_on_lease` | `bool` | `True`                       | Optional proxy smoke-check when building/leasing account sessions (helps fail fast on bad proxies). |
-| `operations.proxy_check_url` | `str` | `"https://x.com/robots.txt"` | URL used by the optional proxy smoke-check (default returns the proxy egress IP). |
+| `operations.proxy_check_url` | `str` | `"https://x.com/robots.txt"` | URL used by the optional proxy smoke-check. Default is `https://x.com/robots.txt`. |
 | `operations.proxy_check_timeout_s` | `float` | `10.0`                       | Timeout for the optional proxy smoke-check. |
 | `operations.account_daily_requests_limit` | `int` | `30`                         | Per-account daily cap (UTC) on *requests/pages*; accounts above this cap become ineligible for leasing until reset. |
 | `operations.account_daily_tweets_limit` | `int` | `600`                        | Per-account daily cap (UTC) on *tweets returned*; accounts above this cap become ineligible for leasing until reset. |
@@ -503,7 +504,7 @@ Output shape:
   - `target` (the requested profile this row belongs to)
   - user fields (`user_id`, `username`, counts, verification flags, and `raw`) when `raw_json=False` (default)
   - raw payload rows (`follow_key`, `type`, `target`, `raw`) when `raw_json=True`
-- File writing uses per-call `save_format`:
+- File writing uses per-call `save` + `save_format`:
   - `csv`: follows CSV rows
   - `json`: follows JSON rows (`raw_json=False`: curated rows, `raw_json=True`: full payload rows)
   - `both`: CSV + JSON
@@ -520,7 +521,7 @@ Return value:
 
 File outputs are controlled per call via `save` + `save_format`:
 
-- `csv` (default): curated CSV schema with important fields
+- `csv`: curated CSV schema with important fields
 - `json`: raw tweet objects saved as JSON array
 - `both`: write CSV + JSON
 - `none`: don’t write files
@@ -637,7 +638,7 @@ Optional fail-fast proxy check:
 
 - `config.operations.proxy_check_on_lease=True` will run a cheap proxy-only connectivity check (no account cookies/headers).
 - `config.operations.proxy_check_url` and `config.operations.proxy_check_timeout_s` control the check.
-  - Default URL is an IP-echo endpoint so you can validate proxy egress.
+  - Default URL is `https://x.com/robots.txt`. If you want proxy egress verification, set an IP-echo URL explicitly.
 
 ### User-Agent policy
 
@@ -704,6 +705,5 @@ Strict mode:
 
 ## Future Work (Planned)
 
-- Implement follows APIs (API-only) to replace legacy browser behavior.
-- Implement API-based login for accounts provision using username/password + email/2fa.
+- Implement browserless API-based login for account provisioning using username/password + email/2fa.
 - Expand manifest coverage (variable schema, optional toggles) where possible.
