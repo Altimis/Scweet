@@ -14,16 +14,22 @@ from .async_tools import call_in_thread
 logger = logging.getLogger(__name__)
 
 _DEFAULT_MANIFEST = {
-    "version": "v4-default-1",
+    "version": "v4-default-4",
     "query_ids": {
         "search_timeline": "f_A-Gyo204PRxixpkrchJg",
         "user_lookup_screen_name": "-oaLodhGbbnzJBACb1kk2Q",
         "profile_timeline": "a3SQAz_VP9k8VWDr9bMcXQ",
+        "followers": "efNzdTpE-mkUcLARCd3RPQ",
+        "following": "M3LO-sJg6BCWdEliN_C2fQ",
+        "verified_followers": "YGl_IyrL0bFU7KHxQoSRVg",
     },
     "endpoints": {
         "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline",
         "user_lookup_screen_name": "https://x.com/i/api/graphql/{query_id}/UserByScreenName",
         "profile_timeline": "https://x.com/i/api/graphql/{query_id}/UserTweets",
+        "followers": "https://x.com/i/api/graphql/{query_id}/Followers",
+        "following": "https://x.com/i/api/graphql/{query_id}/Following",
+        "verified_followers": "https://x.com/i/api/graphql/{query_id}/BlueVerifiedFollowers",
     },
     "operation_features": {
         "user_lookup_screen_name": {
@@ -86,7 +92,7 @@ _DEFAULT_MANIFEST = {
 
 
 class ManifestModel(BaseModel):
-    version: str = "v4-default-1"
+    version: str = "v4-default-4"
     fingerprint: Optional[str] = None
     query_ids: dict[str, str] = Field(default_factory=dict)
     endpoints: dict[str, str] = Field(default_factory=dict)

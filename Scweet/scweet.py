@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import inspect
 import json
 import logging
 import os
@@ -106,6 +107,210 @@ def _read_existing_tweet_ids_from_json(path: str) -> set[str]:
         tid = _tweet_rest_id_from_raw(item)
         if tid:
             out.add(tid)
+    return out
+
+
+FOLLOWS_CSV_HEADER = [
+    "follow_key",
+    "type",
+    "target_username",
+    "target_profile_url",
+    "target_source",
+    "target_raw",
+    "user_id",
+    "username",
+    "name",
+    "description",
+    "location",
+    "created_at",
+    "followers_count",
+    "following_count",
+    "statuses_count",
+    "favourites_count",
+    "media_count",
+    "listed_count",
+    "verified",
+    "blue_verified",
+    "protected",
+    "profile_image_url",
+    "profile_banner_url",
+    "url",
+]
+
+
+PROFILES_CSV_HEADER = [
+    "profile_key",
+    "input_raw",
+    "input_source",
+    "user_id",
+    "username",
+    "name",
+    "description",
+    "location",
+    "created_at",
+    "followers_count",
+    "following_count",
+    "statuses_count",
+    "favourites_count",
+    "media_count",
+    "listed_count",
+    "verified",
+    "blue_verified",
+    "protected",
+    "profile_image_url",
+    "profile_banner_url",
+    "url",
+]
+
+
+def _follow_record_key(value: Any) -> Optional[str]:
+    if not isinstance(value, dict):
+        return None
+    explicit = str(value.get("follow_key") or "").strip()
+    if explicit:
+        return explicit
+    follow_type = str(value.get("type") or "").strip().lower()
+    target = value.get("target") if isinstance(value.get("target"), dict) else {}
+    target_username = str(target.get("username") or "").strip().lstrip("@").lower()
+    target_profile_url = str(target.get("profile_url") or "").strip().lower()
+    target_raw = str(target.get("raw") or "").strip().lower()
+    identity = str(value.get("user_id") or "").strip()
+    if not identity:
+        identity = str(value.get("username") or "").strip().lower()
+    if not identity:
+        raw_user = value.get("raw") if isinstance(value.get("raw"), dict) else {}
+        legacy = raw_user.get("legacy") if isinstance(raw_user.get("legacy"), dict) else {}
+        identity = str(
+            raw_user.get("rest_id")
+            or raw_user.get("id")
+            or legacy.get("id_str")
+            or legacy.get("screen_name")
+            or ""
+        ).strip()
+        if identity and str(legacy.get("screen_name") or "").strip().lower() == identity.lower():
+            identity = identity.lower()
+    if not identity:
+        return None
+    target_ref = target_username or target_profile_url or target_raw or "-"
+    follow_ref = follow_type or "following"
+    return f"{follow_ref}|{target_ref}|{identity}"
+
+
+def _read_existing_follow_keys_from_csv(path: str) -> set[str]:
+    try:
+        if not os.path.exists(path) or os.path.getsize(path) <= 0:
+            return set()
+    except Exception:
+        return set()
+
+    try:
+        with open(path, "r", encoding="utf-8", newline="") as handle:
+            reader = csv.reader(handle)
+            header = next(reader, None) or []
+            header = [str(col).lstrip("\ufeff") for col in header]
+            if "follow_key" not in header:
+                return set()
+            idx = header.index("follow_key")
+            out: set[str] = set()
+            for row in reader:
+                if not row or idx >= len(row):
+                    continue
+                value = str(row[idx]).strip()
+                if value:
+                    out.add(value)
+            return out
+    except Exception:
+        return set()
+
+
+def _read_existing_follow_keys_from_json(path: str) -> set[str]:
+    try:
+        if not os.path.exists(path) or os.path.getsize(path) <= 0:
+            return set()
+    except Exception:
+        return set()
+
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except Exception:
+        return set()
+    if not isinstance(payload, list):
+        return set()
+
+    out: set[str] = set()
+    for row in payload:
+        key = _follow_record_key(row)
+        if key:
+            out.add(key)
+    return out
+
+
+def _profile_record_key(value: Any) -> Optional[str]:
+    if not isinstance(value, dict):
+        return None
+    input_node = value.get("input") if isinstance(value.get("input"), dict) else {}
+    target_ref = (
+        str(input_node.get("raw") or "").strip()
+        or str(input_node.get("source") or "").strip()
+        or "-"
+    ).lower()
+
+    identity = str(value.get("user_id") or "").strip()
+    if not identity:
+        identity = str(value.get("username") or "").strip().lower()
+    if not identity:
+        return None
+    return f"{target_ref}|{identity}"
+
+
+def _read_existing_profile_keys_from_csv(path: str) -> set[str]:
+    try:
+        if not os.path.exists(path) or os.path.getsize(path) <= 0:
+            return set()
+    except Exception:
+        return set()
+
+    try:
+        with open(path, "r", encoding="utf-8", newline="") as handle:
+            reader = csv.reader(handle)
+            header = next(reader, None) or []
+            header = [str(col).lstrip("\ufeff") for col in header]
+            if "profile_key" not in header:
+                return set()
+            idx = header.index("profile_key")
+            out: set[str] = set()
+            for row in reader:
+                if not row or idx >= len(row):
+                    continue
+                value = str(row[idx]).strip()
+                if value:
+                    out.add(value)
+            return out
+    except Exception:
+        return set()
+
+
+def _read_existing_profile_keys_from_json(path: str) -> set[str]:
+    try:
+        if not os.path.exists(path) or os.path.getsize(path) <= 0:
+            return set()
+    except Exception:
+        return set()
+
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except Exception:
+        return set()
+    if not isinstance(payload, list):
+        return set()
+
+    out: set[str] = set()
+    for row in payload:
+        key = _profile_record_key(row)
+        if key:
+            out.add(key)
     return out
 
 
@@ -494,13 +699,103 @@ class Scweet:
         except Exception:
             return None
 
+    @staticmethod
+    def _coerce_max_empty_pages(value: Any) -> int:
+        try:
+            parsed = int(value)
+        except Exception:
+            return 1
+        return max(1, parsed)
+
+    def _resolve_max_empty_pages(self, value: Any) -> int:
+        if value is not None:
+            return self._coerce_max_empty_pages(value)
+        operations = getattr(self._v4_config, "operations", None)
+        configured = getattr(operations, "max_empty_pages", 1)
+        return self._coerce_max_empty_pages(configured)
+
+    @staticmethod
+    def _coerce_save_format(value: Any) -> Optional[str]:
+        if value is None:
+            return None
+        fmt = str(value).strip().lower()
+        if fmt in {"csv", "json", "both", "none"}:
+            return fmt
+        return None
+
+    def _resolve_save_format(self, value: Any, *, save: bool = False) -> str:
+        if not self._coerce_bool_flag(save, default=False):
+            return "none"
+        explicit = self._coerce_save_format(value)
+        if explicit is not None:
+            return explicit
+        configured = getattr(getattr(self._v4_config, "output", None), "format", None)
+        cfg = self._coerce_save_format(configured)
+        if cfg is not None:
+            return cfg
+        return "none"
+
+    @staticmethod
+    def _coerce_bool_flag(value: Any, *, default: bool = False) -> bool:
+        if isinstance(value, bool):
+            return value
+        if value is None:
+            return default
+        if isinstance(value, (int, float)):
+            return bool(value)
+        text = str(value).strip().lower()
+        if not text:
+            return default
+        if text in {"1", "true", "yes", "y", "on"}:
+            return True
+        if text in {"0", "false", "no", "n", "off"}:
+            return False
+        return default
+
+    @staticmethod
+    def _merge_input_values(*values: Any) -> Optional[list[Any]]:
+        out: list[Any] = []
+        for value in values:
+            if value is None:
+                continue
+            if isinstance(value, (list, tuple, set)):
+                for item in value:
+                    if item is None:
+                        continue
+                    text = str(item).strip()
+                    if text:
+                        out.append(item)
+                continue
+            text = str(value).strip()
+            if text:
+                out.append(value)
+        if out:
+            return out
+        return None
+
+    @staticmethod
+    def _supports_kwarg(func: Any, arg_name: str) -> bool:
+        try:
+            signature = inspect.signature(func)
+        except Exception:
+            return False
+        if arg_name in signature.parameters:
+            return True
+        for parameter in signature.parameters.values():
+            if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+                return True
+        return False
+
     def _persist_tweet_outputs(
         self,
         *,
         tweets: list[Any],
         csv_filename: str,
         resume: bool,
+        save_format: Optional[str] = None,
+        write_state: Optional[dict[str, Any]] = None,
     ) -> list[dict[str, Any]]:
+        state = write_state if isinstance(write_state, dict) else {}
         raw_tweets: list[dict[str, Any]] = []
         csv_rows_summary: list[dict[str, Any]] = []
         csv_rows_compat: list[dict[str, Any]] = []
@@ -522,81 +817,390 @@ class Scweet:
             csv_rows_summary.append(mapped.summary)
             csv_rows_compat.append(mapped.compat)
 
-        configured_format = getattr(getattr(self._v4_config, "output", None), "format", None)
-        fmt = str(configured_format or "csv").strip().lower()
-        if fmt not in {"csv", "json", "both", "none"}:
-            fmt = "csv"
+        fmt = self._coerce_save_format(save_format) or "none"
 
         dedupe_on_resume = bool(
             getattr(getattr(self._v4_config, "output", None), "dedupe_on_resume_by_tweet_id", False)
         )
         if resume and dedupe_on_resume and fmt != "none":
-            existing_ids: set[str] = set()
-            if fmt in {"csv", "both"}:
-                existing_ids.update(_read_existing_tweet_ids_from_csv(csv_filename))
-            if fmt in {"json", "both"}:
-                json_path_for_dedupe = str(Path(csv_filename).with_suffix(".json"))
-                existing_ids.update(_read_existing_tweet_ids_from_json(json_path_for_dedupe))
-
-            if existing_ids:
+            seen_ids = state.get("tweet_dedupe_seen_ids")
+            if not isinstance(seen_ids, set):
+                existing_ids: set[str] = set()
+                if fmt in {"csv", "both"}:
+                    existing_ids.update(_read_existing_tweet_ids_from_csv(csv_filename))
+                if fmt in {"json", "both"}:
+                    json_path_for_dedupe = str(Path(csv_filename).with_suffix(".json"))
+                    existing_ids.update(_read_existing_tweet_ids_from_json(json_path_for_dedupe))
                 seen_ids = set(existing_ids)
-                filtered_raw: list[dict[str, Any]] = []
-                filtered_summary: list[dict[str, Any]] = []
-                filtered_compat: list[dict[str, Any]] = []
-                for raw, summary, compat in zip(raw_tweets, csv_rows_summary, csv_rows_compat):
-                    tid: Optional[str] = None
-                    try:
-                        tid = summary.get("tweet_id")  # type: ignore[assignment]
-                    except Exception:
-                        tid = None
-                    if tid is not None and not isinstance(tid, str):
-                        tid = str(tid)
-                    if isinstance(tid, str):
-                        tid = tid.strip() or None
-                    if not tid:
-                        tid = _tweet_rest_id_from_raw(raw)
+                state["tweet_dedupe_seen_ids"] = seen_ids
 
-                    if tid and tid in seen_ids:
-                        continue
-                    if tid:
-                        seen_ids.add(tid)
+            filtered_raw: list[dict[str, Any]] = []
+            filtered_summary: list[dict[str, Any]] = []
+            filtered_compat: list[dict[str, Any]] = []
+            for raw, summary, compat in zip(raw_tweets, csv_rows_summary, csv_rows_compat):
+                tid: Optional[str] = None
+                try:
+                    tid = summary.get("tweet_id")  # type: ignore[assignment]
+                except Exception:
+                    tid = None
+                if tid is not None and not isinstance(tid, str):
+                    tid = str(tid)
+                if isinstance(tid, str):
+                    tid = tid.strip() or None
+                if not tid:
+                    tid = _tweet_rest_id_from_raw(raw)
 
-                    filtered_raw.append(raw)
-                    filtered_summary.append(summary)
-                    filtered_compat.append(compat)
+                if tid and tid in seen_ids:
+                    continue
+                if tid:
+                    seen_ids.add(tid)
 
-                raw_tweets = filtered_raw
-                csv_rows_summary = filtered_summary
-                csv_rows_compat = filtered_compat
+                filtered_raw.append(raw)
+                filtered_summary.append(summary)
+                filtered_compat.append(compat)
+
+            raw_tweets = filtered_raw
+            csv_rows_summary = filtered_summary
+            csv_rows_compat = filtered_compat
 
         if fmt in {"csv", "both"}:
-            write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"
+            if state.get("tweet_csv_initialized"):
+                write_mode = "a"
+            else:
+                write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"
+                state["tweet_csv_initialized"] = True
+            if write_mode == "a":
+                try:
+                    if (not os.path.exists(csv_filename)) or os.path.getsize(csv_filename) <= 0:
+                        write_mode = "w"
+                except Exception:
+                    write_mode = "w"
 
             if not csv_rows_summary:
                 if write_mode == "w" and not os.path.exists(csv_filename):
                     Path(csv_filename).parent.mkdir(parents=True, exist_ok=True)
                     Path(csv_filename).touch()
             else:
-                existing_header: Optional[list[str]] = None
-                if write_mode == "a" and os.path.exists(csv_filename) and os.path.getsize(csv_filename) > 0:
+                existing_header = state.get("tweet_csv_existing_header")
+                if (
+                    not isinstance(existing_header, list)
+                    and write_mode == "a"
+                    and os.path.exists(csv_filename)
+                    and os.path.getsize(csv_filename) > 0
+                ):
                     try:
                         with open(csv_filename, "r", encoding="utf-8", newline="") as handle:
                             reader = csv.reader(handle)
                             existing_header = next(reader, None) or None
                     except Exception:
                         existing_header = None
+                    state["tweet_csv_existing_header"] = existing_header
 
                 if existing_header and existing_header != SUMMARY_CSV_HEADER:
                     write_csv(csv_filename, csv_rows_compat, existing_header, mode="a")
                 else:
                     write_csv(csv_filename, csv_rows_summary, SUMMARY_CSV_HEADER, mode=write_mode)
+                state["tweet_csv_existing_header"] = existing_header or SUMMARY_CSV_HEADER
 
         if fmt in {"json", "both"}:
             json_path = str(Path(csv_filename).with_suffix(".json"))
-            json_mode = "a" if (resume and os.path.exists(json_path)) else "w"
+            if state.get("tweet_json_initialized"):
+                json_mode = "a"
+            else:
+                json_mode = "a" if (resume and os.path.exists(json_path)) else "w"
+                state["tweet_json_initialized"] = True
             write_json_auto_append(json_path, raw_tweets, mode=json_mode)
 
         return raw_tweets
+
+    def _persist_follows_outputs(
+        self,
+        *,
+        follows: list[Any],
+        csv_filename: str,
+        resume: bool,
+        save_format: Optional[str] = None,
+        raw_json: bool = False,
+        write_state: Optional[dict[str, Any]] = None,
+    ) -> list[dict[str, Any]]:
+        state = write_state if isinstance(write_state, dict) else {}
+        normalized_follows: list[dict[str, Any]] = []
+        csv_rows: list[dict[str, Any]] = []
+
+        for item in follows:
+            raw: Any = None
+            if isinstance(item, dict):
+                raw = item
+            elif hasattr(item, "model_dump"):
+                try:
+                    raw = item.model_dump(mode="json")  # type: ignore[attr-defined]
+                except Exception:
+                    raw = None
+            if not isinstance(raw, dict):
+                raw = {"value": str(item)}
+            normalized_follows.append(raw)
+
+            target = raw.get("target") if isinstance(raw.get("target"), dict) else {}
+            csv_rows.append(
+                {
+                    "follow_key": _follow_record_key(raw) or "",
+                    "type": str(raw.get("type") or "").strip(),
+                    "target_username": str(target.get("username") or "").strip(),
+                    "target_profile_url": str(target.get("profile_url") or "").strip(),
+                    "target_source": str(target.get("source") or "").strip(),
+                    "target_raw": str(target.get("raw") or "").strip(),
+                    "user_id": str(raw.get("user_id") or "").strip(),
+                    "username": str(raw.get("username") or "").strip(),
+                    "name": raw.get("name"),
+                    "description": raw.get("description"),
+                    "location": raw.get("location"),
+                    "created_at": raw.get("created_at"),
+                    "followers_count": raw.get("followers_count"),
+                    "following_count": raw.get("following_count"),
+                    "statuses_count": raw.get("statuses_count"),
+                    "favourites_count": raw.get("favourites_count"),
+                    "media_count": raw.get("media_count"),
+                    "listed_count": raw.get("listed_count"),
+                    "verified": bool(raw.get("verified", False)),
+                    "blue_verified": bool(raw.get("blue_verified", False)),
+                    "protected": bool(raw.get("protected", False)),
+                    "profile_image_url": raw.get("profile_image_url"),
+                    "profile_banner_url": raw.get("profile_banner_url"),
+                    "url": raw.get("url"),
+                }
+            )
+
+        fmt = self._coerce_save_format(save_format) or "none"
+
+        dedupe_on_resume = bool(
+            getattr(getattr(self._v4_config, "output", None), "dedupe_on_resume_by_tweet_id", False)
+        )
+        if resume and dedupe_on_resume and fmt != "none":
+            seen_keys = state.get("follows_dedupe_seen_keys")
+            if not isinstance(seen_keys, set):
+                existing_keys: set[str] = set()
+                if fmt in {"csv", "both"}:
+                    existing_keys.update(_read_existing_follow_keys_from_csv(csv_filename))
+                if fmt in {"json", "both"}:
+                    json_path_for_dedupe = str(Path(csv_filename).with_suffix(".json"))
+                    existing_keys.update(_read_existing_follow_keys_from_json(json_path_for_dedupe))
+                seen_keys = set(existing_keys)
+                state["follows_dedupe_seen_keys"] = seen_keys
+
+            filtered_raw: list[dict[str, Any]] = []
+            filtered_rows: list[dict[str, Any]] = []
+            for raw, row in zip(normalized_follows, csv_rows):
+                key = str(row.get("follow_key") or "").strip() or (_follow_record_key(raw) or "")
+                if key and key in seen_keys:
+                    continue
+                if key:
+                    seen_keys.add(key)
+                filtered_raw.append(raw)
+                filtered_rows.append(row)
+            normalized_follows = filtered_raw
+            csv_rows = filtered_rows
+
+        follows_output: list[dict[str, Any]]
+        if raw_json:
+            follows_output = []
+            for row, csv_row in zip(normalized_follows, csv_rows):
+                target = row.get("target") if isinstance(row.get("target"), dict) else {}
+                raw_payload = row.get("raw")
+                if not isinstance(raw_payload, dict):
+                    raw_payload = row
+                follows_output.append(
+                    {
+                        "follow_key": str(csv_row.get("follow_key") or "").strip() or (_follow_record_key(row) or ""),
+                        "type": str(row.get("type") or "").strip(),
+                        "target": dict(target),
+                        "raw": raw_payload,
+                    }
+                )
+        else:
+            follows_output = list(normalized_follows)
+
+        if fmt in {"csv", "both"}:
+            if state.get("follows_csv_initialized"):
+                write_mode = "a"
+            else:
+                write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"
+                state["follows_csv_initialized"] = True
+            if write_mode == "a":
+                try:
+                    if (not os.path.exists(csv_filename)) or os.path.getsize(csv_filename) <= 0:
+                        write_mode = "w"
+                except Exception:
+                    write_mode = "w"
+
+            if not csv_rows:
+                if write_mode == "w" and not os.path.exists(csv_filename):
+                    Path(csv_filename).parent.mkdir(parents=True, exist_ok=True)
+                    Path(csv_filename).touch()
+            else:
+                existing_header = state.get("follows_csv_existing_header")
+                if (
+                    not isinstance(existing_header, list)
+                    and write_mode == "a"
+                    and os.path.exists(csv_filename)
+                    and os.path.getsize(csv_filename) > 0
+                ):
+                    try:
+                        with open(csv_filename, "r", encoding="utf-8", newline="") as handle:
+                            reader = csv.reader(handle)
+                            existing_header = next(reader, None) or None
+                    except Exception:
+                        existing_header = None
+                    state["follows_csv_existing_header"] = existing_header
+
+                if existing_header and existing_header != FOLLOWS_CSV_HEADER:
+                    write_csv(csv_filename, csv_rows, existing_header, mode="a")
+                else:
+                    write_csv(csv_filename, csv_rows, FOLLOWS_CSV_HEADER, mode=write_mode)
+                state["follows_csv_existing_header"] = existing_header or FOLLOWS_CSV_HEADER
+
+        if fmt in {"json", "both"}:
+            json_path = str(Path(csv_filename).with_suffix(".json"))
+            if state.get("follows_json_initialized"):
+                json_mode = "a"
+            else:
+                json_mode = "a" if (resume and os.path.exists(json_path)) else "w"
+                state["follows_json_initialized"] = True
+            write_json_auto_append(json_path, follows_output, mode=json_mode)
+
+        return follows_output
+
+    def _persist_profiles_outputs(
+        self,
+        *,
+        profiles: list[Any],
+        csv_filename: str,
+        resume: bool,
+        save_format: Optional[str] = None,
+        write_state: Optional[dict[str, Any]] = None,
+    ) -> list[dict[str, Any]]:
+        state = write_state if isinstance(write_state, dict) else {}
+        raw_profiles: list[dict[str, Any]] = []
+        csv_rows: list[dict[str, Any]] = []
+
+        for item in profiles:
+            raw: Any = None
+            if isinstance(item, dict):
+                raw = item
+            elif hasattr(item, "model_dump"):
+                try:
+                    raw = item.model_dump(mode="json")  # type: ignore[attr-defined]
+                except Exception:
+                    raw = None
+            if not isinstance(raw, dict):
+                raw = {"value": str(item)}
+            raw_profiles.append(raw)
+
+            input_node = raw.get("input") if isinstance(raw.get("input"), dict) else {}
+            csv_rows.append(
+                {
+                    "profile_key": _profile_record_key(raw) or "",
+                    "input_raw": str(input_node.get("raw") or "").strip(),
+                    "input_source": str(input_node.get("source") or "").strip(),
+                    "user_id": str(raw.get("user_id") or "").strip(),
+                    "username": str(raw.get("username") or "").strip(),
+                    "name": raw.get("name"),
+                    "description": raw.get("description"),
+                    "location": raw.get("location"),
+                    "created_at": raw.get("created_at"),
+                    "followers_count": raw.get("followers_count"),
+                    "following_count": raw.get("following_count"),
+                    "statuses_count": raw.get("statuses_count"),
+                    "favourites_count": raw.get("favourites_count"),
+                    "media_count": raw.get("media_count"),
+                    "listed_count": raw.get("listed_count"),
+                    "verified": bool(raw.get("verified", False)),
+                    "blue_verified": bool(raw.get("blue_verified", False)),
+                    "protected": bool(raw.get("protected", False)),
+                    "profile_image_url": raw.get("profile_image_url"),
+                    "profile_banner_url": raw.get("profile_banner_url"),
+                    "url": raw.get("url"),
+                }
+            )
+
+        fmt = self._coerce_save_format(save_format) or "none"
+
+        dedupe_on_resume = bool(
+            getattr(getattr(self._v4_config, "output", None), "dedupe_on_resume_by_tweet_id", False)
+        )
+        if resume and dedupe_on_resume and fmt != "none":
+            seen_keys = state.get("profiles_dedupe_seen_keys")
+            if not isinstance(seen_keys, set):
+                existing_keys: set[str] = set()
+                if fmt in {"csv", "both"}:
+                    existing_keys.update(_read_existing_profile_keys_from_csv(csv_filename))
+                if fmt in {"json", "both"}:
+                    json_path_for_dedupe = str(Path(csv_filename).with_suffix(".json"))
+                    existing_keys.update(_read_existing_profile_keys_from_json(json_path_for_dedupe))
+                seen_keys = set(existing_keys)
+                state["profiles_dedupe_seen_keys"] = seen_keys
+
+            filtered_raw: list[dict[str, Any]] = []
+            filtered_rows: list[dict[str, Any]] = []
+            for raw, row in zip(raw_profiles, csv_rows):
+                key = str(row.get("profile_key") or "").strip() or (_profile_record_key(raw) or "")
+                if key and key in seen_keys:
+                    continue
+                if key:
+                    seen_keys.add(key)
+                filtered_raw.append(raw)
+                filtered_rows.append(row)
+            raw_profiles = filtered_raw
+            csv_rows = filtered_rows
+
+        if fmt in {"csv", "both"}:
+            if state.get("profiles_csv_initialized"):
+                write_mode = "a"
+            else:
+                write_mode = "a" if (resume and os.path.exists(csv_filename)) else "w"
+                state["profiles_csv_initialized"] = True
+            if write_mode == "a":
+                try:
+                    if (not os.path.exists(csv_filename)) or os.path.getsize(csv_filename) <= 0:
+                        write_mode = "w"
+                except Exception:
+                    write_mode = "w"
+
+            if not csv_rows:
+                if write_mode == "w" and not os.path.exists(csv_filename):
+                    Path(csv_filename).parent.mkdir(parents=True, exist_ok=True)
+                    Path(csv_filename).touch()
+            else:
+                existing_header = state.get("profiles_csv_existing_header")
+                if (
+                    not isinstance(existing_header, list)
+                    and write_mode == "a"
+                    and os.path.exists(csv_filename)
+                    and os.path.getsize(csv_filename) > 0
+                ):
+                    try:
+                        with open(csv_filename, "r", encoding="utf-8", newline="") as handle:
+                            reader = csv.reader(handle)
+                            existing_header = next(reader, None) or None
+                    except Exception:
+                        existing_header = None
+                    state["profiles_csv_existing_header"] = existing_header
+
+                if existing_header and existing_header != PROFILES_CSV_HEADER:
+                    write_csv(csv_filename, csv_rows, existing_header, mode="a")
+                else:
+                    write_csv(csv_filename, csv_rows, PROFILES_CSV_HEADER, mode=write_mode)
+                state["profiles_csv_existing_header"] = existing_header or PROFILES_CSV_HEADER
+
+        if fmt in {"json", "both"}:
+            json_path = str(Path(csv_filename).with_suffix(".json"))
+            if state.get("profiles_json_initialized"):
+                json_mode = "a"
+            else:
+                json_mode = "a" if (resume and os.path.exists(json_path)) else "w"
+                state["profiles_json_initialized"] = True
+            write_json_auto_append(json_path, raw_profiles, mode=json_mode)
+
+        return raw_profiles
 
     @staticmethod
     def _build_profile_timeline_csv_filename(
@@ -614,6 +1218,44 @@ class Scweet:
 
         stem = f"profile_timeline_{username or 'batch'}"
         stem = re.sub(r"[^A-Za-z0-9_]+", "_", stem).strip("_") or "profile_timeline_batch"
+        return os.path.join(save_dir, f"{stem}.csv")
+
+    @staticmethod
+    def _build_follows_csv_filename(
+        *,
+        save_dir: str,
+        custom_csv_name: Optional[str],
+        targets: list[dict[str, Any]],
+        follow_type: str,
+    ) -> str:
+        if custom_csv_name:
+            return os.path.join(save_dir, str(custom_csv_name))
+
+        username = ""
+        if len(targets) == 1:
+            username = str(targets[0].get("username") or "").strip().lstrip("@")
+
+        follow_ref = str(follow_type or "following").strip().lower()
+        stem = f"follows_{follow_ref}_{username or 'batch'}"
+        stem = re.sub(r"[^A-Za-z0-9_]+", "_", stem).strip("_") or "follows_batch"
+        return os.path.join(save_dir, f"{stem}.csv")
+
+    @staticmethod
+    def _build_profiles_csv_filename(
+        *,
+        save_dir: str,
+        custom_csv_name: Optional[str],
+        targets: list[dict[str, Any]],
+    ) -> str:
+        if custom_csv_name:
+            return os.path.join(save_dir, str(custom_csv_name))
+
+        username = ""
+        if len(targets) == 1:
+            username = str(targets[0].get("username") or "").strip().lstrip("@")
+
+        stem = f"profiles_{username or 'batch'}"
+        stem = re.sub(r"[^A-Za-z0-9_]+", "_", stem).strip("_") or "profiles_batch"
         return os.path.join(save_dir, f"{stem}.csv")
 
     def _load_profile_timeline_resume_cursors(self, *, query_hash: str) -> dict[str, str]:
@@ -679,20 +1321,108 @@ class Scweet:
         except Exception:
             pass
 
+    def _load_follows_resume_cursors(self, *, query_hash: str) -> dict[str, str]:
+        if not query_hash:
+            return {}
+        if self._resume_repo is None or not hasattr(self._resume_repo, "get_checkpoint"):
+            return {}
+        checkpoint = self._resume_repo.get_checkpoint(query_hash)
+        if not isinstance(checkpoint, dict):
+            return {}
+        raw_cursor = checkpoint.get("cursor")
+        if isinstance(raw_cursor, dict):
+            payload = raw_cursor
+        elif isinstance(raw_cursor, str):
+            stripped = raw_cursor.strip()
+            if not stripped:
+                return {}
+            try:
+                decoded = json.loads(stripped)
+            except Exception:
+                return {}
+            payload = decoded if isinstance(decoded, dict) else {}
+        else:
+            return {}
+        out: dict[str, str] = {}
+        for key, value in payload.items():
+            cursor_key = str(key or "").strip()
+            cursor_value = str(value or "").strip()
+            if cursor_key and cursor_value:
+                out[cursor_key] = cursor_value
+        return out
+
+    def _save_follows_resume_state(
+        self,
+        *,
+        query_hash: str,
+        resume_cursors: dict[str, str],
+        completed: bool,
+        limit_reached: bool,
+        follow_type: str,
+    ) -> None:
+        if not query_hash:
+            return
+        if self._resume_repo is None:
+            return
+        if completed and not limit_reached and not resume_cursors:
+            if hasattr(self._resume_repo, "clear_checkpoint"):
+                try:
+                    self._resume_repo.clear_checkpoint(query_hash)
+                except Exception:
+                    pass
+            return
+
+        if not hasattr(self._resume_repo, "save_checkpoint"):
+            return
+        cursor_payload = json.dumps(resume_cursors or {}, separators=(",", ":"))
+        try:
+            self._resume_repo.save_checkpoint(
+                query_hash,
+                cursor_payload,
+                "follows",
+                str(follow_type or "following"),
+            )
+        except Exception:
+            pass
+
     async def _run_search_pipeline(
         self,
         *,
         search_request: SearchRequest,
         csv_filename: str,
         resume: bool,
+        save: bool = False,
+        save_format: Optional[str] = None,
     ) -> list[dict[str, Any]]:
         _, logged_in, _, _ = await self.login()
         if not logged_in:
             return []
 
+        effective_save_format = self._resolve_save_format(save_format, save=save)
+        search_write_state: dict[str, Any] = {}
+        runner_supports_stream = self._supports_kwarg(getattr(self._runner, "run_search"), "on_tweets_batch")
+        streaming_active = bool(effective_save_format != "none" and runner_supports_stream)
+
+        async def _on_tweets_batch(batch: list[Any]) -> None:
+            if not batch:
+                return
+            self._persist_tweet_outputs(
+                tweets=list(batch),
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format=effective_save_format,
+                write_state=search_write_state,
+            )
+
         tweets = []
         try:
-            run_result = await self._runner.run_search(search_request)
+            if streaming_active:
+                run_result = await self._runner.run_search(
+                    search_request,
+                    on_tweets_batch=_on_tweets_batch,
+                )
+            else:
+                run_result = await self._runner.run_search(search_request)
             tweets = list(getattr(run_result, "tweets", []) or [])
         except AccountPoolExhausted as exc:
             strict = bool(getattr(self._v4_config.runtime, "strict", False))
@@ -712,11 +1442,20 @@ class Scweet:
             logger.error("Scrape failed detail=%s (set strict=True to raise)", str(exc))
             tweets = []
 
-        raw_tweets = self._persist_tweet_outputs(
-            tweets=tweets,
-            csv_filename=csv_filename,
-            resume=resume,
-        )
+        if streaming_active:
+            raw_tweets = self._persist_tweet_outputs(
+                tweets=tweets,
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format="none",
+            )
+        else:
+            raw_tweets = self._persist_tweet_outputs(
+                tweets=tweets,
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format=effective_save_format,
+            )
 
         await self.aclose()
         return raw_tweets
@@ -728,10 +1467,28 @@ class Scweet:
         csv_filename: str,
         resume: bool,
         query_hash: str,
+        save: bool = False,
+        save_format: Optional[str] = None,
     ) -> list[dict[str, Any]]:
         _, logged_in, _, _ = await self.login()
         if not logged_in:
             return []
+
+        effective_save_format = self._resolve_save_format(save_format, save=save)
+        profile_write_state: dict[str, Any] = {}
+        runner_supports_stream = self._supports_kwarg(getattr(self._runner, "run_profile_tweets"), "on_tweets_page")
+        streaming_active = bool(effective_save_format != "none" and runner_supports_stream)
+
+        async def _on_tweets_page(batch: list[Any]) -> None:
+            if not batch:
+                return
+            self._persist_tweet_outputs(
+                tweets=list(batch),
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format=effective_save_format,
+                write_state=profile_write_state,
+            )
 
         run_response: dict[str, Any] = {}
         tweets: list[Any] = []
@@ -740,7 +1497,13 @@ class Scweet:
         limit_reached = False
 
         try:
-            raw_response = await self._runner.run_profile_tweets(profile_timeline_request)
+            if streaming_active:
+                raw_response = await self._runner.run_profile_tweets(
+                    profile_timeline_request,
+                    on_tweets_page=_on_tweets_page,
+                )
+            else:
+                raw_response = await self._runner.run_profile_tweets(profile_timeline_request)
             if isinstance(raw_response, dict):
                 run_response = dict(raw_response)
             result = run_response.get("result")
@@ -781,14 +1544,130 @@ class Scweet:
                 limit_reached=limit_reached,
             )
 
-        raw_tweets = self._persist_tweet_outputs(
-            tweets=tweets,
-            csv_filename=csv_filename,
-            resume=resume,
-        )
+        if streaming_active:
+            raw_tweets = self._persist_tweet_outputs(
+                tweets=tweets,
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format="none",
+            )
+        else:
+            raw_tweets = self._persist_tweet_outputs(
+                tweets=tweets,
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format=effective_save_format,
+            )
 
         await self.aclose()
         return raw_tweets
+
+    async def _run_follows_pipeline(
+        self,
+        *,
+        follows_request: FollowsRequest,
+        resume: bool,
+        query_hash: str,
+        csv_filename: str,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        raw_json: bool = False,
+    ) -> list[dict[str, Any]]:
+        _, logged_in, _, _ = await self.login()
+        if not logged_in:
+            return []
+
+        effective_save_format = self._resolve_save_format(save_format, save=save)
+        follows_write_state: dict[str, Any] = {}
+        runner_supports_stream = self._supports_kwarg(getattr(self._runner, "run_follows"), "on_follows_page")
+        streaming_active = bool(effective_save_format != "none" and runner_supports_stream)
+
+        async def _on_follows_page(batch: list[Any]) -> None:
+            if not batch:
+                return
+            self._persist_follows_outputs(
+                follows=list(batch),
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format=effective_save_format,
+                raw_json=raw_json,
+                write_state=follows_write_state,
+            )
+
+        follows: list[dict[str, Any]] = []
+        resume_cursors: dict[str, str] = dict(follows_request.initial_cursors or {})
+        completed = False
+        limit_reached = False
+
+        try:
+            if streaming_active:
+                raw_response = await self._runner.run_follows(
+                    follows_request,
+                    on_follows_page=_on_follows_page,
+                )
+            else:
+                raw_response = await self._runner.run_follows(follows_request)
+            if isinstance(raw_response, dict):
+                follows = list(raw_response.get("follows") or [])
+                raw_resume = raw_response.get("resume_cursors")
+                if isinstance(raw_resume, dict):
+                    resume_cursors = {}
+                    for key, value in raw_resume.items():
+                        cursor_key = str(key or "").strip()
+                        cursor_value = str(value or "").strip()
+                        if cursor_key and cursor_value:
+                            resume_cursors[cursor_key] = cursor_value
+                completed = bool(raw_response.get("completed", False))
+                limit_reached = bool(raw_response.get("limit_reached", False))
+            elif isinstance(raw_response, list):
+                follows = [row for row in raw_response if isinstance(row, dict)]
+                completed = True
+        except AccountPoolExhausted as exc:
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            detail = (
+                "No usable accounts available for API scraping. "
+                "Provide accounts via `accounts_file` (accounts.txt), `cookies_file` (cookies.json), "
+                "`env_path` (.env), or `cookies=` (cookie dict/list/header/token)."
+            )
+            if strict:
+                raise AccountPoolExhausted(detail) from exc
+            logger.error("%s (%s)", detail, str(exc))
+            follows = []
+        except Exception as exc:
+            strict = bool(getattr(self._v4_config.runtime, "strict", False))
+            if strict:
+                raise
+            logger.error("Follows scrape failed detail=%s (set strict=True to raise)", str(exc))
+            follows = []
+
+        if resume:
+            self._save_follows_resume_state(
+                query_hash=query_hash,
+                resume_cursors=resume_cursors,
+                completed=completed,
+                limit_reached=limit_reached,
+                follow_type=str(follows_request.follow_type),
+            )
+
+        if streaming_active:
+            raw_follows = self._persist_follows_outputs(
+                follows=follows,
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format="none",
+                raw_json=raw_json,
+            )
+        else:
+            raw_follows = self._persist_follows_outputs(
+                follows=follows,
+                csv_filename=csv_filename,
+                resume=resume,
+                save_format=effective_save_format,
+                raw_json=raw_json,
+            )
+
+        await self.aclose()
+        return raw_follows
 
     def scrape(self, **scrape_kwargs):
         canonical_keys = {
@@ -860,6 +1739,9 @@ class Scweet:
         resume: bool = False,
         save_dir: str = "outputs",
         custom_csv_name: Optional[str] = None,
+        max_empty_pages: Optional[int] = None,
+        save: bool = False,
+        save_format: Optional[str] = None,
     ):
         if not until:
             until = date.today().strftime("%Y-%m-%d")
@@ -930,6 +1812,8 @@ class Scweet:
 
         requested_since = since
         initial_cursor: Optional[str] = None
+        request_max_empty_pages = self._resolve_max_empty_pages(max_empty_pages)
+
         query_hash = compute_query_hash(
             {
                 "since": requested_since,
@@ -939,6 +1823,7 @@ class Scweet:
                 "query": normalized_query,
                 "save_dir": save_dir,
                 "custom_csv_name": custom_csv_name,
+                "max_empty_pages": request_max_empty_pages,
             }
         )
         if resume:
@@ -994,12 +1879,15 @@ class Scweet:
             custom_csv_name=custom_csv_name,
             initial_cursor=initial_cursor,
             query_hash=query_hash,
+            max_empty_pages=request_max_empty_pages,
         )
 
         return await self._run_search_pipeline(
             search_request=search_request,
             csv_filename=csv_filename,
             resume=resume,
+            save=save,
+            save_format=save_format,
         )
 
     async def ascrape(
@@ -1023,6 +1911,9 @@ class Scweet:
         minlikes=None,
         minretweets=None,
         custom_csv_name=None,
+        max_empty_pages: Optional[int] = None,
+        save: bool = False,
+        save_format: Optional[str] = None,
     ):
         if not until:
             until = date.today().strftime("%Y-%m-%d")
@@ -1083,6 +1974,8 @@ class Scweet:
 
         requested_since = since
         initial_cursor: Optional[str] = None
+        request_max_empty_pages = self._resolve_max_empty_pages(max_empty_pages)
+
         query_hash = compute_query_hash(
             {
                 "since": requested_since,
@@ -1092,6 +1985,7 @@ class Scweet:
                 "display_type": display_type,
                 "save_dir": save_dir,
                 "custom_csv_name": custom_csv_name,
+                "max_empty_pages": request_max_empty_pages,
             }
         )
 
@@ -1168,12 +2062,15 @@ class Scweet:
             custom_csv_name=custom_csv_name,
             initial_cursor=initial_cursor,
             query_hash=query_hash,
+            max_empty_pages=request_max_empty_pages,
         )
 
         return await self._run_search_pipeline(
             search_request=search_request,
             csv_filename=csv_filename,
             resume=resume,
+            save=save,
+            save_format=save_format,
         )
 
     def profile_tweets(self, **profile_kwargs):
@@ -1199,6 +2096,9 @@ class Scweet:
         cursor_handoff: bool = False,
         max_account_switches: Optional[int] = None,
         offline: Optional[bool] = None,
+        max_empty_pages: Optional[int] = None,
+        save: bool = False,
+        save_format: Optional[str] = None,
         **legacy_kwargs,
     ):
         if legacy_kwargs:
@@ -1206,7 +2106,8 @@ class Scweet:
             raise TypeError(
                 "aprofile_tweets supports only explicit inputs: "
                 "`usernames`, `profile_urls`, `limit`, `per_profile_limit`, `max_pages_per_profile`, "
-                "`resume`, `save_dir`, `custom_csv_name`, `cursor_handoff`, `max_account_switches`, `offline`"
+                "`resume`, `save_dir`, `custom_csv_name`, `cursor_handoff`, `max_account_switches`, `offline`, "
+                "`max_empty_pages`, `save`, `save_format`"
                 f" (unsupported: {', '.join(unsupported)})"
             )
 
@@ -1230,6 +2131,7 @@ class Scweet:
         request_per_profile_limit = self._coerce_request_limit(per_profile_limit)
         request_max_pages = self._coerce_request_limit(max_pages_per_profile)
         request_max_switches = self._coerce_request_limit(max_account_switches)
+        request_max_empty_pages = self._resolve_max_empty_pages(max_empty_pages)
         configured_allow_anonymous = bool(getattr(self._v4_config.operations, "profile_timeline_allow_anonymous", False))
         allow_anonymous = bool(configured_allow_anonymous if offline is None else offline)
 
@@ -1242,6 +2144,7 @@ class Scweet:
                 "max_pages_per_profile": request_max_pages,
                 "cursor_handoff": bool(cursor_handoff),
                 "max_account_switches": request_max_switches,
+                "max_empty_pages": request_max_empty_pages,
                 "allow_anonymous": allow_anonymous,
                 "save_dir": save_dir,
                 "custom_csv_name": custom_csv_name,
@@ -1262,6 +2165,7 @@ class Scweet:
             cursor_handoff=bool(cursor_handoff),
             max_account_switches=request_max_switches,
             allow_anonymous=allow_anonymous,
+            max_empty_pages=request_max_empty_pages,
         )
 
         return await self._run_profile_timeline_pipeline(
@@ -1269,6 +2173,8 @@ class Scweet:
             csv_filename=csv_filename,
             resume=resume,
             query_hash=query_hash,
+            save=save,
+            save_format=save_format,
         )
 
     def get_follows(self, **scrape_kwargs):
@@ -1285,136 +2191,264 @@ class Scweet:
 
     async def aget_followers(
         self,
-        handle=None,
-        login=True,
-        stay_logged_in=True,
-        sleep=2,
-        user_id=None,
-        profile_url=None,
-        users=None,
+        *,
         usernames=None,
-        user_ids=None,
         profile_urls=None,
+        user_ids=None,
+        limit: float = float("inf"),
+        per_profile_limit: Optional[int] = None,
+        max_pages_per_profile: Optional[int] = None,
+        resume: bool = False,
+        cursor_handoff: bool = False,
+        max_account_switches: Optional[int] = None,
+        save_dir: str = "outputs",
+        custom_csv_name: Optional[str] = None,
+        max_empty_pages: Optional[int] = None,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        raw_json: bool = False,
+        **legacy_kwargs,
     ):
         return await self.aget_follows(
-            handle=handle,
-            type="followers",
-            login=login,
-            stay_logged_in=stay_logged_in,
-            sleep=sleep,
-            user_id=user_id,
-            profile_url=profile_url,
-            users=users,
+            follow_type="followers",
             usernames=usernames,
-            user_ids=user_ids,
             profile_urls=profile_urls,
+            user_ids=user_ids,
+            limit=limit,
+            per_profile_limit=per_profile_limit,
+            max_pages_per_profile=max_pages_per_profile,
+            resume=resume,
+            cursor_handoff=cursor_handoff,
+            max_account_switches=max_account_switches,
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            max_empty_pages=max_empty_pages,
+            save=save,
+            save_format=save_format,
+            raw_json=raw_json,
+            **legacy_kwargs,
         )
 
     async def aget_following(
         self,
-        handle=None,
-        login=True,
-        stay_logged_in=True,
-        sleep=2,
-        user_id=None,
-        profile_url=None,
-        users=None,
+        *,
         usernames=None,
-        user_ids=None,
         profile_urls=None,
+        user_ids=None,
+        limit: float = float("inf"),
+        per_profile_limit: Optional[int] = None,
+        max_pages_per_profile: Optional[int] = None,
+        resume: bool = False,
+        cursor_handoff: bool = False,
+        max_account_switches: Optional[int] = None,
+        save_dir: str = "outputs",
+        custom_csv_name: Optional[str] = None,
+        max_empty_pages: Optional[int] = None,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        raw_json: bool = False,
+        **legacy_kwargs,
     ):
         return await self.aget_follows(
-            handle=handle,
-            type="following",
-            login=login,
-            stay_logged_in=stay_logged_in,
-            sleep=sleep,
-            user_id=user_id,
-            profile_url=profile_url,
-            users=users,
+            follow_type="following",
             usernames=usernames,
-            user_ids=user_ids,
             profile_urls=profile_urls,
+            user_ids=user_ids,
+            limit=limit,
+            per_profile_limit=per_profile_limit,
+            max_pages_per_profile=max_pages_per_profile,
+            resume=resume,
+            cursor_handoff=cursor_handoff,
+            max_account_switches=max_account_switches,
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            max_empty_pages=max_empty_pages,
+            save=save,
+            save_format=save_format,
+            raw_json=raw_json,
+            **legacy_kwargs,
         )
 
     async def aget_verified_followers(
         self,
-        handle=None,
-        login=True,
-        stay_logged_in=True,
-        sleep=2,
-        user_id=None,
-        profile_url=None,
-        users=None,
+        *,
         usernames=None,
-        user_ids=None,
         profile_urls=None,
+        user_ids=None,
+        limit: float = float("inf"),
+        per_profile_limit: Optional[int] = None,
+        max_pages_per_profile: Optional[int] = None,
+        resume: bool = False,
+        cursor_handoff: bool = False,
+        max_account_switches: Optional[int] = None,
+        save_dir: str = "outputs",
+        custom_csv_name: Optional[str] = None,
+        max_empty_pages: Optional[int] = None,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        raw_json: bool = False,
+        **legacy_kwargs,
     ):
         return await self.aget_follows(
-            handle=handle,
-            type="verified_followers",
-            login=login,
-            stay_logged_in=stay_logged_in,
-            sleep=sleep,
-            user_id=user_id,
-            profile_url=profile_url,
-            users=users,
+            follow_type="verified_followers",
             usernames=usernames,
-            user_ids=user_ids,
             profile_urls=profile_urls,
+            user_ids=user_ids,
+            limit=limit,
+            per_profile_limit=per_profile_limit,
+            max_pages_per_profile=max_pages_per_profile,
+            resume=resume,
+            cursor_handoff=cursor_handoff,
+            max_account_switches=max_account_switches,
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            max_empty_pages=max_empty_pages,
+            save=save,
+            save_format=save_format,
+            raw_json=raw_json,
+            **legacy_kwargs,
         )
+
 
     async def aget_follows(
         self,
+        *,
+        follow_type: str = "following",
+        usernames=None,
+        profile_urls=None,
+        user_ids=None,
         handle=None,
-        type="following",
-        login=True,
-        stay_logged_in=True,
-        sleep=2,
         user_id=None,
         profile_url=None,
         users=None,
-        usernames=None,
-        user_ids=None,
-        profile_urls=None,
+        type: Optional[str] = None,
+        login: bool = True,
+        stay_logged_in: bool = True,
+        sleep: float = 2,
+        limit: float = float("inf"),
+        per_profile_limit: Optional[int] = None,
+        max_pages_per_profile: Optional[int] = None,
+        resume: bool = False,
+        cursor_handoff: bool = False,
+        max_account_switches: Optional[int] = None,
+        save_dir: str = "outputs",
+        custom_csv_name: Optional[str] = None,
+        max_empty_pages: Optional[int] = None,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        raw_json: bool = False,
+        **legacy_kwargs,
     ):
-        assert type in ["followers", "verified_followers", "following"]
+        legacy_users = legacy_kwargs.pop("users", None)
+        legacy_handles = legacy_kwargs.pop("handles", None)
+        legacy_usernames = legacy_kwargs.pop("usernames", None)
+        legacy_user_ids = legacy_kwargs.pop("user_ids", None)
+        legacy_profile_urls = legacy_kwargs.pop("profile_urls", None)
+        legacy_handle = legacy_kwargs.pop("handle", None)
+        legacy_user_id = legacy_kwargs.pop("user_id", None)
+        legacy_profile_url = legacy_kwargs.pop("profile_url", None)
+        legacy_type = legacy_kwargs.pop("type", None)
+        legacy_login = legacy_kwargs.pop("login", None)
+        legacy_stay_logged_in = legacy_kwargs.pop("stay_logged_in", None)
+        legacy_sleep = legacy_kwargs.pop("sleep", None)
+
+        if legacy_kwargs:
+            unsupported = sorted(legacy_kwargs.keys())
+            raise TypeError(
+                "aget_follows supports only explicit inputs: "
+                "`follow_type`, `usernames`, `profile_urls`, `user_ids`, `limit`, `per_profile_limit`, "
+                "`max_pages_per_profile`, `resume`, `cursor_handoff`, `max_account_switches`, "
+                "`save_dir`, `custom_csv_name`, `max_empty_pages`, `save`, `save_format`, `raw_json`"
+                "; also accepts legacy aliases: `handle`, `user_id`, `profile_url`, `users`, `user_ids`, `type`, "
+                "`login`, `stay_logged_in`, `sleep`"
+                f" (unsupported: {', '.join(unsupported)})"
+            )
+
+        _ = login, stay_logged_in, sleep, legacy_login, legacy_stay_logged_in, legacy_sleep
+        legacy_follow_type = str(type or legacy_type or "").strip().lower()
+        normalized_follow_type = str(follow_type or "following").strip().lower()
+        if legacy_follow_type and normalized_follow_type in {"", "following"}:
+            normalized_follow_type = legacy_follow_type
+        if normalized_follow_type not in {
+            "followers",
+            "following",
+            "verified_followers",
+        }:
+            raise ValueError(
+                "Unsupported follow_type. Expected one of: "
+                "`followers`, `following`, `verified_followers`"
+            )
+
         normalized = normalize_user_targets(
-            users=users,
-            handles=[handle] if handle is not None else None,
-            usernames=usernames,
-            user_ids=([user_id] if user_id is not None else None) or user_ids,
-            profile_urls=([profile_url] if profile_url is not None else None) or profile_urls,
-            context=f"follows:{type}",
+            users=self._merge_input_values(users, legacy_users),
+            handles=self._merge_input_values(handle, legacy_handle, legacy_handles),
+            usernames=self._merge_input_values(usernames, legacy_usernames),
+            user_ids=self._merge_input_values(user_ids, user_id, legacy_user_ids, legacy_user_id),
+            profile_urls=self._merge_input_values(profile_urls, profile_url, legacy_profile_urls, legacy_profile_url),
+            context=f"follows:{normalized_follow_type}",
         )
         targets = list(normalized.get("targets") or [])
         if not targets:
-            logger.info("No valid user target provided for follows request type=%s", type)
+            logger.info("No valid user target provided for follows request type=%s", normalized_follow_type)
             return []
-        if len(targets) > 1:
-            logger.info(
-                "Follows request type=%s received %s targets; using the first target for compatibility",
-                type,
-                len(targets),
-            )
-        primary = targets[0]
-        response = await self._runner.run_follows(
-            FollowsRequest(
-                handle=primary.get("username"),
-                user_id=primary.get("user_id"),
-                profile_url=primary.get("profile_url"),
-                target=primary,
-                type=type,
-                login=login,
-                stay_logged_in=stay_logged_in,
-                sleep=sleep,
-            )
+
+        csv_filename = self._build_follows_csv_filename(
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            targets=targets,
+            follow_type=normalized_follow_type,
         )
-        if isinstance(response, dict):
-            follows = response.get("follows")
-            if isinstance(follows, list):
-                return follows
-        return []
+
+        request_limit = self._coerce_request_limit(limit)
+        request_per_profile_limit = self._coerce_request_limit(per_profile_limit)
+        request_max_pages = self._coerce_request_limit(max_pages_per_profile)
+        request_max_switches = self._coerce_request_limit(max_account_switches)
+        request_max_empty_pages = self._resolve_max_empty_pages(max_empty_pages)
+
+        query_hash = compute_query_hash(
+            {
+                "mode": "follows",
+                "follow_type": normalized_follow_type,
+                "targets": targets,
+                "limit": request_limit,
+                "per_profile_limit": request_per_profile_limit,
+                "max_pages_per_profile": request_max_pages,
+                "cursor_handoff": bool(cursor_handoff),
+                "max_account_switches": request_max_switches,
+                "max_empty_pages": request_max_empty_pages,
+                "save_dir": save_dir,
+                "custom_csv_name": custom_csv_name,
+            }
+        )
+
+        initial_cursors: dict[str, str] = {}
+        if resume:
+            initial_cursors = self._load_follows_resume_cursors(query_hash=query_hash)
+
+        follows_request = FollowsRequest(
+            targets=targets,
+            follow_type=normalized_follow_type,
+            limit=request_limit,
+            per_profile_limit=request_per_profile_limit,
+            max_pages_per_profile=request_max_pages,
+            resume=resume,
+            query_hash=query_hash,
+            initial_cursors=initial_cursors,
+            cursor_handoff=bool(cursor_handoff),
+            max_account_switches=request_max_switches,
+            max_empty_pages=request_max_empty_pages,
+            raw_json=self._coerce_bool_flag(raw_json),
+        )
+
+        return await self._run_follows_pipeline(
+            follows_request=follows_request,
+            resume=resume,
+            query_hash=query_hash,
+            csv_filename=csv_filename,
+            save=save,
+            save_format=save_format,
+            raw_json=bool(follows_request.raw_json),
+        )
 
     def get_user_information(self, **profiles_kwargs):
         return asyncio.run(self.aget_user_information(**profiles_kwargs))
@@ -1425,13 +2459,18 @@ class Scweet:
         usernames=None,
         profile_urls=None,
         include_meta: bool = False,
+        save_dir: str = "outputs",
+        custom_csv_name: Optional[str] = None,
+        save: bool = False,
+        save_format: Optional[str] = None,
         **legacy_kwargs,
     ):
         if legacy_kwargs:
             unsupported = sorted(legacy_kwargs.keys())
             raise TypeError(
                 "aget_user_information supports only explicit inputs: "
-                "`usernames`, `profile_urls`"
+                "`usernames`, `profile_urls`, `include_meta`, `save_dir`, `custom_csv_name`, "
+                "`save`, `save_format`"
                 f" (unsupported: {', '.join(unsupported)})"
             )
 
@@ -1456,12 +2495,70 @@ class Scweet:
                     },
                 }
             return []
-        response = await self._runner.run_profiles(
-            ProfileRequest(
-                targets=targets,
-                login=login,
-            )
+
+        csv_filename = self._build_profiles_csv_filename(
+            save_dir=save_dir,
+            custom_csv_name=custom_csv_name,
+            targets=targets,
         )
+
+        effective_save_format = self._resolve_save_format(save_format, save=save)
+        profiles_write_state: dict[str, Any] = {}
+        run_profiles_fn = getattr(self._runner, "run_profiles")
+        runner_supports_stream = self._supports_kwarg(run_profiles_fn, "on_profiles_batch")
+        streaming_active = bool(effective_save_format != "none" and runner_supports_stream)
+
+        async def _on_profiles_batch(batch: list[Any]) -> None:
+            if not batch:
+                return
+            self._persist_profiles_outputs(
+                profiles=list(batch),
+                csv_filename=csv_filename,
+                resume=False,
+                save_format=effective_save_format,
+                write_state=profiles_write_state,
+            )
+
+        profile_request = ProfileRequest(
+            targets=targets,
+            login=login,
+        )
+        if streaming_active:
+            run_kwargs: dict[str, Any] = {
+                "on_profiles_batch": _on_profiles_batch,
+            }
+            response = await self._runner.run_profiles(
+                profile_request,
+                **run_kwargs,
+            )
+        else:
+            response = await self._runner.run_profiles(profile_request)
+
+        response_items: list[dict[str, Any]] = []
+        if isinstance(response, dict):
+            raw_items = response.get("items")
+            if isinstance(raw_items, list):
+                response_items = [item for item in raw_items if isinstance(item, dict)]
+        elif isinstance(response, list):
+            response_items = [item for item in response if isinstance(item, dict)]
+
+        if streaming_active:
+            response_items = self._persist_profiles_outputs(
+                profiles=response_items,
+                csv_filename=csv_filename,
+                resume=False,
+                save_format="none",
+            )
+        else:
+            response_items = self._persist_profiles_outputs(
+                profiles=response_items,
+                csv_filename=csv_filename,
+                resume=False,
+                save_format=effective_save_format,
+            )
+        if isinstance(response, dict):
+            response["items"] = response_items
+
         if include_meta and isinstance(response, dict):
             initial_skipped = list(normalized.get("skipped") or [])
             if initial_skipped:
@@ -1473,6 +2570,8 @@ class Scweet:
                 merged_skipped.extend(initial_skipped)
                 meta["skipped"] = merged_skipped
             return response
+        if response_items:
+            return response_items
         if isinstance(response, dict):
             if isinstance(response.get("items"), list):
                 return response["items"]

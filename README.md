@@ -12,8 +12,8 @@ Scweet is:
 - A hosted [**Apify Actor**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) (recommended for production runs and easy scaling).
 - A Python [**library**](https://pypi.org/project/Scweet) (recommended when you want to embed scraping in your own codebase).
 
-Tweet search and profile timeline scraping in v4 are **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
-Use `search()/asearch()` for structured query inputs. Use `profile_tweets()/aprofile_tweets()` for profile timeline scraping. `scrape()/ascrape()` remains for backward compatibility.
+Tweet search, profile timeline, and follows scraping in v4 are **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
+Use `search()/asearch()` for structured query inputs, `profile_tweets()/aprofile_tweets()` for profile timelines, and `get_followers()/get_following()/...` for follows. `scrape()/ascrape()` remains for backward compatibility.
 
 Full documentation: `DOCUMENTATION.md`
 
@@ -86,6 +86,8 @@ tweets = scweet.search(
     resume=True,
     save_dir="outputs",
     custom_csv_name="openai.csv",
+    save=True,
+    save_format="both",  # per-call: csv|json|both|none
 )
 
 print("tweets:", len(tweets))
@@ -129,6 +131,7 @@ cfg = ScweetConfig.from_sources(
             "account_min_delay_s": 2,
             "account_daily_requests_limit": 30,
             "account_daily_tweets_limit": 600,
+            "max_empty_pages": 1,
         },
         "output": {"dedupe_on_resume_by_tweet_id": True},
     },
@@ -143,7 +146,8 @@ Key knobs most users care about:
 - `operations.account_requests_per_min`
 - `operations.account_min_delay_s`
 - `operations.account_daily_requests_limit` and `operations.account_daily_tweets_limit`
-- `output.format` and `output.dedupe_on_resume_by_tweet_id`
+- `operations.max_empty_pages` (default `1`)
+- `output.format` (fallback when `save=True` and `save_format` is not passed) and `output.dedupe_on_resume_by_tweet_id`
 - `resume.mode` (`legacy_csv`, `db_cursor`, `hybrid_safe`)
 
 Logging (optional):
@@ -257,7 +261,10 @@ Key canonical search inputs:
 - `lang`
 - `display_type` ("Top" or "Latest")
 - `limit` (best-effort per run)
+- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results
 - `resume=True` appends to outputs and continues using the configured resume mode
+- `save` (`False` by default): enable file writing for this call
+- `save_format` (`csv|json|both|none`): used only when `save=True`
 
 Legacy query aliases still accepted (deprecated in v4.x):
 
@@ -267,12 +274,14 @@ Legacy query aliases still accepted (deprecated in v4.x):
 
 The return value is always `list[dict]` of raw GraphQL tweet objects.
 
-Files are controlled by `output_format`:
+File writing is controlled per call via `save` + `save_format`:
 
 - `csv`: curated "important fields" schema
 - `json`: raw tweets (full fidelity)
 - `both`: write both
 - `none`: return only
+
+Writing happens only when `save=True`. If `save=True` and `save_format` is omitted, Scweet uses config `output.format` (if not set or `none`, it won't write).
 
 ## Profile Information
 
@@ -290,6 +299,10 @@ result = scweet.get_user_information(
     usernames=["OpenAI", "elonmusk"],
     profile_urls=["https://x.com/OpenAI"],
     include_meta=True,  # return items + request meta/errors
+    save_dir="outputs",
+    custom_csv_name="profiles_info.csv",
+    save=True,
+    save_format="both",
 )
 print(result["items"])
 print(result["meta"])
@@ -310,11 +323,15 @@ Main controls:
 
 - `limit`: global cap across all requested profiles
 - `per_profile_limit`: cap per profile target
-- `max_pages_per_profile`: hard page cap per profile
+- `max_pages_per_profile`: hard page cap per profile (default: unlimited)
+- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results
 - `resume=True`: continue from saved cursor state
 - `offline=True`: scrape profile timelines without leasing an account (best-effort, usually limited pages)
 - `cursor_handoff=True`: allow cursor continuation on another account for transient/rate/auth issues
 - `max_account_switches`: cap cursor handoffs per target
+- `save_dir`, `custom_csv_name`: output path controls
+- `save` (`False` by default): enable file writing for this call
+- `save_format` (`csv|json|both|none`): used only when `save=True`
 
 Example:
 
@@ -331,6 +348,8 @@ tweets = scweet.profile_tweets(
     max_account_switches=2,
     save_dir="outputs",
     custom_csv_name="profiles_timeline.csv",
+    save=True,
+    save_format="both",
 )
 print(len(tweets))  # list[dict] of raw GraphQL tweet objects
 ```
@@ -343,6 +362,81 @@ Aliases:
 
 - `get_profile_timeline(...)` (sync)
 - `aget_profile_timeline(...)` (async)
+
+## Followers / Following
+
+Preferred target inputs:
+
+- `usernames=[...]`
+- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
+- `user_ids=[...]` (direct numeric user ids, no username/url lookup needed)
+
+Legacy aliases are still accepted for compatibility (`handle`, `user_id`, `profile_url`, `users`, `user_ids`, `type`; `login/stay_logged_in/sleep` are accepted and ignored).
+
+Available sync methods:
+
+- `get_followers(...)`
+- `get_following(...)`
+- `get_verified_followers(...)`
+
+Async equivalents:
+
+- `aget_followers(...)`
+- `aget_following(...)`
+- `aget_verified_followers(...)`
+
+Main controls:
+
+- `limit`: global cap across all requested targets
+- `per_profile_limit`: cap per target
+- `max_pages_per_profile`: hard page cap per target (default: unlimited)
+- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results
+- `resume=True`: continue from saved per-target cursor state
+- `cursor_handoff=True`: continue the same cursor on another account for retryable failures
+- `max_account_switches`: cap handoffs per target
+- `save_dir`, `custom_csv_name`: output path controls (same as search/profile timeline)
+- `save` (`False` by default): enable file writing for this call
+- `save_format` (`csv|json|both|none`): used only when `save=True`
+- `raw_json` (`False` by default): for follows JSON/output, choose curated rows (`False`) or raw user payload rows (`True`)
+- account pacing/cooldown uses the same knobs as search: `operations.account_requests_per_min`, `operations.account_min_delay_s`, and cooldown policy (`cooldown_*`)
+- `x-rate-limit-remaining` is enforced preemptively: when a `200` response reports exhausted remaining budget, the account is treated as rate-limited (cooldown from `x-rate-limit-reset` when present), then handoff/stop logic is applied
+- follows page usage increments per-account item pressure using `unique_results` (recorded through the same daily counter field used by search)
+
+Example:
+
+```python
+followers = scweet.get_followers(
+    usernames=["OpenAI", "elonmusk"],
+    profile_urls=["https://x.com/OpenAI"],
+    user_ids=["44196397"],  # optional: direct id target
+    limit=500,
+    per_profile_limit=250,
+    max_pages_per_profile=40,
+    resume=True,
+    cursor_handoff=True,
+    max_account_switches=2,
+    save_dir="outputs",
+    custom_csv_name="followers.csv",
+    save=True,
+    save_format="json",
+    raw_json=True,  # JSON/output rows contain full Twitter user payload under `raw`
+)
+print(len(followers))
+```
+
+Return value is `list[dict]`. Each item includes:
+
+- `type` (`followers`, `following`, `verified_followers`)
+- `target` (the input profile target this row belongs to)
+- user fields (`user_id`, `username`, counts, verification flags, `raw`) when `raw_json=False` (default)
+- raw payload rows (`follow_key`, `type`, `target`, `raw`) when `raw_json=True`
+
+Follows methods use the same per-call `save_format` contract:
+
+- `csv`: write follows CSV
+- `json`: write follows JSON rows (`raw_json=False`: curated rows, `raw_json=True`: full payload rows)
+- `both`: write both
+- `none`: do not write files
 
 ## Resume + Dedupe
 
@@ -367,10 +461,6 @@ print(db.clear_leases(expired_only=True))
 print(db.reset_account_cooldowns(clear_leases=True, include_unusable=True))
 print(db.collapse_duplicates_by_auth_token(dry_run=True))
 ```
-
-## Coming Soon
-
-- Followers/following scraping
 
 ## More Details
 

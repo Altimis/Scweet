@@ -1,6 +1,6 @@
 # Scweet v4 Documentation
 
-Scweet v4 preserves the familiar v3 surface (`Scweet(...)`, `scrape/ascrape`, output filenames, resume flags) while moving tweet scraping to an **API-only** core and introducing **DB-first account provisioning** (SQLite). For new code, prefer `search(...)` / `asearch(...)` for structured query inputs and `profile_tweets(...)` / `aprofile_tweets(...)` for profile timeline scraping.
+Scweet v4 preserves the familiar v3 surface (`Scweet(...)`, `scrape/ascrape`, output filenames, resume flags) while moving scraping to an **API-only** core and introducing **DB-first account provisioning** (SQLite). For new code, prefer `search(...)` / `asearch(...)` for structured query inputs, `profile_tweets(...)` / `aprofile_tweets(...)` for profile timeline scraping, and follows methods (`get_followers(...)`, `get_following(...)`, etc.) for social graph scraping.
 
 ## What’s In v4 (and What Isn’t)
 
@@ -8,13 +8,13 @@ Supported:
 
 - Tweet search scraping (GraphQL SearchTimeline), API-only.
 - Profile timeline scraping (GraphQL UserTweets), API-only.
+- Followers/following scraping (GraphQL Followers/Following/BlueVerifiedFollowers), API-only.
 - Multiple provisioning sources: `.env`, `accounts.txt`, `cookies.json`, Netscape `cookies.txt`, direct `cookies=` payload.
 - Local SQLite state: accounts leasing/cooldowns, resume checkpoints, run stats, manifest cache.
 - Optional internal cookie bootstrap with `nodriver` (credentials -> cookies). No scraping via browser.
 
 Not implemented (v4.x):
 
-- Followers/following APIs currently return `501 Not implemented`.
 - API login/provisioning with credentials
 
 ## Installation
@@ -227,6 +227,7 @@ Account leasing, rate limiting, retries, and cooldown policy.
 | `operations.account_requests_per_min` | `int` | `30`                         | Per-account request rate limit (token bucket). |
 | `operations.account_min_delay_s` | `float` | `2.0`                        | Minimum delay between requests (per account worker). |
 | `operations.api_page_size` | `int` | `20`                         | GraphQL page size (`count`). Larger values reduce requests but can increase per-request payload. Max 100. |
+| `operations.max_empty_pages` | `int` | `1`                          | Stop pagination after this many consecutive pages return `0` results. |
 | `operations.task_retry_base_s` | `int` | `1`                          | Base delay (seconds) used for task retries. |
 | `operations.task_retry_max_s` | `int` | `30`                         | Max delay (seconds) for exponential backoff on transient errors. |
 | `operations.max_task_attempts` | `int` | `3`                          | Max retries per task before failing. |
@@ -249,7 +250,7 @@ File outputs (return value is always `list[dict]`).
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `output.save_dir` | `str` | `"outputs"` | Default directory for output files (can be overridden per call via `save_dir=`). |
-| `output.format` | `"csv" \| "json" \| "both" \| "none"` | `"csv"` | Which files Scweet writes: CSV only, JSON only, both, or none. |
+| `output.format` | `"csv" \| "json" \| "both" \| "none"` | `"csv"` | Fallback file format when a method call uses `save=True` and does not pass `save_format`. |
 | `output.dedupe_on_resume_by_tweet_id` | `bool` | `False` | If `True` and `resume=True`, Scweet avoids appending duplicates (by tweet id) to CSV and JSON outputs. |
 
 #### `manifest`
@@ -319,7 +320,10 @@ Important parameters:
 - `lang`
 - `display_type`: `"Top"` or `"Latest"` (legacy value `"Recent"` is treated as `"Latest"`).
 - `limit`: best-effort per-run cap. Due to concurrency/page size, you may overshoot slightly.
+- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results.
 - `resume`: append to existing outputs + attempt continuation using resume mode policy.
+- `save`: enable file writing for this call (`False` by default).
+- `save_format`: per-call output format (`csv|json|both|none`), used only when `save=True`.
 
 ### `scrape(...)` and `ascrape(...)` (compat wrappers)
 
@@ -364,6 +368,10 @@ result = scweet.get_user_information(
     usernames=["OpenAI", "elonmusk"],
     profile_urls=["https://x.com/OpenAI"],
     include_meta=True,
+    save_dir="outputs",
+    custom_csv_name="profiles_info.csv",
+    save=True,
+    save_format="both",
 )
 print(result["items"])  # list of profile records
 print(result["meta"])   # requested/resolved/failed/skipped/errors
@@ -387,12 +395,15 @@ Main parameters:
 
 - `limit`: global cap across all requested profiles.
 - `per_profile_limit`: cap per profile target.
-- `max_pages_per_profile`: hard page cap per profile.
+- `max_pages_per_profile`: hard page cap per profile (default: unlimited).
+- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results.
 - `resume`: continue from saved per-profile cursors.
 - `offline`: scrape without leasing an account (best-effort; X usually limits depth/pages for anonymous access).
 - `cursor_handoff`: allow same-cursor continuation on another account for retryable failures.
 - `max_account_switches`: max handoffs per profile target.
 - `save_dir`, `custom_csv_name`: output path controls, same as search.
+- `save`: enable file writing for this call (`False` by default).
+- `save_format`: per-call output format (`csv|json|both|none`), used only when `save=True`.
 
 Simple usage:
 
@@ -409,6 +420,8 @@ tweets = scweet.profile_tweets(
     max_account_switches=2,
     save_dir="outputs",
     custom_csv_name="profiles_timeline.csv",
+    save=True,
+    save_format="both",
 )
 print(len(tweets))
 ```
@@ -422,18 +435,97 @@ Default config knob:
 
 - `operations.profile_timeline_allow_anonymous` (`False` by default). When enabled, profile timeline scraping can run without leasing accounts unless overridden per call (`offline=`).
 
+## Followers / Following API
+
+Preferred input fields:
+
+- `usernames=[...]`
+- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
+- `user_ids=[...]` (direct numeric user ids, no username/url lookup needed)
+
+Legacy aliases are still accepted for compatibility (`handle`, `user_id`, `profile_url`, `users`, `user_ids`, `type`; `login/stay_logged_in/sleep` are accepted and ignored).
+
+Methods:
+
+- Sync: `get_followers(...)`, `get_following(...)`, `get_verified_followers(...)`
+- Async: `aget_followers(...)`, `aget_following(...)`, `aget_verified_followers(...)`
+
+Main parameters:
+
+- `limit`: global cap across all requested targets.
+- `per_profile_limit`: cap per target.
+- `max_pages_per_profile`: hard page cap per target (default: unlimited).
+- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results.
+- `resume`: continue from saved per-target cursors.
+- `cursor_handoff`: allow same-cursor continuation on another account for retryable failures.
+- `max_account_switches`: max handoffs per target.
+- `save_dir`, `custom_csv_name`: output path controls, same style as search/profile timeline.
+- `save`: enable file writing for this call (`False` by default).
+- `save_format`: per-call output format (`csv|json|both|none`), used only when `save=True`.
+- `raw_json` (`False` by default): for follows JSON/output, choose curated rows (`False`) or raw user payload rows (`True`).
+- account pacing/cooldown uses the same operations knobs as search:
+  - `operations.account_requests_per_min`
+  - `operations.account_min_delay_s`
+  - `operations.cooldown_default_s`, `operations.transient_cooldown_s`, `operations.auth_cooldown_s`, `operations.cooldown_jitter_s`
+- preemptive header handling is enabled:
+  - when `x-rate-limit-remaining <= 0` on an otherwise `200` response, Scweet treats the account as rate-limited (`429` effective status)
+  - cooldown uses `x-rate-limit-reset` when present
+  - with `cursor_handoff=True`, the cursor can continue on another account (up to `max_account_switches`)
+- follows page usage contributes `unique_results` into the same per-account daily item counter field used by search runs
+
+Simple usage:
+
+```python
+followers = scweet.get_followers(
+    usernames=["OpenAI", "elonmusk"],
+    profile_urls=["https://x.com/OpenAI"],
+    user_ids=["44196397"],  # optional: direct id target
+    limit=500,
+    per_profile_limit=250,
+    max_pages_per_profile=40,
+    resume=True,
+    cursor_handoff=True,
+    max_account_switches=2,
+    save_dir="outputs",
+    custom_csv_name="followers.csv",
+    save=True,
+    save_format="json",
+    raw_json=True,  # JSON/output rows contain full Twitter user payload under `raw`
+)
+print(len(followers))
+```
+
+Output shape:
+
+- Return value is `list[dict]`.
+- Each row includes:
+  - `type` (`followers`, `following`, `verified_followers`)
+  - `target` (the requested profile this row belongs to)
+  - user fields (`user_id`, `username`, counts, verification flags, and `raw`) when `raw_json=False` (default)
+  - raw payload rows (`follow_key`, `type`, `target`, `raw`) when `raw_json=True`
+- File writing uses per-call `save_format`:
+  - `csv`: follows CSV rows
+  - `json`: follows JSON rows (`raw_json=False`: curated rows, `raw_json=True`: full payload rows)
+  - `both`: CSV + JSON
+  - `none`: no files
+
 ## Output (Return + Files)
 
 Return value:
 
 - `search/asearch/scrape/ascrape/profile_tweets/aprofile_tweets/get_profile_timeline/aget_profile_timeline` return `list[dict]` of **raw GraphQL tweet objects** (`tweet_results.result`).
+- `get_followers/get_following/get_verified_followers` (and async variants):
+  - `raw_json=False` (default): return curated user rows with a per-row `target` field.
+  - `raw_json=True`: return rows containing `{follow_key, type, target, raw}` where `raw` is the full user payload from Twitter.
 
-File outputs are controlled by `config.output.format`:
+File outputs are controlled per call via `save` + `save_format`:
 
 - `csv` (default): curated CSV schema with important fields
 - `json`: raw tweet objects saved as JSON array
 - `both`: write CSV + JSON
 - `none`: don’t write files
+
+Writing happens only when `save=True`. If `save=True` and `save_format` is omitted, Scweet uses config `output.format` (if not set or `none`, it won't write).
 
 ### Dedupe on resume (CSV and JSON)
 

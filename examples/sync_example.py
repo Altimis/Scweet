@@ -80,6 +80,8 @@ def main() -> None:
         resume=True,  # appends to existing outputs and continues based on resume mode
         save_dir=str(outputs_dir),
         custom_csv_name="sync_bitcoin.csv",
+        save=True,
+        save_format="both",  # csv|json|both|none (per call)
         display_type="Latest",
         # Optional structured filters:
         # from_users=["elonmusk"],
@@ -96,6 +98,10 @@ def main() -> None:
         usernames=["OpenAI", "elonmusk"],
         profile_urls=["https://x.com/OpenAI"],
         include_meta=True,
+        save_dir=str(outputs_dir),
+        custom_csv_name="profiles_info.csv",
+        save=True,
+        save_format="both",
     )
     print("user_info.items:", len(profile_result.get("items") or []))
     print("user_info.resolved:", (profile_result.get("meta") or {}).get("resolved"))
@@ -113,8 +119,44 @@ def main() -> None:
         max_account_switches=2,
         save_dir=str(outputs_dir),
         custom_csv_name="profiles_timeline.csv",
+        save=True,
+        save_format="both",
     )
     print("profile_tweets:", len(profile_tweets))
+
+    followers = scweet.get_followers(
+        usernames=["OpenAI", "elonmusk"],
+        profile_urls=["https://x.com/OpenAI"],
+        limit=200,
+        per_profile_limit=100,
+        max_pages_per_profile=20,
+        resume=True,
+        cursor_handoff=True,
+        max_account_switches=2,
+        save_dir=str(outputs_dir),
+        custom_csv_name="followers.csv",
+        save=True,
+        save_format="csv",
+        # raw_json=True,  # when save_format includes json, emit full payload rows under `raw`
+    )
+    print("followers:", len(followers))
+
+    following = scweet.get_following(
+        usernames=["OpenAI"],
+        profile_urls=["https://x.com/elonmusk"],
+        limit=100,
+        per_profile_limit=100,
+        max_pages_per_profile=20,
+        resume=True,
+        cursor_handoff=True,
+        max_account_switches=2,
+        save_dir=str(outputs_dir),
+        custom_csv_name="following.csv",
+        save=True,
+        save_format="csv",
+        # raw_json=True,
+    )
+    print("following:", len(following))
 
     # 6) Inspect DB state / maintenance helpers
     db = ScweetDB(str(db_path))

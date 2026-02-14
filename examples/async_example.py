@@ -44,8 +44,8 @@ async def main() -> None:
     # Optional: set/override a per-account proxy in the DB (applies to API calls for that account).
     # ScweetDB(str(db_path)).set_account_proxy("acct-a", {"host": "127.0.0.1", "port": 8080})
 
-    # If you don't want to save the tweets (keep in memory), set
-    # scweet.config.output.format = "none"
+    # Calls are in-memory by default (`save=False`).
+    # To write files, set save=True (and optionally save_format).
 
     tweets = await scweet.asearch(
         since="2026-02-01",
@@ -58,6 +58,8 @@ async def main() -> None:
         resume=True,
         save_dir=str(outputs_dir),
         custom_csv_name="async_bitcoin.csv",
+        save=True,
+        save_format="both",
         display_type="Latest",
     )
     print("tweets:", len(tweets))
@@ -66,6 +68,10 @@ async def main() -> None:
         usernames=["elonmusk"],
         profile_urls=["https://x.com/OpenAI"],
         include_meta=True,
+        save_dir=str(outputs_dir),
+        custom_csv_name="async_profiles_info.csv",
+        save=True,
+        save_format="both",
     )
     print("user_info.items:", len(profile_result.get("items") or []))
     print("user_info.resolved:", (profile_result.get("meta") or {}).get("resolved"))
@@ -82,8 +88,44 @@ async def main() -> None:
         max_account_switches=2,
         save_dir=str(outputs_dir),
         custom_csv_name="async_profiles_timeline.csv",
+        save=True,
+        save_format="both",
     )
     print("profile_tweets:", len(profile_tweets))
+
+    followers = await scweet.aget_followers(
+        usernames=["OpenAI", "elonmusk"],
+        profile_urls=["https://x.com/OpenAI"],
+        limit=200,
+        per_profile_limit=100,
+        max_pages_per_profile=20,
+        resume=True,
+        cursor_handoff=True,
+        max_account_switches=2,
+        save_dir=str(outputs_dir),
+        custom_csv_name="async_followers.csv",
+        save=True,
+        save_format="csv",
+        # raw_json=True,   # when save_format includes json, emit full payload rows under `raw`
+    )
+    print("followers:", len(followers))
+
+    following = await scweet.aget_following(
+        usernames=["OpenAI"],
+        profile_urls=["https://x.com/elonmusk"],
+        limit=100,
+        per_profile_limit=100,
+        max_pages_per_profile=20,
+        resume=True,
+        cursor_handoff=True,
+        max_account_switches=2,
+        save_dir=str(outputs_dir),
+        custom_csv_name="async_following.csv",
+        save=True,
+        save_format="csv",
+        # raw_json=True,
+    )
+    print("following:", len(following))
 
     # Optional: explicitly close the underlying HTTP engine/session pool.
     await scweet.aclose()

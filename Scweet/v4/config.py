@@ -162,6 +162,7 @@ class OperationalConfig(BaseModel):
     account_requests_per_min: int = Field(default=30, ge=1)
     account_min_delay_s: float = Field(default=2.0, ge=0.0)
     api_page_size: int = Field(default=20, ge=1, le=100)
+    max_empty_pages: int = Field(default=1, ge=1)
     task_retry_base_s: int = Field(default=1, ge=0)
     task_retry_max_s: int = Field(default=30, ge=0)
     max_task_attempts: int = Field(default=3, ge=1)
@@ -440,6 +441,7 @@ def build_config_from_legacy_init_kwargs(**kwargs) -> tuple[ScweetConfig, list[s
         "account_requests_per_min",
         "account_min_delay_s",
         "api_page_size",
+        "max_empty_pages",
         "task_retry_base_s",
         "task_retry_max_s",
         "max_task_attempts",

@@ -9,7 +9,12 @@ import logging
 from typing import Any, Optional
 import uuid
 
-from .cooldown import compute_cooldown
+from .cooldown import (
+    compute_cooldown,
+    effective_status_with_rate_limit_headers,
+    parse_rate_limit_remaining,
+    parse_rate_limit_reset,
+)
 from .exceptions import (
     AccountPoolExhausted,
     AccountSessionBuildError,
@@ -200,7 +205,7 @@ class Runner:
                 return candidate
         return None
 
-    async def run_search(self, search_request):
+    async def run_search(self, search_request, on_tweets_batch: Optional[Any] = None):
         # Reset per-run repair state to keep repair attempts bounded.
         self._repair_attempted_keys = set()
         self._repair_source_records = None
@@ -243,6 +248,7 @@ class Runner:
         failure: Optional[BaseException] = None
         stats_lock = asyncio.Lock()
         global_stop_event = asyncio.Event()
+        callback_lock: Optional[asyncio.Lock] = asyncio.Lock() if on_tweets_batch is not None else None
         leased_accounts: dict[str, dict[str, Any]] = {}
         handed_off_lease_ids: set[str] = set()
         error_events: list[dict[str, Any]] = []
@@ -320,6 +326,8 @@ class Runner:
                             stop_event=global_stop_event,
                             error_events=error_events,
                             error_lock=error_lock,
+                            on_tweets_batch=on_tweets_batch,
+                            callback_lock=callback_lock,
                         )
                     )
                 )
@@ -575,16 +583,23 @@ class Runner:
         )
         return False
 
-    async def run_profiles(self, profile_request):
+    async def run_profiles(self, profile_request, on_profiles_batch: Optional[Any] = None):
         if self.profile_engine is None:
             raise EngineError("No engine available for run_profiles")
-        return await _maybe_await(self.profile_engine.get_profiles(profile_request))
+        get_profiles_fn = self.profile_engine.get_profiles
+        if self._supports_kwarg(get_profiles_fn, "on_profiles_batch"):
+            return await _maybe_await(get_profiles_fn(profile_request, on_profiles_batch=on_profiles_batch))
+        return await _maybe_await(get_profiles_fn(profile_request))
 
-    async def run_profile_tweets(self, profile_timeline_request):
+    async def run_profile_tweets(self, profile_timeline_request, on_tweets_page: Optional[Any] = None):
         if self.profile_timeline_engine is None:
             raise EngineError("No engine available for run_profile_tweets")
         request = self._coerce_profile_timeline_request(profile_timeline_request)
-        response = await _maybe_await(self.profile_timeline_engine.get_profile_tweets(request))
+        get_profile_tweets_fn = self.profile_timeline_engine.get_profile_tweets
+        if self._supports_kwarg(get_profile_tweets_fn, "on_tweets_page"):
+            response = await _maybe_await(get_profile_tweets_fn(request, on_tweets_page=on_tweets_page))
+        else:
+            response = await _maybe_await(get_profile_tweets_fn(request))
         if isinstance(response, dict):
             payload = dict(response)
             result_obj = payload.get("result")
@@ -606,10 +621,13 @@ class Runner:
             "limit_reached": False,
         }
 
-    async def run_follows(self, follows_request):
+    async def run_follows(self, follows_request, on_follows_page: Optional[Any] = None):
         if self.follows_engine is None:
             raise EngineError("No engine available for run_follows")
-        return await _maybe_await(self.follows_engine.get_follows(follows_request))
+        get_follows_fn = self.follows_engine.get_follows
+        if self._supports_kwarg(get_follows_fn, "on_follows_page"):
+            return await _maybe_await(get_follows_fn(follows_request, on_follows_page=on_follows_page))
+        return await _maybe_await(get_follows_fn(follows_request))
 
     async def _run_worker_with_heartbeat(
         self,
@@ -627,6 +645,8 @@ class Runner:
         stop_event: Optional[asyncio.Event] = None,
         error_events: Optional[list[dict[str, Any]]] = None,
         error_lock: Optional[asyncio.Lock] = None,
+        on_tweets_batch: Optional[Any] = None,
+        callback_lock: Optional[asyncio.Lock] = None,
     ) -> None:
         lease_id = str(account.get("lease_id") or "").strip()
         ttl_s = max(1, int(_config_value(self.config, "account_lease_ttl_s", 120)))
@@ -674,6 +694,8 @@ class Runner:
                 stop_event=stop_event,
                 error_events=error_events,
                 error_lock=error_lock,
+                on_tweets_batch=on_tweets_batch,
+                callback_lock=callback_lock,
             )
         finally:
             cancelled = False
@@ -797,6 +819,8 @@ class Runner:
         stop_event: Optional[asyncio.Event] = None,
         error_events: Optional[list[dict[str, Any]]] = None,
         error_lock: Optional[asyncio.Lock] = None,
+        on_tweets_batch: Optional[Any] = None,
+        callback_lock: Optional[asyncio.Lock] = None,
     ) -> None:
         account_status = 1
         last_headers: Optional[dict[str, Any]] = None
@@ -814,6 +838,10 @@ class Runner:
         max_task_attempts = max(1, int(_config_value(self.config, "max_task_attempts", 3)))
         max_fallback_attempts = max(1, int(_config_value(self.config, "max_fallback_attempts", 3)))
         max_account_switches = max(0, int(_config_value(self.config, "max_account_switches", 2)))
+        configured_max_empty_pages = self._coerce_max_empty_pages(
+            _config_value(self.config, "max_empty_pages", 1),
+            default=1,
+        )
 
         try:
             if self.account_session_builder is not None:
@@ -956,6 +984,16 @@ class Runner:
                     request_payload["_account_session"] = account_session
                 if task_query.get("cursor"):
                     request_payload["cursor"] = task_query["cursor"]
+                task_max_empty_pages = self._coerce_max_empty_pages(
+                    request_payload.get("max_empty_pages"),
+                    default=configured_max_empty_pages,
+                )
+                try:
+                    empty_pages_count = int(task.get("empty_pages_count", 0) or 0)
+                except Exception:
+                    empty_pages_count = 0
+                if empty_pages_count < 0:
+                    empty_pages_count = 0
 
                 await limiter.acquire()
 
@@ -970,8 +1008,12 @@ class Runner:
                         "text_snippet": _truncate(str(exc)),
                     }
 
-                status_code = int((response or {}).get("status_code") or 200)
-                last_headers = (response or {}).get("headers") or last_headers
+                raw_status_code = int((response or {}).get("status_code") or 200)
+                response_headers = (response or {}).get("headers") or {}
+                if response_headers:
+                    last_headers = response_headers
+                effective_status_code = effective_status_with_rate_limit_headers(raw_status_code, response_headers)
+                preemptive_rate_limited = raw_status_code == 200 and effective_status_code == 429
                 next_cursor = (response or {}).get("cursor")
 
                 tweets = self._extract_tweets(response)
@@ -980,9 +1022,19 @@ class Runner:
                 if lease_id and hasattr(self.accounts_repo, "record_usage"):
                     await _maybe_await(self.accounts_repo.record_usage(lease_id, pages=1, tweets=tweets_count))
 
-                if status_code == 200:
+                if preemptive_rate_limited:
+                    logger.info(
+                        "Search rate-limit preemptive block account=%s remaining=%s reset=%s treated_status=%s",
+                        account.get("username"),
+                        parse_rate_limit_remaining(response_headers),
+                        parse_rate_limit_reset(response_headers),
+                        effective_status_code,
+                    )
+
+                if raw_status_code == 200:
                     limit_reached = False
                     unique_added = 0
+                    page_unique_tweets: list[Any] = []
                     async with stats_lock:
                         for tweet in tweets:
                             tweet_id = self._tweet_id(tweet)
@@ -991,9 +1043,49 @@ class Runner:
                             if tweet_id:
                                 seen_tweet_ids.add(tweet_id)
                             tweets_out.append(tweet)
+                            page_unique_tweets.append(tweet)
                             unique_added += 1
                         if global_limit is not None and len(tweets_out) >= global_limit:
                             limit_reached = True
+
+                    if page_unique_tweets and on_tweets_batch is not None:
+                        try:
+                            if callback_lock is None:
+                                await _maybe_await(on_tweets_batch(page_unique_tweets))
+                            else:
+                                async with callback_lock:
+                                    await _maybe_await(on_tweets_batch(page_unique_tweets))
+                        except Exception as exc:
+                            logger.warning(
+                                "Search page streaming callback failed account=%s detail=%s",
+                                account.get("username"),
+                                str(exc),
+                            )
+
+                    if tweets_count == 0:
+                        empty_pages_count += 1
+                    else:
+                        empty_pages_count = 0
+                    stop_due_to_empty_pages = empty_pages_count >= task_max_empty_pages
+
+                    logger.info(
+                        "Search page processed status=200 account=%s results=%s unique_results=%s empty_pages=%s/%s continue_with_cursor=%s next_cursor=%s",
+                        account.get("username"),
+                        tweets_count,
+                        unique_added,
+                        empty_pages_count,
+                        task_max_empty_pages,
+                        bool((response or {}).get("continue_with_cursor")),
+                        bool(next_cursor),
+                    )
+                    if stop_due_to_empty_pages:
+                        logger.info(
+                            "Search pagination stopped due to empty pages account=%s empty_pages=%s limit=%s",
+                            account.get("username"),
+                            empty_pages_count,
+                            task_max_empty_pages,
+                        )
+
                     if limit_reached and stop_event is not None:
                         stop_event.set()
 
@@ -1010,7 +1102,7 @@ class Runner:
                                 await _maybe_await(
                                     self.resume_repo.save_checkpoint(
                                         query_hash,
-                                        next_cursor,
+                                        None if stop_due_to_empty_pages else next_cursor,
                                         task_since,
                                         task_until,
                                     )
@@ -1018,23 +1110,38 @@ class Runner:
                             except Exception:
                                 pass
 
-                    should_continue_with_cursor = bool((response or {}).get("continue_with_cursor")) and bool(next_cursor)
+                    should_continue_with_cursor = (
+                        not stop_due_to_empty_pages
+                        and bool((response or {}).get("continue_with_cursor"))
+                        and bool(next_cursor)
+                    )
                     continuation_task = None
                     if should_continue_with_cursor and not limit_reached:
-                        continuation_task = self._build_continuation_task(task, next_cursor=str(next_cursor))
+                        continuation_task = self._build_continuation_task(
+                            task,
+                            next_cursor=str(next_cursor),
+                            empty_pages_count=empty_pages_count,
+                        )
                     if continuation_task is not None:
                         await queue.enqueue([continuation_task])
+                        if preemptive_rate_limited:
+                            account_status = effective_status_code
+                            break
                         account_status = 1
                         continue
 
                     await queue.ack(task, stats={"pages": 1, "tweets": unique_added})
                     async with stats_lock:
                         stats.tasks_done += 1
+                    if preemptive_rate_limited:
+                        account_status = effective_status_code
+                        break
                     account_status = 1
                     if limit_reached:
                         break
                     continue
 
+                status_code = int(effective_status_code)
                 account_status = status_code
                 await _append_error_event(
                     error_events,
@@ -1244,11 +1351,37 @@ class Runner:
         return parsed
 
     @staticmethod
+    def _coerce_max_empty_pages(value: Any, *, default: int = 1) -> int:
+        try:
+            parsed = int(value)
+        except Exception:
+            parsed = int(default)
+        return max(1, parsed)
+
+    @staticmethod
+    def _supports_kwarg(func: Any, kwarg_name: str) -> bool:
+        try:
+            signature = inspect.signature(func)
+        except Exception:
+            return False
+        if kwarg_name in signature.parameters:
+            return True
+        for parameter in signature.parameters.values():
+            if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+                return True
+        return False
+
+    @staticmethod
     def _is_limit_reached(global_limit: Optional[int], tweets_count: int) -> bool:
         return bool(global_limit is not None and tweets_count >= global_limit)
 
     @staticmethod
-    def _build_continuation_task(task: dict[str, Any], next_cursor: str) -> Optional[dict[str, Any]]:
+    def _build_continuation_task(
+        task: dict[str, Any],
+        *,
+        next_cursor: str,
+        empty_pages_count: int = 0,
+    ) -> Optional[dict[str, Any]]:
         query = task.get("query") or {}
         if not isinstance(query, dict):
             return None
@@ -1271,6 +1404,7 @@ class Runner:
         next_query["cursor"] = normalized_next_cursor
         continuation["query"] = next_query
         continuation["cursor_history"] = list(seen_cursors)
+        continuation["empty_pages_count"] = max(0, int(empty_pages_count or 0))
         continuation.pop("lease_id", None)
         continuation.pop("lease_worker_id", None)
         return continuation

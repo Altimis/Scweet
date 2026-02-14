@@ -26,6 +26,7 @@ All notable changes to this project are documented in this file.
   - `hybrid_safe`
 - Output format controls:
   - `config.output.format` (`csv|json|both|none`)
+  - per-call `save` + `save_format` controls across methods (`save=False` by default; when `save=True`, format is `csv|json|both|none`)
 - Canonical structured search methods:
   - `Scweet.search(...)` (sync)
   - `Scweet.asearch(...)` (async)
@@ -39,6 +40,23 @@ All notable changes to this project are documented in this file.
   - accepts explicit targets (`usernames`, `profile_urls`)
   - default return is `list[dict]` profile records (`items`)
   - optional response envelope via `include_meta=True` (`{items, meta, status_code}`)
+  - supports file persistence with `save_dir`, `custom_csv_name`, and `save_format`
+- Follows output enhancements:
+  - new per-call `raw_json` toggle on follows methods (`get_followers/get_following/get_verified_followers` and async variants)
+  - `raw_json=False` (default): curated follows rows for JSON/output
+  - `raw_json=True`: JSON/output rows keep full Twitter user payload under `raw` while CSV stays curated
+  - improved field mapping fallbacks from modern user-result nodes (`core`, `verification`, `privacy`, `avatar`, `location`)
+- Follows account-health parity with search:
+  - per-account pacing limiter now applies to follows requests (`account_requests_per_min`, `account_min_delay_s`)
+  - follows sessions now release with search-style cooldown fields (`status`, `available_til`, `cooldown_reason`, `last_error_code`)
+  - follows usage accounting now records unique added users per page (for daily cap pressure), not always `tweets=0`
+  - preemptive rate-limit handling via `x-rate-limit-remaining` + `x-rate-limit-reset` (effective status `429` on exhausted remaining)
+  - long follows runs now keep lease heartbeats active (`account_lease_heartbeat_s`)
+- Search preemptive rate-limit handling:
+  - when `x-rate-limit-remaining <= 0` on status `200`, the account is treated as rate-limited and cooled down via existing cooldown flow
+- Pagination defaults:
+  - `max_pages_per_profile` now defaults to unlimited for profile timeline and follows flows
+  - runs stop via user caps (`limit`, `per_profile_limit`), cursor exhaustion, or `max_empty_pages` unless an explicit `max_pages_per_profile` is provided
 - Profile timeline scraping via:
   - `profile_tweets(...)` / `aprofile_tweets(...)` (primary API)
   - `get_profile_timeline(...)` / `aget_profile_timeline(...)` (aliases)
@@ -46,6 +64,13 @@ All notable changes to this project are documented in this file.
   - supports cursor resume, per-profile/page limits, and optional cursor handoff across accounts
   - supports optional anonymous mode (`offline=True`) for best-effort profile timeline scraping without account leasing
   - returns `list[dict]` raw tweet objects and uses the same output writing path as search APIs
+- Empty-page pagination guard for all cursor-based methods:
+  - new input + config knob: `max_empty_pages` (default `1`)
+  - stops pagination when consecutive pages return `0` results, even if cursor continues to advance
+  - adds per-page result logging for `status=200` with total and unique counts
+- Streaming output persistence for paginated methods:
+  - search/profile timeline/follows now persist incrementally during pagination (not only at run end)
+  - profile information requests stream-save records as they resolve
 - Account recovery and diagnostics:
   - `repair_account(username, ...)` for targeted per-account recovery (optional auth_token cookie refresh + state reset)
   - richer lease-failure diagnostics in logs when no account is eligible (blocked reason counts + sample rows)

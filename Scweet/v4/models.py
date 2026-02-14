@@ -49,6 +49,7 @@ class SearchRequest(BaseModel):
     cursor: Optional[str] = None
     initial_cursor: Optional[str] = None
     query_hash: Optional[str] = None
+    max_empty_pages: int = Field(default=1, ge=1)
 
 
 class ProfileRequest(BaseModel):
@@ -69,17 +70,22 @@ class ProfileTimelineRequest(BaseModel):
     cursor_handoff: bool = False
     max_account_switches: Optional[int] = None
     allow_anonymous: bool = False
+    max_empty_pages: int = Field(default=1, ge=1)
 
 
 class FollowsRequest(BaseModel):
-    handle: Optional[str] = None
-    user_id: Optional[str] = None
-    profile_url: Optional[str] = None
-    target: Optional[dict[str, Any]] = None
-    type: Literal["followers", "verified_followers", "following"] = "following"
-    login: bool = True
-    stay_logged_in: bool = True
-    sleep: float = 2
+    targets: list[dict[str, Any]] = Field(default_factory=list)
+    follow_type: Literal["followers", "following", "verified_followers"] = "following"
+    limit: Optional[int] = None
+    per_profile_limit: Optional[int] = None
+    max_pages_per_profile: Optional[int] = None
+    resume: bool = False
+    query_hash: Optional[str] = None
+    initial_cursors: dict[str, str] = Field(default_factory=dict)
+    cursor_handoff: bool = False
+    max_account_switches: Optional[int] = None
+    max_empty_pages: int = Field(default=1, ge=1)
+    raw_json: bool = False
 
 
 class TweetUser(BaseModel):

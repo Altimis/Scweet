@@ -31,16 +31,46 @@ def _config_value(config: Any, key: str, default: Any) -> Any:
     return default
 
 
-def parse_rate_limit_reset(headers: Optional[dict]) -> Optional[int]:
+def _header_value(headers: Optional[dict], *keys: str) -> Any:
     if not headers:
         return None
-    value = headers.get("x-rate-limit-reset") or headers.get("X-Rate-Limit-Reset")
+    for key in keys:
+        if key in headers:
+            return headers.get(key)
+    lowered = {str(k).lower(): v for k, v in dict(headers).items()}
+    for key in keys:
+        value = lowered.get(str(key).lower())
+        if value is not None:
+            return value
+    return None
+
+
+def parse_rate_limit_reset(headers: Optional[dict]) -> Optional[int]:
+    value = _header_value(headers, "x-rate-limit-reset")
     if value is None:
         return None
     try:
         return int(value)
     except Exception:
         return None
+
+
+def parse_rate_limit_remaining(headers: Optional[dict]) -> Optional[int]:
+    value = _header_value(headers, "x-rate-limit-remaining")
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def effective_status_with_rate_limit_headers(status_code: Optional[int], headers: Optional[dict]) -> int:
+    effective_status = int(status_code or 0)
+    remaining = parse_rate_limit_remaining(headers)
+    if effective_status == 200 and remaining is not None and remaining <= 0:
+        return 429
+    return effective_status
 
 
 def compute_cooldown(
