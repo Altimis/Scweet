@@ -71,6 +71,7 @@ setup(
     package_data={"Scweet": ["default_manifest.json"]},
     install_requires=read_requirements(ROOT / "requirements.txt"),
     python_requires=">=3.9",
+    license_files=[],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
