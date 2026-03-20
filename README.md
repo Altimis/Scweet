@@ -29,6 +29,8 @@ pip install -U Scweet
 
 **1. Get your cookies** — Log into Twitter/X, open DevTools (F12) → Application → Cookies → `https://x.com`, copy `auth_token` and `ct0`.
 
+> Don't want to deal with cookies and account management? Try the [hosted version on Apify](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) — no setup, free tier included.
+
 **2. Create `cookies.json`:**
 
 ```json
@@ -58,8 +60,6 @@ profiles = s.get_user_info(["elonmusk", "OpenAI"])
 ```
 
 > **Tip:** Always set `limit` — without it, scraping continues until results are exhausted or daily account caps are hit.
-
-> **Don't want to manage accounts and proxies?** Scweet is also available as a [hosted actor on Apify](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) — no setup, no cookies, free tier included.
 
 ## Structured Search Filters
 
@@ -148,6 +148,12 @@ All methods: `asearch()`, `aget_profile_tweets()`, `aget_followers()`, `aget_fol
 - This is scraping (Twitter/X web GraphQL), not an official API. Behavior may change.
 - You need X account cookies. Rate limits and anti-bot measures are enforced by X.
 - Use responsibly and in compliance with applicable terms and laws.
+
+## Hosted Version
+
+For production workloads, or if you'd rather skip account and proxy management entirely, Scweet is available as a hosted actor on Apify with a free tier.
+
+[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
 
 ## Contributing
 
