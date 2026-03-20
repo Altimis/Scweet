@@ -5,4 +5,4 @@ include LICENSE.txt
 include requirements.txt
 include pyproject.toml
 
-recursive-include Scweet/v4 *.json
+recursive-include Scweet *.json

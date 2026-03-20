@@ -2,469 +2,157 @@
 [![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
 [![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
 [![License](https://img.shields.io/github/license/Altimis/scweet)](https://github.com/Altimis/scweet/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-DOCUMENTATION.md-blue)](DOCUMENTATION.md)
 
-> Note: Scweet is not affiliated with Twitter/X. Use responsibly and lawfully.
+# Scweet
 
-Scweet is:
+A Python library for scraping Twitter/X via its web GraphQL API. No official API access needed — just your browser cookies.
 
-- A hosted [**Apify Actor**](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) (recommended for production runs and easy scaling).
-- A Python [**library**](https://pypi.org/project/Scweet) (recommended when you want to embed scraping in your own codebase).
+**What you can do:**
 
-Tweet search, profile timeline, and follows scraping in v4 are **API-only** (Twitter/X web GraphQL). Scweet keeps local state in SQLite (accounts, leases, resume checkpoints).
-Use `search()/asearch()` for structured query inputs, `profile_tweets()/aprofile_tweets()` for profile timelines, and `get_followers()/get_following()/...` for follows.
+- **Search tweets** — by keyword, date range, user, hashtag, engagement filters, language, location. Supports raw [Twitter advanced search operators](https://github.com/igorbrigadir/twitter-advanced-search) as the query string
+- **Profile tweets** — fetch a user's timeline
+- **Followers / Following** — scrape follower and following lists
+- **User info** — profile metadata (bio, follower count, verified status, etc.)
+- **Multi-account pooling** — rotate across accounts with automatic rate limiting and cooldowns
+- **Resume** — pick up interrupted scrapes from where they left off
+- **Save to CSV / JSON** — built-in output persistence
+- **Async support** — every method has a sync and async variant
 
-Full documentation: `DOCUMENTATION.md`
-
-## Run Scweet on Apify, *free plan included*: 
-> No accounts/orchestration/proxies headache: provide your search details and download your data in one click.
-
-If you want the fastest path to results (and the best option for production workflows), use the hosted Apify Actor:
-
-- Actor page: https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97
-- Apify offers a free plan/trial (plan limits can change); see the Actor page for current details.
-
-[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
-
-For more details, see Apify Python client quickstart: https://apify.com/altimis/scweet/api/python
-
-## Installation (Scweet library)
+## Installation
 
 ```bash
-pip install Scweet
+pip install -U Scweet
 ```
 
-## Imports (v4)
+## Quick Start
 
-```python
-from Scweet import Scweet, ScweetConfig, ScweetDB
+**1. Get your cookies** — Log into Twitter/X, open DevTools (F12) → Application → Cookies → `https://x.com`, copy `auth_token` and `ct0`.
+
+**2. Create `cookies.json`:**
+
+```json
+[{ "username": "your_account", "cookies": { "auth_token": "...", "ct0": "..." } }]
 ```
 
-Legacy import path (supported in v4.x, deprecated):
-
-```python
-from Scweet.scweet import Scweet
-```
-
-## Python Library Quickstart (Cookies -> Search)
+**3. Scrape:**
 
 ```python
 from Scweet import Scweet
 
-scweet = Scweet.from_sources(
-    db_path="scweet_state.db",
-    # Provide accounts via one (or more) sources:
-    cookies_file="cookies.json",       # also supports Netscape cookies.txt
-    # accounts_file="accounts.txt",
-    # env_path=".env",
-    # cookies={"auth_token": "...", "ct0": "..."},
-    # cookies="YOUR_AUTH_TOKEN",  # convenience auth_token string (ct0 can be bootstrapped if allowed)
-    output_format="both",  # csv|json|both|none
-)
+s = Scweet(cookies_file="cookies.json")
 
-tweets = scweet.search(
-    since="2026-02-01",
-    until="2026-02-07",
-    search_query="openai",
-    display_type="Latest",
-    limit=200,
-    resume=True,
-    save_dir="outputs",
-    custom_csv_name="openai.csv",
-    save=True,
-    save_format="both",  # per-call: csv|json|both|none
-)
+# Search tweets
+tweets = s.search("python programming", limit=100)
+tweets = s.search("AI", since="2024-01-01", until="2024-06-01", limit=500)
 
-print("tweets:", len(tweets))
+# Profile tweets
+tweets = s.get_profile_tweets(["elonmusk", "OpenAI"], limit=200)
+
+# Followers / Following
+users = s.get_followers(["elonmusk"], limit=1000)
+users = s.get_following(["OpenAI"], limit=500)
+
+# User info
+profiles = s.get_user_info(["elonmusk", "OpenAI"])
 ```
 
-Examples you can run from source checkout:
+> **Tip:** Always set `limit` — without it, scraping continues until results are exhausted or daily account caps are hit.
 
-- Sync: `examples/sync_example.py`
-- Async: `examples/async_example.py`
+> **Don't want to manage accounts and proxies?** Scweet is also available as a [hosted actor on Apify](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) — no setup, no cookies, free tier included.
 
-Example input templates (placeholders):
+## Structured Search Filters
 
-- `examples/.env`
-- `examples/accounts.txt`
-- `examples/cookies.json`
+```python
+tweets = s.search(
+    since="2024-01-01",
+    from_users=["OpenAI"],
+    min_likes=50,
+    has_links=True,
+    lang="en",
+    limit=200,
+)
+```
 
-## Config
+Available filters: `all_words`, `any_words`, `exact_phrases`, `exclude_words`, `hashtags_any`, `from_users`, `to_users`, `mentioning_users`, `tweet_type`, `verified_only`, `has_images`, `has_videos`, `has_links`, `min_likes`, `min_replies`, `min_retweets`, `place`, `geocode`, and more. See [Full Documentation](DOCUMENTATION.md).
 
-If you want one place to control everything, build a config and pass it to `Scweet(config=...)`. Keep most advanced knobs in `DOCUMENTATION.md`.
+## Other Account Sources
+
+```python
+s = Scweet(cookies={"auth_token": "...", "ct0": "..."})           # Direct cookies
+s = Scweet(auth_token="YOUR_AUTH_TOKEN")                           # Auth token only (ct0 bootstrapped)
+s = Scweet(cookies=[{"auth_token": "t1", "ct0": "c1"}, ...])      # Multi-account pool
+s = Scweet(db_path="scweet_state.db")                              # Reuse provisioned accounts
+```
+
+## Configuration
 
 ```python
 from Scweet import Scweet, ScweetConfig
 
-cfg = ScweetConfig.from_sources(
-    db_path="scweet_state.db",
-    cookies_file="cookies.json",       # optional provisioning source
-    accounts_file="accounts.txt",      # optional provisioning source
-    # cookies={"auth_token": "...", "ct0": "..."},  # optional provisioning source
-    # cookies="YOUR_AUTH_TOKEN",  # optional provisioning source
-    bootstrap_strategy="auto",         # auto|token_only|nodriver_only|none
-    provision_on_init=True,            # import sources during Scweet init
-    output_format="both",              # csv|json|both|none
-    resume_mode="hybrid_safe",         # legacy_csv|db_cursor|hybrid_safe
-    strict=False,                      # raise instead of returning empty output for some failures
-    proxy=None,                        # used for API calls and nodriver bootstrap
-    overrides={
-        "pool": {"concurrency": 4},
-        "operations": {
-            "account_lease_ttl_s": 300,
-            "account_requests_per_min": 30,
-            "account_min_delay_s": 2,
-            "account_daily_requests_limit": 30,
-            "account_daily_tweets_limit": 600,
-            "max_empty_pages": 1,
-        },
-        "output": {"dedupe_on_resume_by_tweet_id": True},
-    },
+s = Scweet(
+    cookies_file="cookies.json",
+    config=ScweetConfig(
+        concurrency=3,
+        proxy="http://user:pass@host:port",
+        daily_requests_limit=50,
+        manifest_scrape_on_init=True,
+    ),
 )
-
-scweet = Scweet(config=cfg)
 ```
 
-Key knobs:
+| Field | Default | Description |
+|-------|---------|-------------|
+| `concurrency` | `5` | Parallel workers |
+| `proxy` | `None` | HTTP proxy for API calls |
+| `min_delay_s` | `2.0` | Minimum delay between requests |
+| `daily_requests_limit` | `30` | Max API requests per account per day |
+| `daily_tweets_limit` | `600` | Max tweets per account per day |
+| `manifest_scrape_on_init` | `False` | Auto-fetch fresh GraphQL query IDs on startup |
 
-- `pool.concurrency`
-- `operations.account_requests_per_min`
-- `operations.account_min_delay_s`
-- `operations.account_daily_requests_limit` and `operations.account_daily_tweets_limit`
-- `operations.max_empty_pages` (default `1`)
-- `output.format` (fallback when `save=True` and `save_format` is not passed) and `output.dedupe_on_resume_by_tweet_id`
-- `resume.mode` (`legacy_csv`, `db_cursor`, `hybrid_safe`)
+For output formats, resume, async patterns, account management, and the full config reference — see [Full Documentation](DOCUMENTATION.md).
 
-Logging (optional):
+## Saving Results
 
 ```python
-from Scweet import configure_logging
+tweets = s.search("bitcoin", since="2024-01-01", limit=200, save=True)
+# → outputs/bitcoin_2024-01-01_2024-03-20.csv
 
-configure_logging(profile="simple", level="INFO", force=True)  # notebook-friendly
+tweets = s.search("AI", limit=200, save=True, save_format="json")
+# → outputs/AI_2024-03-13_2024-03-20.json
+
+tweets = s.search("query", limit=200, save=True, save_name="my_results")
+# → outputs/my_results.csv
 ```
 
-## Provision Accounts (DB-First)
+Files are written to `outputs/` by default (configurable via `ScweetConfig(save_dir="my_dir")`). File names are auto-generated from the query and date range, or you can set `save_name` explicitly. Results append to existing files.
 
-Scweet stores accounts in SQLite. Provisioning imports account sources into the DB and marks which accounts are eligible.
-
-Supported sources:
-
-- `accounts.txt`
-- `cookies.json` (and Netscape `cookies.txt`)
-- `cookies=` payload (cookie dict/list/header string/auth_token string/file path/JSON string)
-- `.env` via `env_path`
-
-You can provision on init (recommended) or manually:
+## Async Support
 
 ```python
+import asyncio
 from Scweet import Scweet
 
-scweet = Scweet.from_sources(db_path="scweet_state.db", provision_on_init=False)
+async def main():
+    s = Scweet(cookies_file="cookies.json")
+    tweets = await s.asearch("python", limit=100)
+    users = await s.aget_followers(["elonmusk"], limit=500)
 
-result = scweet.provision_accounts(
-    accounts_file="accounts.txt",
-    cookies_file="cookies.json",
-    # env_path=".env",
-    # cookies={"auth_token": "...", "ct0": "..."},
-    # cookies="YOUR_AUTH_TOKEN",
-)
-print(result)  # {"processed": ..., "eligible": ...}
+asyncio.run(main())
 ```
 
-### accounts.txt format
+All methods: `asearch()`, `aget_profile_tweets()`, `aget_followers()`, `aget_following()`, `aget_user_info()`.
 
-One account per line (colon-separated):
+## Important Notes
 
-```text
-username:password:email:email_password:2fa:auth_token
-```
+- This is scraping (Twitter/X web GraphQL), not an official API. Behavior may change.
+- You need X account cookies. Rate limits and anti-bot measures are enforced by X.
+- Use responsibly and in compliance with applicable terms and laws.
 
-Missing trailing fields are allowed.
+## Contributing
 
-### cookies.json format
-
-```json
-[
-  {
-    "username": "acct1",
-    "cookies": { "auth_token": "...", "ct0": "..." }
-  }
-]
-```
-
-### Per-account proxy override (optional)
-
-By default, `proxy=` (runtime proxy) applies to all accounts. If you need a different proxy per account, set a proxy on the account record:
-
-- In `cookies.json`: add `"proxy"` to the account object (string URL or dict).
-- In `accounts.txt`: append a tab then a proxy value (string URL or JSON dict).
-- Or set it later via `ScweetDB.set_account_proxy(username, proxy)`.
-
-Proxy credentials are supported:
-
-- API HTTP accepts either a URL string like `"http://user:pass@host:port"` or a dict like `{"host": "...", "port": 8080, "username": "...", "password": "..."}`.
-- nodriver bootstrap also supports authenticated proxies, but the dict form is recommended for proxy auth.
-
-Example `cookies.json` record with proxy:
-
-```json
-[
-  {
-    "username": "acct1",
-    "cookies": { "auth_token": "...", "ct0": "..." },
-    "proxy": { "host": "127.0.0.1", "port": 8080, "username": "proxyuser", "password": "proxypass" }
-  }
-]
-```
-
-Example `accounts.txt` line with a proxy (tab-separated):
-
-```text
-alice:::::AUTH_TOKEN_HERE	{"host":"127.0.0.1","port":8080}
-```
-
-## Search (Inputs + Outputs)
-
-Recommended methods:
-
-- `search(...)`: sync structured search API.
-- `asearch(...)`: async structured search API.
-- `scrape(...)` and `ascrape(...)`: backward-compatible wrappers.
-
-Most-used search inputs:
-
-- `since`, `until` (YYYY-MM-DD), `search_query`
-- query filters: `all_words`, `any_words`, `exact_phrases`, `exclude_words`, user filters, hashtag filters
-- quality filters: `tweet_type`, media/link/mention/hashtag flags, `verified_only`, minimum engagement fields
-- run controls: `limit`, `resume`, `max_empty_pages`
-- output controls: `save` (`False` by default), `save_format` (`csv|json|both|none`, only used when `save=True`)
-
-For the full input matrix and advanced behavior notes, see `DOCUMENTATION.md`.
-
-Legacy query aliases still accepted (deprecated in v4.x):
-
-- `words`, `from_account`, `to_account`, `mention_account`, `hashtag`
-- `minlikes`, `minreplies`, `minretweets`
-- `filter_replies` (mapped to `tweet_type="exclude_replies"`)
-
-The return value is always `list[dict]` of raw GraphQL tweet objects.
-
-File writing is controlled per call via `save` + `save_format`:
-
-- `csv`: curated "important fields" schema
-- `json`: raw tweets (full fidelity)
-- `both`: write both
-- `none`: return only
-
-Writing happens only when `save=True`. If `save=True` and `save_format` is omitted, Scweet uses config `output.format` (if not set or `none`, it won't write).
-
-Tiny examples:
-
-```python
-# In-memory only (default)
-tweets = scweet.search(since="2026-02-01", until="2026-02-02", search_query="openai")
-
-# Write to disk
-tweets = scweet.search(
-    since="2026-02-01",
-    until="2026-02-02",
-    search_query="openai",
-    save=True,
-    save_format="csv",
-    save_dir="outputs",
-    custom_csv_name="openai.csv",
-)
-```
-
-## Profile Information
-
-Use `get_user_information(...)` / `aget_user_information(...)` with explicit user target types.
-
-Accepted input fields:
-
-- `usernames=[...]`
-- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
-
-Example:
-
-```python
-result = scweet.get_user_information(
-    usernames=["OpenAI", "elonmusk"],
-    profile_urls=["https://x.com/OpenAI"],
-    include_meta=True,  # return items + request meta/errors
-    save_dir="outputs",
-    custom_csv_name="profiles_info.csv",
-    save=True,
-    save_format="both",
-)
-print(result["items"])
-print(result["meta"])
-```
-
-`get_user_information(...)` returns `list[dict]` by default. Set `include_meta=True` to get `{items, meta, status_code}`.
-
-## Profile Timeline
-
-Use `profile_tweets(...)` / `aprofile_tweets(...)` to scrape tweets directly from profile timelines (`UserTweets` endpoint).
-
-Accepted input fields:
-
-- `usernames=[...]`
-- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
-
-Main controls:
-
-- `limit`: global cap across all requested profiles
-- `per_profile_limit`: cap per profile target
-- `max_pages_per_profile`: hard page cap per profile (default: unlimited)
-- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results
-- `resume=True`: continue from saved cursor state
-- `offline=True`: scrape profile timelines without leasing an account (best-effort, usually limited pages)
-- `cursor_handoff=True`: allow cursor continuation on another account for transient/rate/auth issues
-- `max_account_switches`: cap cursor handoffs per target
-- `save_dir`, `custom_csv_name`: output path controls
-- `save` (`False` by default): enable file writing for this call
-- `save_format` (`csv|json|both|none`): used only when `save=True`
-
-Example:
-
-```python
-tweets = scweet.profile_tweets(
-    usernames=["OpenAI", "elonmusk"],
-    profile_urls=["https://x.com/OpenAI"],
-    limit=500,
-    per_profile_limit=250,
-    max_pages_per_profile=50,
-    resume=True,
-    offline=False,
-    cursor_handoff=True,
-    max_account_switches=2,
-    save_dir="outputs",
-    custom_csv_name="profiles_timeline.csv",
-    save=True,
-    save_format="both",
-)
-print(len(tweets))  # list[dict] of raw GraphQL tweet objects
-```
-
-You can also set a default via config:
-
-`overrides={"operations": {"profile_timeline_allow_anonymous": True}}`
-
-Aliases:
-
-- `get_profile_timeline(...)` (sync)
-- `aget_profile_timeline(...)` (async)
-
-## Followers / Following
-
-Preferred target inputs:
-
-- `usernames=[...]`
-- `profile_urls=[...]` (profile handle URLs like `https://x.com/OpenAI`)
-- `user_ids=[...]` (direct numeric user ids, no username/url lookup needed)
-
-Legacy aliases are still accepted for compatibility (`handle`, `user_id`, `profile_url`, `users`, `user_ids`, `type`; `login/stay_logged_in/sleep` are accepted and ignored).
-
-Available sync methods:
-
-- `get_followers(...)`
-- `get_following(...)`
-- `get_verified_followers(...)`
-
-Async equivalents:
-
-- `aget_followers(...)`
-- `aget_following(...)`
-- `aget_verified_followers(...)`
-
-Main controls:
-
-- `limit`: global cap across all requested targets
-- `per_profile_limit`: cap per target
-- `max_pages_per_profile`: hard page cap per target (default: unlimited)
-- `max_empty_pages` (default `1`): stop cursor pagination after this many consecutive pages with `0` results
-- `resume=True`: continue from saved per-target cursor state
-- `cursor_handoff=True`: continue the same cursor on another account for retryable failures
-- `max_account_switches`: cap handoffs per target
-- `save_dir`, `custom_csv_name`: output path controls (same as search/profile timeline)
-- `save` (`False` by default): enable file writing for this call
-- `save_format` (`csv|json|both|none`): used only when `save=True`
-- `raw_json` (`False` by default): for follows JSON/output, choose curated rows (`False`) or raw user payload rows (`True`)
-- account pacing/cooldown and rate-limit handling follow the same protections as search
-
-Example:
-
-```python
-followers = scweet.get_followers(
-    usernames=["OpenAI", "elonmusk"],
-    profile_urls=["https://x.com/OpenAI"],
-    user_ids=["44196397"],  # optional: direct id target
-    limit=500,
-    per_profile_limit=250,
-    max_pages_per_profile=40,
-    resume=True,
-    cursor_handoff=True,
-    max_account_switches=2,
-    save_dir="outputs",
-    custom_csv_name="followers.csv",
-    save=True,
-    save_format="json",
-    raw_json=True,  # JSON/output rows contain full Twitter user payload under `raw`
-)
-print(len(followers))
-```
-
-Return value is `list[dict]`. Each item includes:
-
-- `type` (`followers`, `following`, `verified_followers`)
-- `target` (the input profile target this row belongs to)
-- user fields (`user_id`, `username`, counts, verification flags, `raw`) when `raw_json=False` (default)
-- raw payload rows (`follow_key`, `type`, `target`, `raw`) when `raw_json=True`
-
-Follows methods use the same per-call `save` + `save_format` contract:
-
-- `csv`: write follows CSV
-- `json`: write follows JSON rows (`raw_json=False`: curated rows, `raw_json=True`: full payload rows)
-- `both`: write both
-- `none`: do not write files
-
-## Resume + Dedupe
-
-- `resume=True` appends to existing CSV and JSON outputs.
-- To avoid writing duplicates across runs when resuming:
-  - `overrides={"output": {"dedupe_on_resume_by_tweet_id": True}}`
-
-## Local DB Helpers (ScweetDB)
-
-Use `ScweetDB` to inspect and maintain the local state DB:
-
-```python
-from Scweet import ScweetDB
-
-db = ScweetDB("scweet_state.db")
-print(db.accounts_summary())
-print(db.list_accounts(limit=10, eligible_only=True))
-print(db.set_account_proxy("acct1", {"host": "127.0.0.1", "port": 8080}))
-print(db.repair_account("acct1", force_refresh=True))
-print(db.reset_daily_counters())
-print(db.clear_leases(expired_only=True))
-print(db.reset_account_cooldowns(clear_leases=True, include_unusable=True))
-print(db.collapse_duplicates_by_auth_token(dry_run=True))
-```
-
-## More Details
-
-See `DOCUMENTATION.md` for the full guide (cookies formats, logging setup, strict mode, manifest updates, advanced config knobs).
-
-## Trust & Expectations
-
-- This is scraping (Twitter/X web GraphQL), not an official API.
-- You need accounts/cookies. Rate limits and anti-bot controls vary.
-- For production workflows, the Apify Actor is usually the simplest and most reliable option.
-
-## Contribute
-We welcome **PRs**, bug reports, and feature suggestions!  
-If you find Scweet useful, consider **starring** the repo ⭐ 
+PRs, bug reports, and feature suggestions are welcome!
+If you find Scweet useful, consider starring the repo.
 
 ---
-MIT License • © 2020–2026 Altimis
+MIT License

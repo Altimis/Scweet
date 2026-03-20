@@ -19,18 +19,15 @@ __pycache__/
 # Local secrets (never commit real tokens/passwords)
 /.env
 
+# Runtime output artifacts
+outputs/
+
 # Ignore IDE settings
 .idea/
 
-# Images are used in README/docs
-# images/
-
-# Ignore specific files inside Scweet/
+# Ignore stale files inside Scweet/
 Scweet/debug.log
-Scweet/scweet_v1.8.py
-Scweet/user.py
 
-# Comment out these so this branch will track them:
+# Not tracked in v5:
 src/
 tools/
-tests/

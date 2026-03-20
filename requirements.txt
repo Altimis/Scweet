@@ -1,10 +1,6 @@
-certifi
 python-dotenv
-urllib3
-PyVirtualDisplay
-beautifulsoup4==4.12.3
-nodriver==0.38.post1  # 0.45.2
 sqlmodel>=0.0.22
 SQLAlchemy>=2.0
 curl_cffi
-XClientTransaction
+XClientTransaction>=1.0.2
+pydantic>=2.0

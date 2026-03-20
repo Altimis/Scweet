@@ -1,163 +1,711 @@
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable, Optional, Union
+import asyncio
+import logging
+import os
+from datetime import date, timedelta
+from typing import Any, Optional
 
-from .scweet import Scweet as LegacyScweet
-from .v4.config import ApiHttpMode, BootstrapStrategy, ResumeMode, ScweetConfig, build_config_from_legacy_init_kwargs
-from .v4.warnings import warn_deprecated
+from .config import ScweetConfig
+from .exceptions import (
+    AccountPoolExhausted,
+    EngineError,
+    NetworkError,
+    ProxyError,
+    RunFailed,
+    ScweetError,
+)
+
+logger = logging.getLogger(__name__)
 
 
-class Scweet(LegacyScweet):
-    """Preferred v4 client with compatibility signatures and v4-core routing."""
+def _exc_summary() -> str:
+    import sys
+    exc = sys.exc_info()[1]
+    if exc is None:
+        return "unknown error"
+    return f"{type(exc).__name__}: {exc}"
+
+
+class Scweet:
+    """Scweet v5 client — simple API-only Twitter/X scraper.
+
+    Init options (pick one):
+        s = Scweet(cookies_file="cookies.json")
+        s = Scweet(auth_token="abc123")
+        s = Scweet(cookies={"auth_token": "...", "ct0": "..."})
+        s = Scweet(db_path="existing_state.db")  # reuse provisioned accounts
+    """
 
     def __init__(
         self,
-        proxy=None,
-        cookies=None,
-        cookies_path=None,
-        user_agent=None,
-        disable_images=False,
-        env_path=None,
-        n_splits=5,
-        concurrency=5,
-        headless=True,
-        scroll_ratio=30,
-        mode="BROWSER",
-        code_callback: Optional[Callable[[str, str], Awaitable[str]]] = None,
         *,
-        config: Optional[Union[ScweetConfig, dict[str, Any]]] = None,
-        **kwargs,
+        cookies_file: Optional[str] = None,
+        auth_token: Optional[str] = None,
+        cookies: Any = None,
+        accounts_file: Optional[str] = None,
+        env_path: Optional[str] = None,
+        db_path: str = "scweet_state.db",
+        config: Optional[ScweetConfig] = None,
+        provision: bool = True,
     ):
-        allowed_extras = {"engine", "db_path", "accounts_file", "cookies_file", "manifest_url", "update_manifest"}
-        unknown = set(kwargs.keys()) - allowed_extras
-        if unknown:
-            unknown_str = ", ".join(sorted(unknown))
-            raise TypeError(f"Unexpected keyword argument(s): {unknown_str}")
+        if config is not None:
+            self._config = config.model_copy(deep=True)
+        else:
+            self._config = ScweetConfig()
 
-        config_provided = config is not None
-        build_kwargs: dict[str, Any] = dict(kwargs)
-        build_kwargs["config"] = config
+        # Override db_path from constructor arg
+        if db_path != "scweet_state.db" or config is None:
+            self._config.db_path = db_path
 
-        # Config should win over legacy defaults. Only apply legacy args when:
-        # - no config was provided, or
-        # - the caller passed a non-default value.
-        if (not config_provided) or proxy is not None:
-            build_kwargs["proxy"] = proxy
-        if (not config_provided) or cookies is not None:
-            build_kwargs["cookies"] = cookies
-        if (not config_provided) or cookies_path is not None:
-            build_kwargs["cookies_path"] = cookies_path
-        if (not config_provided) or user_agent is not None:
-            build_kwargs["user_agent"] = user_agent
-        if (not config_provided) or disable_images is not False:
-            build_kwargs["disable_images"] = disable_images
-        if (not config_provided) or env_path is not None:
-            build_kwargs["env_path"] = env_path
-        if (not config_provided) or n_splits != 5:
-            build_kwargs["n_splits"] = n_splits
-        if (not config_provided) or concurrency != 5:
-            build_kwargs["concurrency"] = concurrency
-        if (not config_provided) or headless is not True:
-            build_kwargs["headless"] = headless
-        if (not config_provided) or scroll_ratio != 30:
-            build_kwargs["scroll_ratio"] = scroll_ratio
-        if (not config_provided) or mode != "BROWSER":
-            build_kwargs["mode"] = mode
-        if (not config_provided) or code_callback is not None:
-            build_kwargs["code_callback"] = code_callback
+        self._cookies_file = cookies_file
+        self._auth_token = auth_token
+        self._cookies = cookies
+        self._accounts_file = accounts_file
+        self._env_path = env_path
 
-        self._v4_config, self._v4_init_warnings = build_config_from_legacy_init_kwargs(**build_kwargs)
-
-        effective_proxy = self._v4_config.runtime.proxy
-        effective_cookies = getattr(self._v4_config.accounts, "cookies", None)
-        effective_cookies_path = getattr(self._v4_config.accounts, "cookies_path", None)
-        effective_user_agent = self._v4_config.runtime.user_agent
-        effective_disable_images = self._v4_config.runtime.disable_images
-        effective_env_path = self._v4_config.accounts.env_path
-        effective_n_splits = self._v4_config.pool.n_splits
-        effective_concurrency = self._v4_config.pool.concurrency
-        effective_headless = self._v4_config.runtime.headless
-        effective_scroll_ratio = self._v4_config.runtime.scroll_ratio
-        effective_mode = mode
-        effective_code_callback = self._v4_config.runtime.code_callback
-
-        # Let the legacy facade constructor initialize v4 core using this already-mapped config.
-        self._v4_prebuilt_config = self._v4_config
-        self._v4_prebuilt_warnings = list(self._v4_init_warnings)
-        self._v4_emit_legacy_import_warning = False
-        self._v4_emit_init_warnings = False
-
-        super().__init__(
-            proxy=effective_proxy,
-            cookies=effective_cookies,
-            cookies_path=effective_cookies_path,
-            user_agent=effective_user_agent,
-            disable_images=effective_disable_images,
-            env_path=effective_env_path,
-            n_splits=effective_n_splits,
-            concurrency=effective_concurrency,
-            headless=effective_headless,
-            scroll_ratio=effective_scroll_ratio,
-            mode=effective_mode,
-            code_callback=effective_code_callback,
-        )
-
-        for message in self._v4_init_warnings:
-            warn_deprecated(message)
+        self._init_core(provision=provision)
 
     @property
     def config(self) -> ScweetConfig:
-        return self._v4_config
+        return self._config
 
     @property
-    def init_warnings(self) -> list[str]:
-        return list(self._v4_init_warnings)
+    def db(self):
+        from .db import ScweetDB
 
-    @classmethod
-    def from_sources(
-        cls,
-        *,
-        db_path: str = "scweet_state.db",
-        accounts_file: Optional[str] = None,
-        cookies_file: Optional[str] = None,
-        env_path: Optional[str] = None,
-        cookies: Any = None,
-        manifest_url: Optional[str] = None,
-        update_manifest: bool = False,
-        bootstrap_strategy: BootstrapStrategy | str = BootstrapStrategy.AUTO,
-        provision_on_init: bool = True,
-        strict: bool = False,
-        proxy: Any = None,
-        user_agent: Optional[str] = None,
-        api_user_agent: Optional[str] = None,
-        resume_mode: ResumeMode | str = ResumeMode.HYBRID_SAFE,
-        output_format: Optional[str] = None,
-        api_http_mode: ApiHttpMode | str = ApiHttpMode.AUTO,
-        api_http_impersonate: Optional[str] = None,
-        n_splits: Optional[int] = None,
-        concurrency: Optional[int] = None,
-        overrides: Any = None,
-    ) -> "Scweet":
-        cfg = ScweetConfig.from_sources(
-            db_path=db_path,
-            accounts_file=accounts_file,
-            cookies_file=cookies_file,
-            env_path=env_path,
-            cookies=cookies,
-            manifest_url=manifest_url,
-            update_manifest=bool(update_manifest),
-            bootstrap_strategy=bootstrap_strategy,
-            provision_on_init=provision_on_init,
-            strict=strict,
-            proxy=proxy,
-            user_agent=user_agent,
-            api_user_agent=api_user_agent,
-            resume_mode=resume_mode,
-            output_format=output_format,
-            api_http_mode=api_http_mode,
-            api_http_impersonate=api_http_impersonate,
-            n_splits=n_splits,
-            concurrency=concurrency,
-            overrides=overrides,
+        return ScweetDB(
+            self._config.db_path,
+            account_daily_requests_limit=self._config.daily_requests_limit,
+            account_daily_tweets_limit=self._config.daily_tweets_limit,
         )
-        return cls(config=cfg)
+
+    def _init_core(self, *, provision: bool = True) -> None:
+        from .account_session import AccountSessionBuilder
+        from .api_engine import ApiEngine
+        from .auth import import_accounts_to_db
+        from .manifest import ManifestProvider
+        from .outputs import write_csv
+        from .repos import AccountsRepo, ResumeRepo, RunsRepo
+        from .runner import Runner
+        from .transaction import TransactionIdProvider
+
+        cfg = self._config
+        db_path = cfg.db_path
+
+        self._accounts_repo = AccountsRepo(
+            db_path,
+            lease_ttl_s=cfg.lease_ttl_s,
+            daily_pages_limit=cfg.daily_requests_limit,
+            daily_tweets_limit=cfg.daily_tweets_limit,
+            require_auth_material=True,
+        )
+        self._runs_repo = RunsRepo(db_path)
+        self._resume_repo = ResumeRepo(db_path)
+
+        # Provision accounts from constructor sources
+        if provision:
+            cookies_payload = self._cookies
+            if cookies_payload is None and self._auth_token:
+                cookies_payload = {"auth_token": self._auth_token}
+
+            has_sources = bool(
+                self._accounts_file or self._cookies_file or self._env_path or cookies_payload is not None
+            )
+            if has_sources:
+                runtime_options = {"proxy": cfg.proxy}
+                try:
+                    import_accounts_to_db(
+                        db_path,
+                        accounts_file=self._accounts_file,
+                        cookies_file=self._cookies_file,
+                        env_path=self._env_path,
+                        cookies_payload=cookies_payload,
+                        bootstrap_strategy="auto",
+                        runtime=runtime_options,
+                    )
+                except Exception:
+                    logger.exception("Account provisioning failed (best-effort); continuing")
+
+        self._manifest_provider = ManifestProvider(
+            db_path=db_path,
+            manifest_url=cfg.manifest_url,
+            ttl_s=cfg.manifest_ttl_s,
+        )
+        if cfg.manifest_scrape_on_init:
+            try:
+                self._manifest_provider.scrape_from_x_sync(strict=cfg.strict)
+            except Exception:
+                if cfg.strict:
+                    raise
+                logger.exception("Live manifest scrape failed (best-effort); continuing")
+        elif cfg.manifest_update_on_init:
+            try:
+                self._manifest_provider.refresh_sync(strict=cfg.strict)
+            except Exception:
+                if cfg.strict:
+                    raise
+                logger.exception("Manifest refresh failed (best-effort); continuing")
+
+        tx_kwargs: dict[str, Any] = {"proxy": cfg.proxy, "user_agent": cfg.api_user_agent}
+        if cfg.api_http_impersonate:
+            tx_kwargs["impersonate"] = cfg.api_http_impersonate
+        self._transaction_id_provider = TransactionIdProvider(**tx_kwargs)
+
+        self._api_engine = ApiEngine(
+            config=cfg,
+            accounts_repo=self._accounts_repo,
+            manifest_provider=self._manifest_provider,
+            transaction_id_provider=self._transaction_id_provider,
+        )
+
+        http_mode = getattr(cfg.api_http_mode, "value", cfg.api_http_mode)
+        session_kwargs: dict[str, Any] = {
+            "api_http_mode": str(http_mode or "auto"),
+            "proxy": cfg.proxy,
+        }
+        if cfg.api_http_impersonate:
+            session_kwargs["impersonate"] = cfg.api_http_impersonate
+        if cfg.api_user_agent:
+            session_kwargs["user_agent"] = cfg.api_user_agent
+        self._account_session_builder = AccountSessionBuilder(**session_kwargs)
+
+        self._runner = Runner(
+            config=cfg,
+            repos={
+                "accounts_repo": self._accounts_repo,
+                "runs_repo": self._runs_repo,
+                "resume_repo": self._resume_repo,
+            },
+            engines={
+                "engine": self._api_engine,
+                "account_session_builder": self._account_session_builder,
+            },
+            outputs={"write_csv": write_csv},
+        )
+
+    # ── Search ──────────────────────────────────────────────────────────
+
+    def search(
+        self,
+        query: str = "",
+        *,
+        since: Optional[str] = None,
+        until: Optional[str] = None,
+        # Structured filters (all optional, merged with query):
+        all_words: Optional[list[str]] = None,
+        any_words: Optional[list[str]] = None,
+        exact_phrases: Optional[list[str]] = None,
+        exclude_words: Optional[list[str]] = None,
+        hashtags_any: Optional[list[str]] = None,
+        hashtags_exclude: Optional[list[str]] = None,
+        from_users: Optional[list[str]] = None,
+        to_users: Optional[list[str]] = None,
+        mentioning_users: Optional[list[str]] = None,
+        tweet_type: Optional[str] = None,
+        verified_only: Optional[bool] = None,
+        blue_verified_only: Optional[bool] = None,
+        has_images: Optional[bool] = None,
+        has_videos: Optional[bool] = None,
+        has_links: Optional[bool] = None,
+        has_mentions: Optional[bool] = None,
+        has_hashtags: Optional[bool] = None,
+        min_likes: Optional[int] = None,
+        min_replies: Optional[int] = None,
+        min_retweets: Optional[int] = None,
+        place: Optional[str] = None,
+        geocode: Optional[str] = None,
+        near: Optional[str] = None,
+        within: Optional[str] = None,
+        # Standard params:
+        lang: Optional[str] = None,
+        display_type: str = "Top",
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        return asyncio.run(
+            self.asearch(
+                query,
+                since=since,
+                until=until,
+                all_words=all_words,
+                any_words=any_words,
+                exact_phrases=exact_phrases,
+                exclude_words=exclude_words,
+                hashtags_any=hashtags_any,
+                hashtags_exclude=hashtags_exclude,
+                from_users=from_users,
+                to_users=to_users,
+                mentioning_users=mentioning_users,
+                tweet_type=tweet_type,
+                verified_only=verified_only,
+                blue_verified_only=blue_verified_only,
+                has_images=has_images,
+                has_videos=has_videos,
+                has_links=has_links,
+                has_mentions=has_mentions,
+                has_hashtags=has_hashtags,
+                min_likes=min_likes,
+                min_replies=min_replies,
+                min_retweets=min_retweets,
+                place=place,
+                geocode=geocode,
+                near=near,
+                within=within,
+                lang=lang,
+                display_type=display_type,
+                limit=limit,
+                max_empty_pages=max_empty_pages,
+                resume=resume,
+                save=save,
+                save_format=save_format,
+                save_name=save_name,
+            )
+        )
+
+    async def asearch(
+        self,
+        query: str = "",
+        *,
+        since: Optional[str] = None,
+        until: Optional[str] = None,
+        # Structured filters (all optional, merged with query):
+        all_words: Optional[list[str]] = None,
+        any_words: Optional[list[str]] = None,
+        exact_phrases: Optional[list[str]] = None,
+        exclude_words: Optional[list[str]] = None,
+        hashtags_any: Optional[list[str]] = None,
+        hashtags_exclude: Optional[list[str]] = None,
+        from_users: Optional[list[str]] = None,
+        to_users: Optional[list[str]] = None,
+        mentioning_users: Optional[list[str]] = None,
+        tweet_type: Optional[str] = None,
+        verified_only: Optional[bool] = None,
+        blue_verified_only: Optional[bool] = None,
+        has_images: Optional[bool] = None,
+        has_videos: Optional[bool] = None,
+        has_links: Optional[bool] = None,
+        has_mentions: Optional[bool] = None,
+        has_hashtags: Optional[bool] = None,
+        min_likes: Optional[int] = None,
+        min_replies: Optional[int] = None,
+        min_retweets: Optional[int] = None,
+        place: Optional[str] = None,
+        geocode: Optional[str] = None,
+        near: Optional[str] = None,
+        within: Optional[str] = None,
+        # Standard params:
+        lang: Optional[str] = None,
+        display_type: str = "Top",
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        from .models import SearchRequest
+        from .resume import compute_query_hash, resolve_resume_start
+
+        if not since:
+            since = (date.today() - timedelta(days=7)).strftime("%Y-%m-%d")
+        if not until:
+            until = date.today().strftime("%Y-%m-%d")
+
+        effective_max_empty = max_empty_pages or self._config.max_empty_pages
+
+        query_hash = compute_query_hash({
+            "since": since,
+            "until": until,
+            "query": query,
+            "lang": lang,
+            "display_type": display_type,
+            "max_empty_pages": effective_max_empty,
+        })
+
+        initial_cursor: Optional[str] = None
+        if resume:
+            since, initial_cursor = resolve_resume_start(
+                mode="db_cursor",
+                csv_path=None,
+                requested_since=since,
+                resume_repo=self._resume_repo,
+                query_hash=query_hash,
+            )
+
+        search_request = SearchRequest(
+            since=since,
+            until=until,
+            search_query=query or None,
+            all_words=all_words,
+            any_words=any_words,
+            exact_phrases=exact_phrases,
+            exclude_words=exclude_words,
+            hashtags_any=hashtags_any,
+            hashtags_exclude=hashtags_exclude,
+            from_users=from_users,
+            to_users=to_users,
+            mentioning_users=mentioning_users,
+            tweet_type=tweet_type,
+            verified_only=verified_only,
+            blue_verified_only=blue_verified_only,
+            has_images=has_images,
+            has_videos=has_videos,
+            has_links=has_links,
+            has_mentions=has_mentions,
+            has_hashtags=has_hashtags,
+            min_likes=min_likes,
+            min_replies=min_replies,
+            min_retweets=min_retweets,
+            place=place,
+            geocode=geocode,
+            near=near,
+            within=within,
+            lang=lang,
+            limit=limit,
+            display_type=display_type,
+            resume=resume,
+            initial_cursor=initial_cursor,
+            query_hash=query_hash,
+            max_empty_pages=effective_max_empty,
+        )
+
+        try:
+            result = await self._runner.run_search(search_request)
+        except ScweetError:
+            if self._config.strict:
+                raise
+            logger.warning("search failed: %s", _exc_summary(), exc_info=True)
+            return []
+
+        tweets = [self._tweet_to_dict(t) for t in (result.tweets or [])]
+
+        if save:
+            name = save_name or self._build_save_name("search", query=query, since=since, until=until, from_users=from_users)
+            self._save_output(tweets, "search", save_format, save_name=name)
+
+        return tweets
+
+    # ── Profile Tweets ──────────────────────────────────────────────────
+
+    def get_profile_tweets(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        return asyncio.run(
+            self.aget_profile_tweets(
+                users, limit=limit, max_empty_pages=max_empty_pages,
+                resume=resume, save=save, save_format=save_format, save_name=save_name,
+            )
+        )
+
+    async def aget_profile_tweets(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        from .models import ProfileTimelineRequest
+        from .user_identity import normalize_user_targets
+
+        resolved = normalize_user_targets(users=users)
+        targets = resolved.get("targets", [])
+        effective_max_empty = max_empty_pages or self._config.max_empty_pages
+        request = ProfileTimelineRequest(
+            targets=targets,
+            limit=limit,
+            resume=resume,
+            allow_anonymous=self._config.profile_timeline_allow_anonymous,
+            max_empty_pages=effective_max_empty,
+        )
+
+        try:
+            response = await self._runner.run_profile_tweets(request)
+        except ScweetError:
+            if self._config.strict:
+                raise
+            logger.warning("get_profile_tweets failed: %s", _exc_summary(), exc_info=True)
+            return []
+
+        result = response.get("result") if isinstance(response, dict) else response
+        tweets = [self._tweet_to_dict(t) for t in (getattr(result, "tweets", None) or [])]
+
+        if save:
+            name = save_name or self._build_save_name("profile_tweets", users=users)
+            self._save_output(tweets, "profile_tweets", save_format, save_name=name)
+
+        return tweets
+
+    # ── Followers / Following ───────────────────────────────────────────
+
+    def get_followers(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        return asyncio.run(
+            self.aget_followers(
+                users, limit=limit, max_empty_pages=max_empty_pages,
+                resume=resume, raw_json=raw_json, save=save, save_format=save_format,
+                save_name=save_name,
+            )
+        )
+
+    async def aget_followers(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        return await self._run_follows(
+            users, "followers", limit=limit, max_empty_pages=max_empty_pages,
+            resume=resume, raw_json=raw_json, save=save, save_format=save_format,
+            save_name=save_name,
+        )
+
+    def get_following(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        return asyncio.run(
+            self.aget_following(
+                users, limit=limit, max_empty_pages=max_empty_pages,
+                resume=resume, raw_json=raw_json, save=save, save_format=save_format,
+                save_name=save_name,
+            )
+        )
+
+    async def aget_following(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        return await self._run_follows(
+            users, "following", limit=limit, max_empty_pages=max_empty_pages,
+            resume=resume, raw_json=raw_json, save=save, save_format=save_format,
+            save_name=save_name,
+        )
+
+    async def _run_follows(
+        self,
+        users: list[str],
+        follow_type: str,
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        from .models import FollowsRequest
+        from .user_identity import normalize_user_targets
+
+        resolved = normalize_user_targets(users=users)
+        targets = resolved.get("targets", [])
+        effective_max_empty = max_empty_pages or self._config.max_empty_pages
+        request = FollowsRequest(
+            targets=targets,
+            follow_type=follow_type,
+            limit=limit,
+            resume=resume,
+            raw_json=raw_json,
+            max_empty_pages=effective_max_empty,
+        )
+
+        try:
+            response = await self._runner.run_follows(request)
+        except ScweetError:
+            if self._config.strict:
+                raise
+            logger.warning("%s failed: %s", follow_type, _exc_summary(), exc_info=True)
+            return []
+
+        items = self._extract_follows_items(response)
+
+        if save:
+            name = save_name or self._build_save_name(follow_type, users=users)
+            self._save_output(items, follow_type, save_format, save_name=name)
+
+        return items
+
+    # ── User Info ───────────────────────────────────────────────────────
+
+    def get_user_info(
+        self,
+        users: list[str],
+        *,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        return asyncio.run(self.aget_user_info(users, save=save, save_format=save_format, save_name=save_name))
+
+    async def aget_user_info(
+        self,
+        users: list[str],
+        *,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        from .models import ProfileRequest
+        from .user_identity import normalize_user_targets
+
+        resolved = normalize_user_targets(users=users)
+        targets = resolved.get("targets", [])
+        handles = [t.get("username") or t.get("handle") or t.get("raw", "") for t in targets]
+        request = ProfileRequest(handles=handles, targets=targets)
+
+        try:
+            response = await self._runner.run_profiles(request)
+        except ScweetError:
+            if self._config.strict:
+                raise
+            logger.warning("get_user_info failed: %s", _exc_summary(), exc_info=True)
+            return []
+
+        if isinstance(response, dict):
+            items = response.get("items", [])
+        else:
+            items = getattr(response, "items", None) or []
+        if not isinstance(items, list):
+            items = []
+
+        if save:
+            name = save_name or self._build_save_name("user_info", users=users)
+            self._save_output(items, "user_info", save_format, save_name=name)
+
+        return items
+
+    # ── Output helpers ──────────────────────────────────────────────────
+
+    @staticmethod
+    def _build_save_name(
+        operation: str,
+        *,
+        query: Optional[str] = None,
+        since: Optional[str] = None,
+        until: Optional[str] = None,
+        from_users: Optional[list[str]] = None,
+        users: Optional[list[str]] = None,
+    ) -> str:
+        """Build a descriptive file name like 'bitcoin_2024-01-01_2024-06-01'."""
+        import re
+
+        # Pick the most descriptive part
+        if query:
+            part = "_".join(query.split()[:3])
+        elif from_users:
+            part = "_".join(from_users[:3])
+        elif users:
+            part = "_".join(users[:3])
+        else:
+            part = operation
+
+        # Sanitize for filesystem
+        part = re.sub(r'[^\w\-.]', '_', part).strip('_') or operation
+
+        # Append date range if available
+        if since and until:
+            return f"{part}_{since}_{until}"
+        elif since:
+            return f"{part}_{since}"
+        return part
+
+    def _save_output(
+        self, rows: list[dict], operation: str, save_format: Optional[str],
+        save_name: Optional[str] = None,
+    ) -> None:
+        if not rows:
+            return
+
+        fmt = (save_format or self._config.save_format or "csv").lower().strip()
+        save_dir = self._config.save_dir or "outputs"
+        os.makedirs(save_dir, exist_ok=True)
+
+        if save_name:
+            # Strip extension if user provided one
+            base_name = save_name.rsplit(".", 1)[0] if "." in save_name else save_name
+        else:
+            base_name = operation
+
+        base = os.path.join(save_dir, base_name)
+
+        if fmt in ("csv", "both"):
+            from .outputs import write_csv_auto_header
+            write_csv_auto_header(f"{base}.csv", rows, mode="a")
+
+        if fmt in ("json", "both"):
+            from .outputs import write_json_auto_append
+            write_json_auto_append(f"{base}.json", rows, mode="a")
+
+    @staticmethod
+    def _tweet_to_dict(tweet: Any) -> dict:
+        if isinstance(tweet, dict):
+            return tweet
+        if hasattr(tweet, "model_dump"):
+            return tweet.model_dump()
+        return dict(tweet)
+
+    @staticmethod
+    def _extract_follows_items(response: Any) -> list[dict]:
+        if isinstance(response, dict):
+            for key in ("follows", "items"):
+                items = response.get(key)
+                if isinstance(items, list):
+                    return items
+            result = response.get("result")
+            if result is not None:
+                items = getattr(result, "items", None)
+                if isinstance(items, list):
+                    return items
+        items = getattr(response, "items", None)
+        if isinstance(items, list):
+            return items
+        return []

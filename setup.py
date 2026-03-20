@@ -68,7 +68,7 @@ setup(
     ],
     packages=find_packages(include=("Scweet", "Scweet.*")),
     include_package_data=True,
-    package_data={"Scweet.v4": ["default_manifest.json"]},
+    package_data={"Scweet": ["default_manifest.json"]},
     install_requires=read_requirements(ROOT / "requirements.txt"),
     python_requires=">=3.9",
     classifiers=[
