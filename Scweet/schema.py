@@ -27,6 +27,7 @@ if SQLMODEL_AVAILABLE:
             ),
             Index("ix_accounts_cooldown", "status", "available_til"),
             Index("ix_accounts_lease_lookup", "lease_id"),
+            {"extend_existing": True},
         )
 
         id: Optional[int] = Field(default=None, primary_key=True)
@@ -63,6 +64,7 @@ if SQLMODEL_AVAILABLE:
 
     class RunTable(SQLModel, table=True):
         __tablename__ = "runs"
+        __table_args__ = {"extend_existing": True}
 
         id: Optional[int] = Field(default=None, primary_key=True)
         run_id: str = Field(sa_column=Column(String(64), unique=True, index=True, nullable=False))
@@ -79,6 +81,7 @@ if SQLMODEL_AVAILABLE:
         __tablename__ = "resume_state"
         __table_args__ = (
             Index("ix_resume_lookup", "query_hash", "updated_at"),
+            {"extend_existing": True},
         )
 
         id: Optional[int] = Field(default=None, primary_key=True)
@@ -92,6 +95,7 @@ if SQLMODEL_AVAILABLE:
 
     class ManifestCacheTable(SQLModel, table=True):
         __tablename__ = "manifest_cache"
+        __table_args__ = {"extend_existing": True}
 
         id: Optional[int] = Field(default=None, primary_key=True)
         key: str = Field(sa_column=Column(String(255), unique=True, index=True, nullable=False))
