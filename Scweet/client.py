@@ -241,6 +241,23 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Search tweets. Returns list of tweet dicts. Raises on failure.
+
+        Args:
+            query: Raw search string (Twitter advanced search operators supported).
+            since: Start date ``YYYY-MM-DD``. Defaults to 30 days ago.
+            until: End date ``YYYY-MM-DD``. Defaults to today.
+            limit: Max tweets to collect. Always set this — without a limit,
+                scraping continues until results are exhausted or daily caps are hit.
+            save: Write results to disk (CSV by default).
+            save_format: ``"csv"``, ``"json"``, or ``"both"``.
+            resume: Resume from the last saved checkpoint for this query.
+
+        Returns:
+            List of tweet dicts. Each dict has: ``tweet_id``, ``user``
+            (``screen_name``, ``name``), ``timestamp``, ``text``, ``likes``,
+            ``retweets``, ``comments``, ``media``, ``tweet_url``, ``raw``.
+        """
         return asyncio.run(
             self.asearch(
                 query,
@@ -322,6 +339,7 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Async variant of :meth:`search`. See :meth:`search` for full docs."""
         from .models import SearchRequest
         from .resume import compute_query_hash, resolve_resume_start
 
@@ -411,6 +429,7 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Fetch tweets from user timelines. Returns list of tweet dicts (same schema as :meth:`search`)."""
         return asyncio.run(
             self.aget_profile_tweets(
                 users, limit=limit, max_empty_pages=max_empty_pages,
@@ -429,6 +448,7 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Async variant of :meth:`get_profile_tweets`."""
         from .models import ProfileTimelineRequest
         from .user_identity import normalize_user_targets
 
@@ -468,6 +488,10 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Fetch followers of the given users. Returns list of user dicts.
+
+        Pass ``raw_json=True`` to include the full GraphQL payload under a ``raw`` key.
+        """
         return asyncio.run(
             self.aget_followers(
                 users, limit=limit, max_empty_pages=max_empty_pages,
@@ -488,6 +512,7 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Async variant of :meth:`get_followers`."""
         return await self._run_follows(
             users, "followers", limit=limit, max_empty_pages=max_empty_pages,
             resume=resume, raw_json=raw_json, save=save, save_format=save_format,
@@ -506,6 +531,10 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Fetch accounts that the given users follow. Returns list of user dicts.
+
+        Pass ``raw_json=True`` to include the full GraphQL payload under a ``raw`` key.
+        """
         return asyncio.run(
             self.aget_following(
                 users, limit=limit, max_empty_pages=max_empty_pages,
@@ -526,6 +555,7 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Async variant of :meth:`get_following`."""
         return await self._run_follows(
             users, "following", limit=limit, max_empty_pages=max_empty_pages,
             resume=resume, raw_json=raw_json, save=save, save_format=save_format,
@@ -580,6 +610,12 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Fetch profile metadata for the given users. Returns list of user dicts.
+
+        Each dict has: ``user_id``, ``username``, ``name``, ``description``,
+        ``location``, ``followers_count``, ``following_count``, ``verified``,
+        ``blue_verified``, ``profile_image_url``, and more.
+        """
         return asyncio.run(self.aget_user_info(users, save=save, save_format=save_format, save_name=save_name))
 
     async def aget_user_info(
@@ -590,6 +626,7 @@ class Scweet:
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
+        """Async variant of :meth:`get_user_info`."""
         from .models import ProfileRequest
         from .user_identity import normalize_user_targets
 

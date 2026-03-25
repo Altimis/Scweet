@@ -320,6 +320,59 @@ The default format can be set globally via `ScweetConfig(save_format="json")`.
 
 ---
 
+## Output Schemas
+
+### Tweet record
+
+Returned by `search()` and `get_profile_tweets()`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tweet_id` | `str` | Tweet ID |
+| `user` | `dict` | Author info: `screen_name` (handle), `name` (display name) |
+| `timestamp` | `str` | Post time — Twitter date string, e.g. `"Thu Mar 20 22:25:15 +0000 2025"` |
+| `text` | `str` | Full tweet text |
+| `embedded_text` | `str \| None` | Quoted tweet text (if this tweet quotes another) |
+| `emojis` | `list \| None` | Extracted emojis (if any) |
+| `comments` | `int` | Reply count |
+| `likes` | `int` | Like count |
+| `retweets` | `int` | Retweet count |
+| `media` | `dict \| None` | Media: `{"image_links": ["https://..."]}` — `None` if no media |
+| `tweet_url` | `str` | Permalink, e.g. `"https://x.com/user/status/123"` |
+| `raw` | `dict` | Full GraphQL payload |
+
+### User record
+
+Returned by `get_followers()`, `get_following()`, and `get_user_info()`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `user_id` | `str` | Twitter user ID |
+| `username` | `str` | Screen name / handle |
+| `name` | `str` | Display name |
+| `description` | `str` | Bio text |
+| `location` | `str \| None` | Self-reported location |
+| `created_at` | `str` | Account creation date (Twitter date string) |
+| `followers_count` | `int` | Follower count |
+| `following_count` | `int` | Following count |
+| `statuses_count` | `int` | Total tweets posted |
+| `favourites_count` | `int` | Total likes given |
+| `media_count` | `int` | Media tweet count |
+| `listed_count` | `int` | List membership count |
+| `verified` | `bool` | Legacy verified badge |
+| `blue_verified` | `bool` | Twitter Blue / paid verification |
+| `protected` | `bool` | Protected (private) account |
+| `profile_image_url` | `str` | Profile photo URL |
+| `profile_banner_url` | `str` | Banner image URL |
+| `url` | `str \| None` | Website URL set in bio |
+| `raw` | `dict` | Full GraphQL payload (only present when `raw_json=True`) |
+
+**Followers / following only:** each record also has `type` (`"followers"` or `"following"`) and `target` (info about the queried account).
+
+**User info only:** each record has `input` (the queried input) instead of `type`/`target`. The `raw` field is omitted by default (not present unless the underlying engine returns it).
+
+---
+
 ## Resume Interrupted Searches
 
 Resume a search from where it left off using SQLite cursor checkpoints:
@@ -609,6 +662,28 @@ All exceptions are importable from the top-level package:
 ```python
 from Scweet import ScweetError, AccountPoolExhausted, RunFailed, NetworkError, ProxyError, EngineError
 ```
+
+### Troubleshooting
+
+**Empty results / fewer tweets than expected**
+- Check your date range — Twitter search is often shallow on older dates
+- Try `display_type="Latest"` to get chronological results instead of "Top"
+- Your account may have hit its daily cap (`daily_requests_limit` / `daily_tweets_limit` in `ScweetConfig`). Check with `ScweetDB("scweet_state.db").accounts_summary()`
+- Run with logging enabled to see what's happening: `logging.basicConfig(level=logging.INFO)`
+
+**`AccountPoolExhausted`**
+- All accounts are cooling down or at daily limits. The error message includes counts: `total=N, unusable=M, cooling_down=K`
+- Wait for cooldowns to expire, or add more accounts
+- Reset cooldowns manually: `ScweetDB("scweet_state.db").reset_account_cooldowns()`
+
+**`RunFailed` / `NetworkError`**
+- Check your internet connection and proxy configuration
+- X may have rotated GraphQL query IDs — enable `manifest_scrape_on_init=True` to auto-fetch fresh ones
+- 404 errors in logs mean stale query IDs (transient) — not bad auth
+
+**Auth errors (401/403 in logs)**
+- Your `auth_token` or `ct0` cookie has expired — refresh them from your browser
+- Use `ScweetDB("scweet_state.db").repair_account("username", force_refresh=True)` to trigger token refresh
 
 ---
 
