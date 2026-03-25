@@ -4,13 +4,10 @@ import pytest
 from pydantic import ValidationError
 
 from Scweet import ScweetConfig
-from Scweet import configure_logging
 
 
 def test_public_config_symbols_are_exported():
     assert ScweetConfig is not None
-    assert configure_logging is not None
-    assert callable(configure_logging)
 
 
 def test_scweetconfig_flat_fields():

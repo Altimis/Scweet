@@ -236,7 +236,18 @@ class Runner:
             accounts = list(accounts or [])
             if not accounts:
                 stats.tasks_failed = stats.tasks_total
-                raise AccountPoolExhausted("No eligible account could be leased")
+                _diag: dict[str, Any] = {}
+                try:
+                    _diag = self.accounts_repo.eligibility_diagnostics()
+                except Exception:
+                    pass
+                _total = _diag.get("total", "?")
+                _blocked = _diag.get("blocked_counts", {})
+                _detail = ", ".join(f"{k}={v}" for k, v in sorted(_blocked.items())) if _blocked else "no accounts in pool"
+                raise AccountPoolExhausted(
+                    f"No eligible accounts (total={_total}, {_detail}). "
+                    "Check your credentials or wait for cooldowns to expire."
+                )
             for account in accounts:
                 lease_id = str(account.get("lease_id") or "").strip()
                 if lease_id:
@@ -329,7 +340,6 @@ class Runner:
         if failure is not None:
             raise failure
 
-        strict = bool(_cfg(self.config, "strict", False))
         unresolved = max(0, stats.tasks_total - stats.tasks_done - stats.tasks_failed)
         if stats.tweets_count == 0 and (stats.tasks_failed > 0 or unresolved > 0):
             summary = self._build_run_failure_summary(
@@ -337,9 +347,7 @@ class Runner:
                 unresolved=unresolved,
                 error_events=error_events,
             )
-            if strict:
-                raise self._classify_run_failure(summary, error_events=error_events)
-            logger.error("%s", summary)
+            raise self._classify_run_failure(summary, error_events=error_events)
 
         return SearchResult(tweets=collected_tweets, stats=stats)
 

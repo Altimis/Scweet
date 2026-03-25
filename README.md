@@ -61,6 +61,38 @@ profiles = s.get_user_info(["elonmusk", "OpenAI"])
 
 > **Tip:** Always set `limit` — without it, scraping continues until results are exhausted or daily account caps are hit.
 
+## CLI
+
+Scweet ships with a `scweet` command-line tool — use it directly from the terminal without writing any code:
+
+```bash
+# Search tweets
+scweet --auth-token TOKEN search "python" --since 2025-01-01 --limit 100 --pretty
+
+# Search with filters
+scweet --auth-token TOKEN search --from elonmusk naval --hashtag AI --has-images --limit 50
+
+# Profile tweets
+scweet --auth-token TOKEN profile-tweets elonmusk OpenAI --limit 100
+
+# Followers / Following
+scweet --auth-token TOKEN followers elonmusk --limit 500 --save --save-format json
+scweet --auth-token TOKEN following OpenAI --limit 200
+
+# User info
+scweet --cookies-file cookies.json user-info elonmusk naval --pretty
+```
+
+By default the CLI runs silently — no output is printed. Use `--save` to write to CSV/JSON files, `--pretty` to print to stdout, or both. Errors always surface with a message and non-zero exit code. Pipe `--pretty` output to `jq` for quick filtering.
+
+**Subcommands:** `search`, `profile-tweets`, `followers`, `following`, `user-info`
+
+**Auth options (global):** `--auth-token`, `--cookies-file`, `--env-file`, `--db-path`
+
+**Config options (global):** `--proxy`, `--concurrency`
+
+Run `scweet --help` or `scweet <subcommand> --help` for the full option list. See [Full Documentation](DOCUMENTATION.md#cli) for all subcommand flags.
+
 ## Structured Search Filters
 
 ```python

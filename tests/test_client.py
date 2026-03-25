@@ -187,29 +187,16 @@ def test_search_via_api_engine(monkeypatch, tmp_path):
     assert len(calls) >= 1
 
 
-def test_search_no_accounts_returns_empty(tmp_path):
+def test_search_raises_when_no_accounts(tmp_path):
     db_path = str(tmp_path / "state.db")
     client = PreferredScweet(db_path=db_path, provision=False)
-    out = asyncio.run(
-        client.asearch("x", since="2026-02-01", until="2026-02-02")
-    )
-    assert out == []
-
-
-def test_search_strict_raises_when_no_accounts(tmp_path):
-    db_path = str(tmp_path / "state.db")
-    client = PreferredScweet(
-        db_path=db_path,
-        config=ScweetConfig(strict=True),
-        provision=False,
-    )
     with pytest.raises(AccountPoolExhausted):
         asyncio.run(
             client.asearch("x", since="2026-02-01", until="2026-02-02")
         )
 
 
-def test_search_strict_raises_on_network_error(monkeypatch, tmp_path):
+def test_search_raises_on_network_error(monkeypatch, tmp_path):
     db_path = str(tmp_path / "state.db")
     _seed_account(db_path)
 
@@ -226,7 +213,7 @@ def test_search_strict_raises_on_network_error(monkeypatch, tmp_path):
 
     client = PreferredScweet(
         db_path=db_path,
-        config=ScweetConfig(strict=True, n_splits=1, concurrency=1),
+        config=ScweetConfig(n_splits=1, concurrency=1),
         provision=False,
     )
     with pytest.raises((NetworkError, RunFailed)):
@@ -235,42 +222,10 @@ def test_search_strict_raises_on_network_error(monkeypatch, tmp_path):
         )
 
 
-def test_non_strict_swallows_run_failed_on_all_methods(tmp_path):
-    """Non-strict mode returns [] for any ScweetError on any method."""
+def test_raises_run_failed_on_profile_tweets(tmp_path):
     db_path = str(tmp_path / "state.db")
     _seed_account(db_path)
     client = PreferredScweet(db_path=db_path, provision=False)
-
-    class _FailRunner:
-        async def run_search(self, request):
-            raise RunFailed("boom")
-
-        async def run_profile_tweets(self, request):
-            raise NetworkError("no network")
-
-        async def run_follows(self, request):
-            raise RunFailed("proxy down", diagnostics={})
-
-        async def run_profiles(self, request):
-            raise AccountPoolExhausted("no accounts")
-
-    client._runner = _FailRunner()
-
-    assert client.search("x") == []
-    assert client.get_profile_tweets(["x"]) == []
-    assert client.get_followers(["x"]) == []
-    assert client.get_following(["x"]) == []
-    assert client.get_user_info(["x"]) == []
-
-
-def test_strict_raises_run_failed_on_profile_tweets(tmp_path):
-    db_path = str(tmp_path / "state.db")
-    _seed_account(db_path)
-    client = PreferredScweet(
-        db_path=db_path,
-        config=ScweetConfig(strict=True),
-        provision=False,
-    )
 
     class _FailRunner:
         async def run_profile_tweets(self, request):
@@ -281,14 +236,10 @@ def test_strict_raises_run_failed_on_profile_tweets(tmp_path):
         client.get_profile_tweets(["x"])
 
 
-def test_strict_raises_on_follows(tmp_path):
+def test_raises_on_follows(tmp_path):
     db_path = str(tmp_path / "state.db")
     _seed_account(db_path)
-    client = PreferredScweet(
-        db_path=db_path,
-        config=ScweetConfig(strict=True),
-        provision=False,
-    )
+    client = PreferredScweet(db_path=db_path, provision=False)
 
     class _FailRunner:
         async def run_follows(self, request):
@@ -299,14 +250,10 @@ def test_strict_raises_on_follows(tmp_path):
         client.get_followers(["x"])
 
 
-def test_strict_raises_on_user_info(tmp_path):
+def test_raises_on_user_info(tmp_path):
     db_path = str(tmp_path / "state.db")
     _seed_account(db_path)
-    client = PreferredScweet(
-        db_path=db_path,
-        config=ScweetConfig(strict=True),
-        provision=False,
-    )
+    client = PreferredScweet(db_path=db_path, provision=False)
 
     class _FailRunner:
         async def run_profiles(self, request):

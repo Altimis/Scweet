@@ -52,7 +52,7 @@ def configure_logging(
         show_api_http = profile_value == "detailed"
 
     if stream is None:
-        stream = sys.stdout
+        stream = sys.stderr
 
     if fmt is None:
         fmt = _DETAILED_FMT if profile_value == "detailed" else _SIMPLE_FMT

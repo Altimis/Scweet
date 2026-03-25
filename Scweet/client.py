@@ -3,38 +3,39 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import warnings
 from datetime import date, timedelta
 from typing import Any, Optional
 
 from .config import ScweetConfig
-from .exceptions import (
-    AccountPoolExhausted,
-    EngineError,
-    NetworkError,
-    ProxyError,
-    RunFailed,
-    ScweetError,
-)
+from .exceptions import ScweetError
 
 logger = logging.getLogger(__name__)
-
-
-def _exc_summary() -> str:
-    import sys
-    exc = sys.exc_info()[1]
-    if exc is None:
-        return "unknown error"
-    return f"{type(exc).__name__}: {exc}"
 
 
 class Scweet:
     """Scweet v5 client — simple API-only Twitter/X scraper.
 
-    Init options (pick one):
-        s = Scweet(cookies_file="cookies.json")
-        s = Scweet(auth_token="abc123")
-        s = Scweet(cookies={"auth_token": "...", "ct0": "..."})
-        s = Scweet(db_path="existing_state.db")  # reuse provisioned accounts
+    Credential options (pick one):
+        s = Scweet(cookies_file="cookies.json")       # path to cookies JSON
+        s = Scweet(auth_token="abc123")               # single auth_token cookie
+        s = Scweet(cookies={"auth_token": "...", "ct0": "..."})  # inline dict
+        s = Scweet(env_path=".env")                   # .env file with AUTH_TOKEN/CT0
+        s = Scweet(db_path="existing.db")             # reuse a pre-populated state DB
+
+    Args:
+        cookies_file: Path to a JSON file containing account cookies.
+        auth_token: Single auth_token cookie value. The ct0 (CSRF) token will be
+            bootstrapped automatically via a request to x.com.
+        cookies: Inline cookies dict, list of account dicts, or JSON string.
+        accounts_file: Path to a colon-separated accounts.txt file.
+        env_path: Path to a .env file with AUTH_TOKEN, CT0, USERNAME, etc.
+        db_path: Path to the SQLite state file. The constructor arg always takes
+            precedence over any db_path set in ``config``. Default: scweet_state.db.
+        config: Optional ScweetConfig for advanced settings.
+        provision: If True (default), import credentials into the DB on init.
+            Set to False to skip credential import and use only accounts that
+            already exist in the database (useful when the DB is pre-populated).
     """
 
     def __init__(
@@ -54,9 +55,8 @@ class Scweet:
         else:
             self._config = ScweetConfig()
 
-        # Override db_path from constructor arg
-        if db_path != "scweet_state.db" or config is None:
-            self._config.db_path = db_path
+        # Constructor db_path always wins (predictable precedence)
+        self._config.db_path = db_path
 
         self._cookies_file = cookies_file
         self._auth_token = auth_token
@@ -113,9 +113,14 @@ class Scweet:
                 self._accounts_file or self._cookies_file or self._env_path or cookies_payload is not None
             )
             if has_sources:
+                source_desc = (
+                    self._cookies_file or self._accounts_file or self._env_path
+                    or ("auth_token" if self._auth_token else "inline cookies")
+                )
+                logger.info("Provisioning accounts from %s", source_desc)
                 runtime_options = {"proxy": cfg.proxy}
                 try:
-                    import_accounts_to_db(
+                    imported = import_accounts_to_db(
                         db_path,
                         accounts_file=self._accounts_file,
                         cookies_file=self._cookies_file,
@@ -124,8 +129,21 @@ class Scweet:
                         bootstrap_strategy="auto",
                         runtime=runtime_options,
                     )
+                    if imported == 0:
+                        warnings.warn(
+                            "Account provisioning produced no usable accounts. "
+                            "Check your credentials (auth_token, ct0/CSRF).",
+                            RuntimeWarning,
+                            stacklevel=3,
+                        )
                 except Exception:
-                    logger.exception("Account provisioning failed (best-effort); continuing")
+                    logger.exception("Account provisioning failed")
+                    warnings.warn(
+                        "Account provisioning failed. Check your credentials. "
+                        "See logs for details.",
+                        RuntimeWarning,
+                        stacklevel=3,
+                    )
 
         self._manifest_provider = ManifestProvider(
             db_path=db_path,
@@ -134,18 +152,14 @@ class Scweet:
         )
         if cfg.manifest_scrape_on_init:
             try:
-                self._manifest_provider.scrape_from_x_sync(strict=cfg.strict)
+                self._manifest_provider.scrape_from_x_sync(strict=True)
             except Exception:
-                if cfg.strict:
-                    raise
-                logger.exception("Live manifest scrape failed (best-effort); continuing")
+                logger.exception("Live manifest scrape failed; continuing with cached manifest")
         elif cfg.manifest_update_on_init:
             try:
-                self._manifest_provider.refresh_sync(strict=cfg.strict)
+                self._manifest_provider.refresh_sync(strict=True)
             except Exception:
-                if cfg.strict:
-                    raise
-                logger.exception("Manifest refresh failed (best-effort); continuing")
+                logger.exception("Manifest refresh failed; continuing with cached manifest")
 
         tx_kwargs: dict[str, Any] = {"proxy": cfg.proxy, "user_agent": cfg.api_user_agent}
         if cfg.api_http_impersonate:
@@ -312,7 +326,7 @@ class Scweet:
         from .resume import compute_query_hash, resolve_resume_start
 
         if not since:
-            since = (date.today() - timedelta(days=7)).strftime("%Y-%m-%d")
+            since = (date.today() - timedelta(days=30)).strftime("%Y-%m-%d")
         if not until:
             until = date.today().strftime("%Y-%m-%d")
 
@@ -374,13 +388,7 @@ class Scweet:
             max_empty_pages=effective_max_empty,
         )
 
-        try:
-            result = await self._runner.run_search(search_request)
-        except ScweetError:
-            if self._config.strict:
-                raise
-            logger.warning("search failed: %s", _exc_summary(), exc_info=True)
-            return []
+        result = await self._runner.run_search(search_request)
 
         tweets = [self._tweet_to_dict(t) for t in (result.tweets or [])]
 
@@ -435,13 +443,7 @@ class Scweet:
             max_empty_pages=effective_max_empty,
         )
 
-        try:
-            response = await self._runner.run_profile_tweets(request)
-        except ScweetError:
-            if self._config.strict:
-                raise
-            logger.warning("get_profile_tweets failed: %s", _exc_summary(), exc_info=True)
-            return []
+        response = await self._runner.run_profile_tweets(request)
 
         result = response.get("result") if isinstance(response, dict) else response
         tweets = [self._tweet_to_dict(t) for t in (getattr(result, "tweets", None) or [])]
@@ -558,13 +560,7 @@ class Scweet:
             max_empty_pages=effective_max_empty,
         )
 
-        try:
-            response = await self._runner.run_follows(request)
-        except ScweetError:
-            if self._config.strict:
-                raise
-            logger.warning("%s failed: %s", follow_type, _exc_summary(), exc_info=True)
-            return []
+        response = await self._runner.run_follows(request)
 
         items = self._extract_follows_items(response)
 
@@ -602,13 +598,7 @@ class Scweet:
         handles = [t.get("username") or t.get("handle") or t.get("raw", "") for t in targets]
         request = ProfileRequest(handles=handles, targets=targets)
 
-        try:
-            response = await self._runner.run_profiles(request)
-        except ScweetError:
-            if self._config.strict:
-                raise
-            logger.warning("get_user_info failed: %s", _exc_summary(), exc_info=True)
-            return []
+        response = await self._runner.run_profiles(request)
 
         if isinstance(response, dict):
             items = response.get("items", [])
@@ -663,6 +653,7 @@ class Scweet:
         save_name: Optional[str] = None,
     ) -> None:
         if not rows:
+            logger.warning("save=True but no results to write for operation '%s'", operation)
             return
 
         fmt = (save_format or self._config.save_format or "csv").lower().strip()
@@ -679,11 +670,15 @@ class Scweet:
 
         if fmt in ("csv", "both"):
             from .outputs import write_csv_auto_header
-            write_csv_auto_header(f"{base}.csv", rows, mode="a")
+            path = f"{base}.csv"
+            write_csv_auto_header(path, rows, mode="a")
+            logger.info("Saved %d rows to %s", len(rows), path)
 
         if fmt in ("json", "both"):
             from .outputs import write_json_auto_append
-            write_json_auto_append(f"{base}.json", rows, mode="a")
+            path = f"{base}.json"
+            write_json_auto_append(path, rows, mode="a")
+            logger.info("Saved %d rows to %s", len(rows), path)
 
     @staticmethod
     def _tweet_to_dict(tweet: Any) -> dict:

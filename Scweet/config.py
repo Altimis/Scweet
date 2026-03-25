@@ -53,7 +53,6 @@ class ScweetConfig(BaseModel):
     scheduler_min_interval_s: int = Field(default=300, ge=1)
     n_splits: int = Field(default=5, ge=1)
     priority: int = 1
-    strict: bool = False
     proxy_check_on_lease: bool = True
     proxy_check_url: str = "https://x.com/robots.txt"
     proxy_check_timeout_s: float = Field(default=10.0, ge=0.0)

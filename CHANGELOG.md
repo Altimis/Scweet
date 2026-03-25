@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [5.1.0] - 2026-03-25
+
+### Added
+
+- **Command-line interface** — `scweet` command installed automatically with the package. All endpoints available as subcommands: `search`, `profile-tweets`, `followers`, `following`, `user-info`.
+- Full filter support in the CLI: all search filters (`--from`, `--hashtag`, `--min-likes`, `--has-images`, etc.), output options (`--save`, `--save-format`, `--save-dir`, `--save-name`, `--pretty`), and global auth/config flags (`--auth-token`, `--cookies-file`, `--env-file`, `--proxy`, `--strict`, `--concurrency`).
+- `python -m Scweet` entry point via `__main__.py`.
+- 78 unit tests covering the CLI parser, command handlers, output formatting, and `main()` exit codes (`tests/test_cli.py`).
+
+---
+
 ## [5.0.0] - 2025
 
 ### Added

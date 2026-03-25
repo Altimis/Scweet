@@ -70,6 +70,9 @@ setup(
     include_package_data=True,
     package_data={"Scweet": ["default_manifest.json"]},
     install_requires=read_requirements(ROOT / "requirements.txt"),
+    entry_points={
+        "console_scripts": ["scweet=Scweet.cli:main"],
+    },
     python_requires=">=3.9",
     license_files=[],
     classifiers=[

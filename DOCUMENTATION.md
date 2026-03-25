@@ -7,7 +7,7 @@ pip install -U Scweet
 ```
 
 ```python
-from Scweet import Scweet, ScweetConfig, ScweetDB, configure_logging
+from Scweet import Scweet, ScweetConfig, ScweetDB
 ```
 
 ---
@@ -128,7 +128,7 @@ The per-call `limit` is what you should set in normal usage. The account daily c
 ```python
 s = Scweet(cookies_file="cookies.json")
 
-# Defaults to last 7 days if since/until omitted
+# Defaults to last 30 days if since/until omitted — always set explicit dates for reproducibility
 tweets = s.search("python programming", limit=100)
 
 # Explicit date range
@@ -136,7 +136,7 @@ tweets = s.search("python programming", since="2024-01-01", until="2024-02-01", 
 print(f"Found {len(tweets)} tweets")
 ```
 
-Both `since` and `until` are optional. `since` defaults to 7 days ago, `until` defaults to today.
+Both `since` and `until` are optional. `since` defaults to **30 days ago**, `until` defaults to today. Always set explicit dates for reproducible results.
 
 ### Structured filters
 
@@ -178,7 +178,7 @@ tweets = s.search(
 | `from_users` | `list[str]` | Tweets from these users |
 | `to_users` | `list[str]` | Tweets to these users |
 | `mentioning_users` | `list[str]` | Tweets mentioning these users |
-| `tweet_type` | `str` | `all`, `originals_only`, `replies_only`, `exclude_replies` |
+| `tweet_type` | `str` | `all`, `originals_only`, `replies_only`, `retweets_only`, `exclude_replies`, `exclude_retweets` |
 | `verified_only` | `bool` | Verified accounts only |
 | `blue_verified_only` | `bool` | Blue verified only |
 | `has_images` | `bool` | Must contain images |
@@ -199,7 +199,7 @@ tweets = s.search(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `query` | `str` | `""` | Raw query string (Twitter search operators) |
-| `since` | `str` | 7 days ago | Start date (`YYYY-MM-DD`) |
+| `since` | `str` | 30 days ago | Start date (`YYYY-MM-DD`) |
 | `until` | `str` | today | End date (`YYYY-MM-DD`) |
 | `lang` | `str` | `None` | Language filter (e.g., `"en"`) |
 | `display_type` | `str` | `"Top"` | `"Top"` or `"Latest"` |
@@ -407,7 +407,6 @@ s = Scweet(
 | `scheduler_min_interval_s` | `int` | `300` | Minimum time interval split (seconds) |
 | `n_splits` | `int` | `5` | Number of time interval splits for search |
 | `priority` | `int` | `1` | Task priority |
-| `strict` | `bool` | `False` | Raise exceptions instead of returning empty |
 | `proxy_check_on_lease` | `bool` | `True` | Verify proxy connectivity before leasing |
 | `proxy_check_url` | `str` | `"https://x.com/robots.txt"` | URL for proxy check |
 | `proxy_check_timeout_s` | `float` | `10.0` | Timeout for proxy check |
@@ -530,28 +529,18 @@ db.reset_daily_counters()
 
 ## Logging
 
-Scweet uses Python's `logging` module. By default, no output is produced (NullHandler). Opt in with `configure_logging()`:
+Scweet uses Python's standard `logging` module under the `"Scweet"` logger namespace. By default no output is produced (NullHandler — standard library practice). To see logs, configure a handler on the `"Scweet"` logger in your application:
 
 ```python
-from Scweet import configure_logging
+import logging
 
-# Simple — high-level flow logs
-configure_logging(profile="simple", level="INFO", force=True)
-
-# Detailed — includes per-request API logs and file/line info
-configure_logging(profile="detailed", level="DEBUG", force=True)
+logging.basicConfig(level=logging.INFO)
+# or target only Scweet:
+logging.getLogger("Scweet").setLevel(logging.INFO)
+logging.getLogger("Scweet").addHandler(logging.StreamHandler())
 ```
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `level` | `str \| int` | `"INFO"` | Log level |
-| `profile` | `str` | `"simple"` | `"simple"` or `"detailed"` |
-| `force` | `bool` | `False` | Replace existing handlers |
-| `stream` | `TextIO` | `sys.stdout` | Output stream |
-| `fmt` | `str \| None` | `None` | Custom format string |
-| `show_api_http` | `bool \| None` | `None` | Show per-request API logs |
-| `api_level` | `str \| int \| None` | `None` | Override api_engine log level |
-| `transaction_level` | `str \| int \| None` | `None` | Override transaction log level |
+The CLI automatically sets up INFO-level logging to stderr. Pass `-v` / `--verbose` to the CLI for DEBUG-level output.
 
 ---
 
@@ -583,31 +572,21 @@ The sync methods (`search`, `get_followers`, etc.) wrap their async counterparts
 
 ## Error Handling
 
-### Strict vs non-strict mode
-
-By default (`strict=False`), all methods return `[]` when something goes wrong — no accounts available, network errors, proxy failures, etc. Errors are logged but don't crash your code:
+All Scweet methods raise exceptions on failure — there is no silent empty-result mode. Wrap calls in try/except to handle errors explicitly:
 
 ```python
+from Scweet import Scweet, AccountPoolExhausted, NetworkError, RunFailed
+
 s = Scweet(cookies_file="cookies.json")
-tweets = s.search("query")  # Returns [] on any error
-```
-
-With `strict=True`, exceptions are raised instead, so you can handle them explicitly:
-
-```python
-from Scweet import Scweet, ScweetConfig, AccountPoolExhausted, NetworkError
-
-s = Scweet(
-    cookies_file="cookies.json",
-    config=ScweetConfig(strict=True),
-)
 
 try:
     tweets = s.search("query")
-except AccountPoolExhausted:
-    print("No accounts available — check cooldowns or add more accounts")
+except AccountPoolExhausted as e:
+    print(f"No accounts available: {e}")
 except NetworkError:
     print("Network issue — check your connection or proxy")
+except RunFailed as e:
+    print(f"Scrape failed: {e}")
 ```
 
 This applies to all methods: `search`, `get_profile_tweets`, `get_followers`, `get_following`, and `get_user_info`.
@@ -629,6 +608,166 @@ All exceptions are importable from the top-level package:
 
 ```python
 from Scweet import ScweetError, AccountPoolExhausted, RunFailed, NetworkError, ProxyError, EngineError
+```
+
+---
+
+## CLI
+
+Scweet ships with a `scweet` command-line tool installed automatically alongside the package. No extra setup required — just `pip install -U Scweet`.
+
+### Usage pattern
+
+```
+scweet [auth options] [config options] <subcommand> [subcommand options]
+```
+
+### Global options
+
+**Auth:**
+
+| Flag | Description |
+|------|-------------|
+| `--auth-token TOKEN` | `auth_token` cookie value |
+| `--cookies-file FILE` | Path to a cookies JSON file |
+| `--env-file FILE` | Path to a `.env` file |
+| `--db-path PATH` | SQLite state file (default: `scweet_state.db`) |
+
+**Config:**
+
+| Flag | Description |
+|------|-------------|
+| `--proxy PROXY` | Proxy URL or JSON string |
+| `--concurrency N` | Worker concurrency (default: `5`) |
+
+### Output options
+
+Available on every subcommand:
+
+| Flag | Description |
+|------|-------------|
+| `--save` | Save results to file |
+| `--save-format {csv,json,both}` | File format (default: `csv`) |
+| `--save-dir DIR` | Output directory (default: `outputs`) |
+| `--save-name NAME` | Base filename for saved output |
+| `--pretty` | Print results as indented JSON to stdout |
+
+By default the CLI runs silently — no output is printed. Use `--save` to write results to a file, `--pretty` to print to stdout, or both together.
+
+### Subcommands
+
+#### `search`
+
+```bash
+scweet --auth-token TOKEN search [QUERY] [options]
+```
+
+`QUERY` is optional — you can use filters alone.
+
+| Flag | Description |
+|------|-------------|
+| `--since DATE` | Start date `YYYY-MM-DD` |
+| `--until DATE` | End date `YYYY-MM-DD` |
+| `--limit N` | Max tweets to return |
+| `--lang CODE` | Language code (e.g. `en`) |
+| `--display-type {Top,Latest}` | Default: `Top` |
+| `--from USER [USER ...]` | Tweets from these users |
+| `--to USER [USER ...]` | Tweets sent to these users |
+| `--mention USER [USER ...]` | Tweets mentioning these users |
+| `--all-words WORD [WORD ...]` | Tweets containing ALL of these words (AND) |
+| `--any-words WORD [WORD ...]` | Tweets containing ANY of these words (OR) |
+| `--exact-phrases PHRASE [PHRASE ...]` | Tweets containing these exact phrases |
+| `--hashtag TAG [TAG ...]` | Tweets containing any of these hashtags |
+| `--hashtags-exclude TAG [TAG ...]` | Exclude tweets with these hashtags |
+| `--exclude WORD [WORD ...]` | Exclude tweets with these words |
+| `--tweet-type {originals-only,replies-only,retweets-only,exclude-replies,exclude-retweets}` | Filter by tweet type |
+| `--min-likes N` | Minimum likes |
+| `--min-replies N` | Minimum replies |
+| `--min-retweets N` | Minimum retweets |
+| `--has-images` | Must contain images |
+| `--has-videos` | Must contain videos |
+| `--has-links` | Must contain links |
+| `--has-mentions` | Must contain @mentions |
+| `--has-hashtags` | Must contain hashtags |
+| `--verified-only` | Verified accounts only |
+| `--blue-verified-only` | Blue verified accounts only |
+| `--place PLACE` | Place filter |
+| `--geocode GEOCODE` | Geocode filter (e.g. `40.7,-74.0,10km`) |
+| `--near PLACE` | Near this location (e.g. `"San Francisco"`) |
+| `--within RADIUS` | Radius for `--near` (e.g. `15km` or `10mi`) |
+| `--resume` | Resume from last checkpoint |
+| `--max-empty-pages N` | Stop after N consecutive empty pages |
+
+#### `profile-tweets`
+
+```bash
+scweet --auth-token TOKEN profile-tweets USER [USER ...] [options]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--limit N` | Max tweets to return |
+| `--resume` | Resume from last checkpoint |
+| `--max-empty-pages N` | Stop after N consecutive empty pages |
+
+#### `followers` / `following`
+
+```bash
+scweet --auth-token TOKEN followers USER [USER ...] [options]
+scweet --auth-token TOKEN following USER [USER ...] [options]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--limit N` | Max users to return |
+| `--resume` | Resume from last checkpoint |
+| `--max-empty-pages N` | Stop after N consecutive empty pages |
+| `--raw-json` | Return raw API JSON instead of normalized dicts |
+
+#### `user-info`
+
+```bash
+scweet --auth-token TOKEN user-info USER [USER ...]
+```
+
+No pagination — one API call per user.
+
+### Examples
+
+```bash
+# Search (defaults to last 30 days — set explicit dates for reproducibility)
+scweet --auth-token TOKEN search "ChatGPT" --limit 200 --pretty
+
+# Search with date range and engagement filters
+scweet --auth-token TOKEN search "AI tools" \
+  --since 2025-01-01 --until 2025-06-01 \
+  --min-likes 100 --has-images --limit 500
+
+# Tweets from specific accounts containing a hashtag
+scweet --auth-token TOKEN search \
+  --from elonmusk naval sama \
+  --hashtag AI startups --limit 100
+
+# Pull a user's timeline, save to JSON
+scweet --cookies-file cookies.json profile-tweets elonmusk \
+  --limit 200 --save --save-format json
+
+# Get followers and pipe to jq
+scweet --auth-token TOKEN followers elonmusk --limit 1000 --pretty | jq '.[].screen_name'
+
+# Lookup multiple profiles
+scweet --auth-token TOKEN user-info elonmusk OpenAI sama --pretty
+
+# Resume a previously interrupted search
+scweet --auth-token TOKEN search "python" --since 2025-01-01 --resume
+```
+
+### Help
+
+```bash
+scweet --help
+scweet search --help
+scweet followers --help
 ```
 
 ---

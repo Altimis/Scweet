@@ -12,7 +12,6 @@ from .exceptions import (
     RunFailed,
     ScweetError,
 )
-from .logging_config import configure_logging
 
 logging.getLogger("Scweet").addHandler(logging.NullHandler())
 
@@ -20,7 +19,6 @@ __all__ = [
     "Scweet",
     "ScweetConfig",
     "ScweetDB",
-    "configure_logging",
     "ScweetError",
     "AccountPoolExhausted",
     "EngineError",
