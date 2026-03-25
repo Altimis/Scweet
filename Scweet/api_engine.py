@@ -2398,12 +2398,27 @@ class ApiEngine:
                 if screen_name and tweet_id:
                     tweet_url = f"https://x.com/{screen_name}/status/{tweet_id}"
 
+                # embedded_text: quoted tweet text or full retweet text
+                embedded_text: Optional[str] = None
+                qt = tweet_result.get("quoted_status_result") or {}
+                if isinstance(qt, dict) and qt:
+                    qt_legacy = qt.get("result", {}).get("legacy", {})
+                    if isinstance(qt_legacy, dict):
+                        embedded_text = qt_legacy.get("full_text") or None
+                if embedded_text is None:
+                    rt = legacy.get("retweeted_status_result") or {}
+                    if isinstance(rt, dict) and rt:
+                        rt_legacy = rt.get("result", {}).get("legacy", {})
+                        if isinstance(rt_legacy, dict):
+                            embedded_text = rt_legacy.get("full_text") or None
+
                 tweets.append(
                     TweetRecord(
                         tweet_id=str(tweet_id),
                         user=TweetUser(screen_name=screen_name, name=user_name),
                         timestamp=legacy.get("created_at"),
                         text=text,
+                        embedded_text=embedded_text,
                         comments=self._safe_int(legacy.get("reply_count")),
                         likes=self._safe_int(legacy.get("favorite_count")),
                         retweets=self._safe_int(legacy.get("retweet_count")),
@@ -2500,12 +2515,26 @@ class ApiEngine:
                 if screen_name and tweet_id:
                     tweet_url = f"https://x.com/{screen_name}/status/{tweet_id}"
 
+                embedded_text = None
+                qt = tweet_result.get("quoted_status_result") or {}
+                if isinstance(qt, dict) and qt:
+                    qt_legacy = qt.get("result", {}).get("legacy", {})
+                    if isinstance(qt_legacy, dict):
+                        embedded_text = qt_legacy.get("full_text") or None
+                if embedded_text is None:
+                    rt = legacy.get("retweeted_status_result") or {}
+                    if isinstance(rt, dict) and rt:
+                        rt_legacy = rt.get("result", {}).get("legacy", {})
+                        if isinstance(rt_legacy, dict):
+                            embedded_text = rt_legacy.get("full_text") or None
+
                 tweets.append(
                     TweetRecord(
                         tweet_id=str(tweet_id),
                         user=TweetUser(screen_name=screen_name, name=user_name),
                         timestamp=legacy.get("created_at"),
                         text=text,
+                        embedded_text=embedded_text,
                         comments=self._safe_int(legacy.get("reply_count")),
                         likes=self._safe_int(legacy.get("favorite_count")),
                         retweets=self._safe_int(legacy.get("retweet_count")),

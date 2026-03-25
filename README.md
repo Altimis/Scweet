@@ -70,7 +70,7 @@ Scweet ships with a `scweet` command-line tool — use it directly from the term
 scweet --auth-token TOKEN search "python" --since 2025-01-01 --limit 100 --pretty
 
 # Search with filters
-scweet --auth-token TOKEN search --from elonmusk naval --hashtag AI --has-images --limit 50
+scweet --auth-token TOKEN search --from elonmusk naval --hashtags-any AI --has-images --limit 50
 
 # Profile tweets
 scweet --auth-token TOKEN profile-tweets elonmusk OpenAI --limit 100

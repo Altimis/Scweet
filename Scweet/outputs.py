@@ -4,7 +4,53 @@ import csv
 import json
 import os
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
+
+# Canonical column order for CSV output.  Fields listed here appear first (in
+# this order); any extra fields are appended alphabetically after them.
+
+TWEET_COLUMN_ORDER: list[str] = [
+    "tweet_id",
+    "timestamp",
+    "user_screen_name",
+    "user_name",
+    "text",
+    "likes",
+    "retweets",
+    "comments",
+    "tweet_url",
+    "image_links",
+    "embedded_text",
+]
+
+USER_COLUMN_ORDER: list[str] = [
+    "user_id",
+    "username",
+    "name",
+    "description",
+    "followers_count",
+    "following_count",
+    "verified",
+    "blue_verified",
+    "location",
+    "created_at",
+    "statuses_count",
+    "favourites_count",
+    "media_count",
+    "listed_count",
+    "protected",
+    "profile_image_url",
+    "profile_banner_url",
+    "url",
+]
+
+
+def _apply_preferred_order(keys: set[str], preferred_order: Optional[list[str]]) -> list[str]:
+    if not preferred_order:
+        return sorted(keys)
+    ordered = [k for k in preferred_order if k in keys]
+    remaining = sorted(k for k in keys if k not in set(preferred_order))
+    return ordered + remaining
 
 
 def write_csv(path: str, rows: Union[list[dict], list[list]], header: list[str], mode: str = "w") -> None:
@@ -41,12 +87,22 @@ def write_csv(path: str, rows: Union[list[dict], list[list]], header: list[str],
             raise TypeError(f"Unsupported CSV row type: {type(row)!r}")
 
 
-def write_csv_auto_header(path: str, rows: list[dict], *, mode: str = "w") -> list[str]:
+def write_csv_auto_header(
+    path: str,
+    rows: list[dict],
+    *,
+    mode: str = "w",
+    preferred_order: Optional[list[str]] = None,
+) -> list[str]:
     """Write dict rows to CSV with a computed header.
 
     If mode="a" and the file exists, this function will:
     - append if no new columns are needed
     - otherwise rewrite the file with a union header to avoid dropping fields
+
+    ``preferred_order``: fields listed here appear first (in order); remaining
+    fields are appended alphabetically.  Has no effect when appending to an
+    existing file (the existing column order is preserved).
     """
 
     target = Path(path)
@@ -57,7 +113,8 @@ def write_csv_auto_header(path: str, rows: list[dict], *, mode: str = "w") -> li
             target.touch()
         return []
 
-    new_header = sorted({str(key) for row in rows for key in (row or {}).keys()})
+    all_keys = {str(key) for row in rows for key in (row or {}).keys()}
+    new_header = _apply_preferred_order(all_keys, preferred_order)
 
     if mode == "a" and target.exists() and target.stat().st_size > 0:
         with target.open("r", newline="", encoding="utf-8") as handle:

@@ -254,9 +254,11 @@ class Scweet:
             resume: Resume from the last saved checkpoint for this query.
 
         Returns:
-            List of tweet dicts. Each dict has: ``tweet_id``, ``user``
-            (``screen_name``, ``name``), ``timestamp``, ``text``, ``likes``,
-            ``retweets``, ``comments``, ``media``, ``tweet_url``, ``raw``.
+            List of tweet dicts. Each dict has: ``tweet_id``, ``timestamp``,
+            ``user`` (``screen_name``, ``name``), ``text``, ``likes``,
+            ``retweets``, ``comments``, ``tweet_url``, ``media``
+            (``image_links``), ``raw``. CSV output flattens ``user`` and
+            ``media`` into separate columns.
         """
         return asyncio.run(
             self.asearch(
@@ -706,9 +708,20 @@ class Scweet:
         base = os.path.join(save_dir, base_name)
 
         if fmt in ("csv", "both"):
-            from .outputs import write_csv_auto_header
+            from .outputs import TWEET_COLUMN_ORDER, USER_COLUMN_ORDER, write_csv_auto_header
+            _tweet_ops = {"search", "profile_tweets"}
+            _user_ops = {"followers", "following", "user_info"}
+            if operation in _tweet_ops:
+                csv_rows = [self._flatten_tweet_for_csv(r) for r in rows]
+                preferred_order = TWEET_COLUMN_ORDER
+            elif operation in _user_ops:
+                csv_rows = rows
+                preferred_order = USER_COLUMN_ORDER
+            else:
+                csv_rows = rows
+                preferred_order = None
             path = f"{base}.csv"
-            write_csv_auto_header(path, rows, mode="a")
+            write_csv_auto_header(path, csv_rows, mode="a", preferred_order=preferred_order)
             logger.info("Saved %d rows to %s", len(rows), path)
 
         if fmt in ("json", "both"):
@@ -724,6 +737,23 @@ class Scweet:
         if hasattr(tweet, "model_dump"):
             return tweet.model_dump()
         return dict(tweet)
+
+    @staticmethod
+    def _flatten_tweet_for_csv(d: dict) -> dict:
+        """Return a CSV-safe copy of a tweet dict with nested fields flattened.
+
+        user.screen_name → user_screen_name, user.name → user_name
+        media.image_links → image_links (list serialized as JSON in the cell)
+        """
+        out = dict(d)
+        user = out.pop("user", None)
+        if isinstance(user, dict):
+            out["user_screen_name"] = user.get("screen_name") or ""
+            out["user_name"] = user.get("name") or ""
+        media = out.pop("media", None)
+        if isinstance(media, dict):
+            out["image_links"] = media.get("image_links") or []
+        return out
 
     @staticmethod
     def _extract_follows_items(response: Any) -> list[dict]:

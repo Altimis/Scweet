@@ -18,9 +18,11 @@ from .cooldown import (
 from .exceptions import (
     AccountPoolExhausted,
     AccountSessionBuildError,
+    AuthError,
     EngineError,
     NetworkError,
     ProxyError,
+    RateLimitError,
     RunFailed,
 )
 from .http_utils import apply_proxies_to_session, normalize_http_proxies
@@ -185,7 +187,7 @@ class Runner:
             and hasattr(self.resume_repo, "save_checkpoint")
         )
 
-        _q_display = str(base_query.get("query") or "")[:80]
+        _q_display = str(base_query.get("search_query") or "")[:80]
         _since_display = base_query["since"][:10] if base_query.get("since") else "?"
         _until_display = base_query["until"][:10] if base_query.get("until") else "?"
         _limit_display = str(global_limit) if global_limit is not None else "unlimited"
@@ -1359,16 +1361,32 @@ class Runner:
     @staticmethod
     def _classify_run_failure(summary: str, *, error_events: list[dict[str, Any]]) -> RunFailed:
         lowered = summary.lower()
+        diag = {"events": error_events[-10:]}
+
+        # Proxy errors — check first (407 is also a proxy signal)
         for event in error_events:
             if str(event.get("kind") or "").startswith("proxy"):
-                return ProxyError(summary, diagnostics={"events": error_events[-10:]})
+                return ProxyError(summary, diagnostics=diag)
             if int(event.get("status_code") or 0) == 407:
-                return ProxyError(summary, diagnostics={"events": error_events[-10:]})
+                return ProxyError(summary, diagnostics=diag)
             detail = str(event.get("detail") or event.get("reason") or "").lower()
             if "proxy" in detail:
-                return ProxyError(summary, diagnostics={"events": error_events[-10:]})
+                return ProxyError(summary, diagnostics=diag)
 
-        if any(int(e.get("status_code") or 0) == 599 for e in error_events) or "timed out" in lowered:
-            return NetworkError(summary, diagnostics={"events": error_events[-10:]})
+        # Count status codes across all events to find dominant failure reason
+        codes = [int(e.get("status_code") or 0) for e in error_events if e.get("status_code")]
+        total = len(codes) or 1
+        rate_limited = sum(1 for c in codes if c == 429)
+        auth_failed = sum(1 for c in codes if c in (401, 403))
+        network_failed = sum(1 for c in codes if c == 599)
 
-        return RunFailed(summary, diagnostics={"events": error_events[-10:]})
+        if rate_limited / total >= 0.5:
+            return RateLimitError(summary, diagnostics=diag)
+
+        if auth_failed / total >= 0.5:
+            return AuthError(summary, diagnostics=diag)
+
+        if network_failed > 0 or "timed out" in lowered:
+            return NetworkError(summary, diagnostics=diag)
+
+        return RunFailed(summary, diagnostics=diag)

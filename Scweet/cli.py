@@ -87,9 +87,9 @@ def cmd_search(args: argparse.Namespace) -> None:
         from_users=args.from_users or None,
         to_users=args.to or None,
         mentioning_users=args.mention or None,
-        hashtags_any=args.hashtag or None,
+        hashtags_any=args.hashtags_any or None,
         hashtags_exclude=args.hashtags_exclude or None,
-        exclude_words=args.exclude or None,
+        exclude_words=args.exclude_words or None,
         tweet_type=args.tweet_type.replace("-", "_") if args.tweet_type else None,
         min_likes=args.min_likes,
         min_replies=args.min_replies,
@@ -182,7 +182,7 @@ def build_parser() -> argparse.ArgumentParser:
         epilog=(
             "Examples:\n"
             "  scweet --auth-token TOKEN search \"python\" --since 2025-01-01 --limit 50 --pretty\n"
-            "  scweet --auth-token TOKEN search --from elonmusk naval --hashtag AI --has-images\n"
+            "  scweet --auth-token TOKEN search --from elonmusk naval --hashtags-any AI --has-images\n"
             "  scweet --auth-token TOKEN followers elonmusk --limit 200 --save --save-format json\n"
             "  scweet --cookies-file cookies.json user-info elonmusk naval --pretty\n"
         ),
@@ -217,11 +217,11 @@ def build_parser() -> argparse.ArgumentParser:
                    help="tweets containing ANY of these words (OR)")
     f.add_argument("--exact-phrases", nargs="+", metavar="PHRASE",
                    help="tweets containing these exact phrases")
-    f.add_argument("--hashtag", nargs="+", metavar="TAG",
+    f.add_argument("--hashtags-any", nargs="+", metavar="TAG",
                    help="tweets containing any of these hashtags")
     f.add_argument("--hashtags-exclude", nargs="+", metavar="TAG",
                    help="exclude tweets containing these hashtags")
-    f.add_argument("--exclude", nargs="+", metavar="WORD",
+    f.add_argument("--exclude-words", nargs="+", metavar="WORD",
                    help="exclude tweets containing these words")
     f.add_argument("--tweet-type",
                    choices=["originals-only", "replies-only", "retweets-only", "exclude-replies", "exclude-retweets"],

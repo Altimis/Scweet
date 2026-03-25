@@ -6,9 +6,11 @@ from .config import ScweetConfig
 from .db import ScweetDB
 from .exceptions import (
     AccountPoolExhausted,
+    AuthError,
     EngineError,
     NetworkError,
     ProxyError,
+    RateLimitError,
     RunFailed,
     ScweetError,
 )
@@ -25,4 +27,6 @@ __all__ = [
     "RunFailed",
     "NetworkError",
     "ProxyError",
+    "RateLimitError",
+    "AuthError",
 ]

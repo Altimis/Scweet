@@ -39,6 +39,14 @@ class ProxyError(RunFailed):
     """Proxy misconfiguration or proxy connectivity failure prevented scraping progress."""
 
 
+class RateLimitError(RunFailed):
+    """All accounts were rate-limited (429). Wait for cooldowns to expire and retry."""
+
+
+class AuthError(RunFailed):
+    """Account credentials are invalid or expired (401/403). Refresh your auth_token/ct0."""
+
+
 class ResumeError(ScweetError):
     """Resume mode/checkpoint error."""
 

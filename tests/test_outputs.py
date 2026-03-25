@@ -62,6 +62,27 @@ def test_write_csv_auto_header_empty_noop(tmp_path):
     assert result == []
 
 
+def test_write_csv_auto_header_preferred_order(tmp_path):
+    path = str(tmp_path / "out.csv")
+    rows = [{"z": 1, "a": 2, "m": 3, "extra": 4}]
+    preferred = ["m", "a", "z"]
+    header = write_csv_auto_header(path, rows, preferred_order=preferred)
+    # Preferred fields first in declared order, then remaining alphabetically
+    assert header == ["m", "a", "z", "extra"]
+
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        assert list(reader.fieldnames) == ["m", "a", "z", "extra"]
+
+
+def test_write_csv_auto_header_preferred_order_partial(tmp_path):
+    """Preferred order fields not in data are silently skipped."""
+    path = str(tmp_path / "out.csv")
+    rows = [{"b": 1, "a": 2}]
+    header = write_csv_auto_header(path, rows, preferred_order=["a", "b", "c"])
+    assert header == ["a", "b"]
+
+
 # ── write_json / write_json_auto_append ─────────────────────────────────
 
 

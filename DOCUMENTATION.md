@@ -329,17 +329,18 @@ Returned by `search()` and `get_profile_tweets()`.
 | Field | Type | Description |
 |-------|------|-------------|
 | `tweet_id` | `str` | Tweet ID |
-| `user` | `dict` | Author info: `screen_name` (handle), `name` (display name) |
 | `timestamp` | `str` | Post time — Twitter date string, e.g. `"Thu Mar 20 22:25:15 +0000 2025"` |
+| `user` | `dict` | Author: `{"screen_name": "elonmusk", "name": "Elon Musk"}` |
 | `text` | `str` | Full tweet text |
-| `embedded_text` | `str \| None` | Quoted tweet text (if this tweet quotes another) |
-| `emojis` | `list \| None` | Extracted emojis (if any) |
-| `comments` | `int` | Reply count |
 | `likes` | `int` | Like count |
 | `retweets` | `int` | Retweet count |
-| `media` | `dict \| None` | Media: `{"image_links": ["https://..."]}` — `None` if no media |
+| `comments` | `int` | Reply count |
 | `tweet_url` | `str` | Permalink, e.g. `"https://x.com/user/status/123"` |
+| `media` | `dict \| None` | `{"image_links": ["https://..."]}` — `None` if no media |
+| `embedded_text` | `str \| None` | Text of the quoted or retweeted tweet — `None` for plain tweets |
 | `raw` | `dict` | Full GraphQL payload |
+
+**CSV output** flattens `user` and `media`: `user_screen_name`, `user_name`, and `image_links` become their own columns (in that order). JSON output and the Python return value preserve the nested structure above.
 
 ### User record
 
@@ -628,7 +629,7 @@ The sync methods (`search`, `get_followers`, etc.) wrap their async counterparts
 All Scweet methods raise exceptions on failure — there is no silent empty-result mode. Wrap calls in try/except to handle errors explicitly:
 
 ```python
-from Scweet import Scweet, AccountPoolExhausted, NetworkError, RunFailed
+from Scweet import Scweet, AccountPoolExhausted, RateLimitError, AuthError, NetworkError, RunFailed
 
 s = Scweet(cookies_file="cookies.json")
 
@@ -636,6 +637,10 @@ try:
     tweets = s.search("query")
 except AccountPoolExhausted as e:
     print(f"No accounts available: {e}")
+except RateLimitError:
+    print("Rate limited — wait for cooldowns and retry")
+except AuthError:
+    print("Credentials expired — refresh your auth_token/ct0")
 except NetworkError:
     print("Network issue — check your connection or proxy")
 except RunFailed as e:
@@ -653,6 +658,8 @@ ScweetError                          # Base — catch-all
   AccountPoolExhausted               # No eligible accounts (all cooled down / at daily limits)
   EngineError                        # Engine-level runtime error
     RunFailed                        # Run completed but couldn't produce results
+      RateLimitError                 # All accounts rate-limited (429) — wait and retry
+      AuthError                      # Credentials invalid or expired (401/403)
       NetworkError                   # Network/connectivity failure
       ProxyError                     # Proxy misconfiguration or connectivity failure
 ```
@@ -660,7 +667,10 @@ ScweetError                          # Base — catch-all
 All exceptions are importable from the top-level package:
 
 ```python
-from Scweet import ScweetError, AccountPoolExhausted, RunFailed, NetworkError, ProxyError, EngineError
+from Scweet import (
+    ScweetError, AccountPoolExhausted,
+    RunFailed, RateLimitError, AuthError, NetworkError, ProxyError, EngineError,
+)
 ```
 
 ### Troubleshooting
@@ -676,14 +686,18 @@ from Scweet import ScweetError, AccountPoolExhausted, RunFailed, NetworkError, P
 - Wait for cooldowns to expire, or add more accounts
 - Reset cooldowns manually: `ScweetDB("scweet_state.db").reset_account_cooldowns()`
 
+**`RateLimitError`**
+- X has rate-limited your accounts. Wait for cooldowns (usually a few minutes) and retry
+- Add more accounts to spread the load
+
+**`AuthError`**
+- Your `auth_token` or `ct0` cookie has expired — refresh them from your browser
+- Use `ScweetDB("scweet_state.db").repair_account("username", force_refresh=True)` to trigger token refresh
+
 **`RunFailed` / `NetworkError`**
 - Check your internet connection and proxy configuration
 - X may have rotated GraphQL query IDs — enable `manifest_scrape_on_init=True` to auto-fetch fresh ones
 - 404 errors in logs mean stale query IDs (transient) — not bad auth
-
-**Auth errors (401/403 in logs)**
-- Your `auth_token` or `ct0` cookie has expired — refresh them from your browser
-- Use `ScweetDB("scweet_state.db").repair_account("username", force_refresh=True)` to trigger token refresh
 
 ---
 
@@ -752,9 +766,9 @@ scweet --auth-token TOKEN search [QUERY] [options]
 | `--all-words WORD [WORD ...]` | Tweets containing ALL of these words (AND) |
 | `--any-words WORD [WORD ...]` | Tweets containing ANY of these words (OR) |
 | `--exact-phrases PHRASE [PHRASE ...]` | Tweets containing these exact phrases |
-| `--hashtag TAG [TAG ...]` | Tweets containing any of these hashtags |
+| `--hashtags-any TAG [TAG ...]` | Tweets containing any of these hashtags |
 | `--hashtags-exclude TAG [TAG ...]` | Exclude tweets with these hashtags |
-| `--exclude WORD [WORD ...]` | Exclude tweets with these words |
+| `--exclude-words WORD [WORD ...]` | Exclude tweets with these words |
 | `--tweet-type {originals-only,replies-only,retweets-only,exclude-replies,exclude-retweets}` | Filter by tweet type |
 | `--min-likes N` | Minimum likes |
 | `--min-replies N` | Minimum replies |
@@ -821,7 +835,7 @@ scweet --auth-token TOKEN search "AI tools" \
 # Tweets from specific accounts containing a hashtag
 scweet --auth-token TOKEN search \
   --from elonmusk naval sama \
-  --hashtag AI startups --limit 100
+  --hashtags-any AI startups --limit 100
 
 # Pull a user's timeline, save to JSON
 scweet --cookies-file cookies.json profile-tweets elonmusk \
