@@ -185,6 +185,18 @@ class Runner:
             and hasattr(self.resume_repo, "save_checkpoint")
         )
 
+        _q_display = str(base_query.get("query") or "")[:80]
+        _since_display = base_query["since"][:10] if base_query.get("since") else "?"
+        _until_display = base_query["until"][:10] if base_query.get("until") else "?"
+        _limit_display = str(global_limit) if global_limit is not None else "unlimited"
+        logger.info(
+            "Starting search: query=%r since=%s until=%s limit=%s",
+            _q_display,
+            _since_display,
+            _until_display,
+            _limit_display,
+        )
+
         run_id = str(uuid.uuid4())
         stats = RunStats(tweets_count=0, tasks_total=0, tasks_done=0, tasks_failed=0, retries=0)
         collected_tweets: list[Any] = []
@@ -252,9 +264,9 @@ class Runner:
                 lease_id = str(account.get("lease_id") or "").strip()
                 if lease_id:
                     leased_accounts[lease_id] = account
-                logger.info(
-                    "Account leased username=%s id=%s lease_id=%s",
-                    account.get("username"),
+                logger.info("Account leased username=%s", account.get("username"))
+                logger.debug(
+                    "Account lease detail id=%s lease_id=%s",
                     account.get("id"),
                     account.get("lease_id"),
                 )
@@ -553,7 +565,7 @@ class Runner:
             and hasattr(self.accounts_repo, "heartbeat")
         )
         if can_heartbeat:
-            logger.info(
+            logger.debug(
                 "Account heartbeat started username=%s id=%s lease_id=%s interval_s=%s ttl_s=%s",
                 account.get("username"),
                 account.get("id"),
@@ -599,7 +611,7 @@ class Runner:
                     cancelled = True
                 except Exception:
                     pass
-                logger.info(
+                logger.debug(
                     "Account heartbeat stopped username=%s id=%s lease_id=%s",
                     account.get("username"),
                     account.get("id"),
@@ -800,10 +812,8 @@ class Runner:
                     )
                     return
                 logger.info(
-                    "Account session ready username=%s id=%s lease_id=%s cookie_count=%s session_mode=%s",
+                    "Account session ready username=%s cookie_count=%s session_mode=%s",
                     account.get("username"),
-                    account.get("id"),
-                    lease_id,
                     session_meta.get("cookie_count", "n/a"),
                     session_meta.get("session_mode", "unknown"),
                 )
@@ -926,6 +936,7 @@ class Runner:
                 if raw_status_code == 200:
                     limit_reached = False
                     unique_added = 0
+                    total_collected = 0
                     page_unique_tweets: list[Any] = []
                     async with stats_lock:
                         for tweet in tweets:
@@ -939,6 +950,13 @@ class Runner:
                             unique_added += 1
                         if global_limit is not None and len(tweets_out) >= global_limit:
                             limit_reached = True
+                        total_collected = len(tweets_out)
+
+                    if unique_added > 0:
+                        if global_limit is not None:
+                            logger.info("Collected %d / %d tweets", total_collected, global_limit)
+                        else:
+                            logger.info("Collected %d tweets", total_collected)
 
                     if page_unique_tweets and on_tweets_batch is not None:
                         try:
@@ -960,22 +978,19 @@ class Runner:
                         empty_pages_count = 0
                     stop_due_to_empty_pages = empty_pages_count >= task_max_empty_pages
 
-                    logger.info(
-                        "Search page processed status=200 account=%s results=%s unique_results=%s empty_pages=%s/%s continue_with_cursor=%s next_cursor=%s",
+                    logger.debug(
+                        "Search page processed status=200 account=%s results=%s unique=%s empty_pages=%s/%s continue=%s",
                         account.get("username"),
                         tweets_count,
                         unique_added,
                         empty_pages_count,
                         task_max_empty_pages,
                         bool((response or {}).get("continue_with_cursor")),
-                        bool(next_cursor),
                     )
                     if stop_due_to_empty_pages:
                         logger.info(
-                            "Search pagination stopped due to empty pages account=%s empty_pages=%s limit=%s",
+                            "Search done (no more results) account=%s",
                             account.get("username"),
-                            empty_pages_count,
-                            task_max_empty_pages,
                         )
 
                     if limit_reached and stop_event is not None:
@@ -1111,7 +1126,7 @@ class Runner:
                     "cooldown_reason": cooldown_reason,
                     "last_error_code": None if account_status == 1 else account_status,
                 }
-                logger.info(
+                logger.debug(
                     "Account cooldown decision username=%s id=%s lease_id=%s status_code=%s next_status=%s reason=%s",
                     account.get("username"),
                     account.get("id"),
@@ -1126,11 +1141,9 @@ class Runner:
                         fields_to_set=release_fields,
                     )
                 )
-                logger.info(
-                    "Account release outcome username=%s id=%s lease_id=%s released=%s",
+                logger.debug(
+                    "Account released username=%s released=%s",
                     account.get("username"),
-                    account.get("id"),
-                    lease_id,
                     bool(released),
                 )
             if account_session is not None:
