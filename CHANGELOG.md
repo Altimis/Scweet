@@ -6,10 +6,23 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- **Command-line interface** — `scweet` command installed automatically with the package. All endpoints available as subcommands: `search`, `profile-tweets`, `followers`, `following`, `user-info`.
-- Full filter support in the CLI: all search filters (`--from`, `--hashtag`, `--min-likes`, `--has-images`, etc.), output options (`--save`, `--save-format`, `--save-dir`, `--save-name`, `--pretty`), and global auth/config flags (`--auth-token`, `--cookies-file`, `--env-file`, `--proxy`, `--strict`, `--concurrency`).
-- `python -m Scweet` entry point via `__main__.py`.
-- 78 unit tests covering the CLI parser, command handlers, output formatting, and `main()` exit codes (`tests/test_cli.py`).
+- **Command-line interface** — `scweet` command installed with the package. Subcommands: `search`, `profile-tweets`, `followers`, `following`, `user-info`. Full filter, auth, and output options. Use `--pretty` to print to stdout or `--save` to write files.
+- **`embedded_text`** field — populated for quote tweets (quoted tweet text) and retweets (full retweet text), extracted from the GraphQL response.
+- **`RateLimitError` / `AuthError`** — targeted exception subclasses of `RunFailed`, raised automatically based on dominant HTTP error codes (429 → `RateLimitError`, 401/403 → `AuthError`). Both exported from the top-level package.
+- **Canonical CSV column order** — `TWEET_COLUMN_ORDER` / `USER_COLUMN_ORDER` constants ensure consistent, human-readable column ordering. User and media fields are flattened to `user_screen_name`, `user_name`, `image_links` in CSV; Python/JSON output preserves nested structure.
+- Progress logging — human-readable start message with query/dates/limit; per-batch "Collected N / limit" updates; internal noise demoted to DEBUG.
+- Output schema tables, method docstrings, troubleshooting guide, and full error hierarchy in `DOCUMENTATION.md`.
+
+### Fixed
+
+- `strict` removed from `ScweetConfig` — errors always raise exceptions (was silently swallowed by default).
+- `--tweet-type` CLI choices corrected to `originals-only`, `replies-only`, `retweets-only`, `exclude-replies`, `exclude-retweets`.
+- `--hashtag` renamed to `--hashtags-any`, `--exclude` renamed to `--exclude-words` to match library parameter names.
+- Default search window extended from 7 to 30 days when `since` is omitted.
+- `configure_logging` removed from public exports (still used internally by the CLI).
+- `AccountPoolExhausted` message now includes account counts (total, unusable, cooling down).
+- `db_path` constructor argument now always takes precedence over `ScweetConfig(db_path=...)`.
+- Fixed `query=''` in runner logs (was reading wrong field from `SearchRequest`).
 
 ---
 
