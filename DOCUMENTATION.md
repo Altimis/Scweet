@@ -39,12 +39,12 @@ Create a `cookies.json` file:
 s = Scweet(cookies_file="cookies.json")
 ```
 
-For multiple accounts (enables concurrent scraping):
+For multiple accounts with per-account proxies (enables concurrent scraping and reduces ban risk):
 
 ```json
 [
-  { "username": "account1", "cookies": { "auth_token": "...", "ct0": "..." } },
-  { "username": "account2", "cookies": { "auth_token": "...", "ct0": "..." } }
+  { "username": "account1", "cookies": { "auth_token": "...", "ct0": "..." }, "proxy": "http://user1:pass1@host1:port1" },
+  { "username": "account2", "cookies": { "auth_token": "...", "ct0": "..." }, "proxy": "http://user2:pass2@host2:port2" }
 ]
 ```
 
@@ -54,6 +54,9 @@ If you just have an `auth_token`, Scweet will bootstrap `ct0` automatically:
 
 ```python
 s = Scweet(auth_token="YOUR_AUTH_TOKEN")
+
+# Add a global proxy directly — no ScweetConfig needed
+s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@host:port")
 ```
 
 ### Option C: inline cookies
@@ -842,7 +845,7 @@ scweet --cookies-file cookies.json profile-tweets elonmusk \
   --limit 200 --save --save-format json
 
 # Get followers and pipe to jq
-scweet --auth-token TOKEN followers elonmusk --limit 1000 --pretty | jq '.[].screen_name'
+scweet --auth-token TOKEN followers elonmusk --limit 1000 --pretty | jq '.[].username'
 
 # Lookup multiple profiles
 scweet --auth-token TOKEN user-info elonmusk OpenAI sama --pretty

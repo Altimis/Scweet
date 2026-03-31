@@ -13,15 +13,17 @@ The sync methods use asyncio.run() internally and will fail inside a running eve
 from __future__ import annotations
 
 import asyncio
+import logging
 
-from Scweet import Scweet, ScweetConfig, ScweetDB, configure_logging
+from Scweet import Scweet, ScweetConfig, ScweetDB
 
-configure_logging(profile="simple", level="INFO", force=True)
+logging.basicConfig(level=logging.INFO)
 
 
 async def main() -> None:
     s = Scweet(
         cookies_file="examples/cookies.json",
+        proxy="http://user:pass@host:port",       # recommended — use a dedicated proxy
         config=ScweetConfig(
             concurrency=3,
             manifest_scrape_on_init=True,
@@ -65,7 +67,7 @@ async def main() -> None:
 
     profiles = await s.aget_user_info(["elonmusk", "OpenAI"])
     for p in profiles:
-        print(f"  @{p.get('screen_name')}: {p.get('followers_count')} followers")
+        print(f"  @{p.get('username')}: {p.get('followers_count')} followers")
 
     # ── DB inspection ────────────────────────────────────────────────
 

@@ -335,6 +335,26 @@ def test_config_property(tmp_path):
     assert client.config.concurrency == 7
 
 
+def test_proxy_constructor_arg_sets_config(tmp_path):
+    client = PreferredScweet(
+        db_path=str(tmp_path / "state.db"),
+        proxy="http://user:pass@host:1234",
+        provision=False,
+    )
+    assert client.config.proxy == "http://user:pass@host:1234"
+
+
+def test_proxy_constructor_arg_overrides_config(tmp_path):
+    cfg = ScweetConfig(proxy="http://old:proxy@host:9999")
+    client = PreferredScweet(
+        db_path=str(tmp_path / "state.db"),
+        proxy="http://new:proxy@host:1234",
+        config=cfg,
+        provision=False,
+    )
+    assert client.config.proxy == "http://new:proxy@host:1234"
+
+
 def test_db_property(tmp_path):
     client = PreferredScweet(db_path=str(tmp_path / "state.db"), provision=False)
     db = client.db

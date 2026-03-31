@@ -32,6 +32,9 @@ class Scweet:
         env_path: Path to a .env file with AUTH_TOKEN, CT0, USERNAME, etc.
         db_path: Path to the SQLite state file. The constructor arg always takes
             precedence over any db_path set in ``config``. Default: scweet_state.db.
+        proxy: Proxy URL applied to all accounts, e.g. "http://user:pass@host:port".
+            Takes precedence over any proxy set in ``config``. For per-account
+            proxies, embed the ``proxy`` field in each entry of your cookies.json.
         config: Optional ScweetConfig for advanced settings.
         provision: If True (default), import credentials into the DB on init.
             Set to False to skip credential import and use only accounts that
@@ -47,6 +50,7 @@ class Scweet:
         accounts_file: Optional[str] = None,
         env_path: Optional[str] = None,
         db_path: str = "scweet_state.db",
+        proxy: Optional[str] = None,
         config: Optional[ScweetConfig] = None,
         provision: bool = True,
     ):
@@ -57,6 +61,9 @@ class Scweet:
 
         # Constructor db_path always wins (predictable precedence)
         self._config.db_path = db_path
+        # Constructor proxy always wins over config
+        if proxy is not None:
+            self._config.proxy = proxy
 
         self._cookies_file = cookies_file
         self._auth_token = auth_token

@@ -40,8 +40,8 @@ def read_text_optional(path: Path) -> str | None:
 
 
 long_description = (
-    read_text_optional(ROOT / "DOCUMENTATION.md")
-    or read_text_optional(ROOT / "README.md")
+    read_text_optional(ROOT / "README.md")
+    or read_text_optional(ROOT / "DOCUMENTATION.md")
     or ""
 )
 
@@ -49,7 +49,7 @@ setup(
     name="Scweet",
     version=version,
     license="MIT",
-    description="API-only tweet search scraping (Twitter/X web GraphQL)",
+    description="Scrape tweets, profiles, followers and more from Twitter/X — no API key needed",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Yassine AIT JEDDI",
@@ -58,13 +58,21 @@ setup(
     download_url=f"https://github.com/Altimis/Scweet/archive/v{version}.tar.gz",
     keywords=[
         "twitter",
+        "x",
         "scraper",
-        "python",
-        "crawl",
-        "following",
-        "followers",
         "twitter-scraper",
+        "x-scraper",
         "tweets",
+        "tweet-search",
+        "twitter-search",
+        "followers",
+        "following",
+        "twitter-api-alternative",
+        "graphql",
+        "web-scraping",
+        "social-media",
+        "data-collection",
+        "python",
     ],
     packages=find_packages(include=("Scweet", "Scweet.*")),
     include_package_data=True,
@@ -76,9 +84,11 @@ setup(
     python_requires=">=3.9",
     license_files=[],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "Topic :: Software Development :: Build Tools",
+        "Intended Audience :: Science/Research",
+        "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+        "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",

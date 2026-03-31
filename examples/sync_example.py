@@ -7,17 +7,18 @@ Demonstrates:
 - Profile tweets, followers, following, user info
 - Saving results to disk
 - Inspecting DB state via ScweetDB
-- Error handling with strict mode
 
 Replace placeholders with your real cookies before running.
 """
 
 from __future__ import annotations
 
-from Scweet import Scweet, ScweetConfig, ScweetDB, configure_logging
+import logging
+
+from Scweet import Scweet, ScweetConfig, ScweetDB
 
 # Optional: enable logging to see what Scweet is doing
-configure_logging(profile="simple", level="INFO", force=True)
+logging.basicConfig(level=logging.INFO)
 
 
 def main() -> None:
@@ -31,9 +32,9 @@ def main() -> None:
     #
     s = Scweet(
         cookies_file="examples/cookies.json",
+        proxy="http://user:pass@host:port",       # recommended — use a dedicated proxy
         config=ScweetConfig(
             concurrency=3,
-            # proxy="http://user:pass@host:port",
             daily_requests_limit=50,
             manifest_scrape_on_init=True,  # auto-fetch fresh GraphQL query IDs
         ),
@@ -112,7 +113,7 @@ def main() -> None:
 
     profiles = s.get_user_info(["elonmusk", "OpenAI"])
     for p in profiles:
-        print(f"  @{p.get('screen_name')}: {p.get('followers_count')} followers")
+        print(f"  @{p.get('username')}: {p.get('followers_count')} followers")
 
     # ── DB inspection ────────────────────────────────────────────────
 

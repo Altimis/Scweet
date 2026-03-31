@@ -28,6 +28,8 @@ All notable changes to this project are documented in this file.
 
 ## [5.0.0] - 2025
 
+> **Why the rewrite?** The migration from browser automation to direct GraphQL API calls began in v3. Twitter/X progressively restricted anonymous access from 2023 onwards, making the browser-based approach increasingly brittle. v5 completed the transition by removing the browser dependency entirely. Scweet now calls X's internal GraphQL API directly — the same one the web app uses — authenticated with browser cookies. The result is faster, leaner (no headless browser), and maintainable as X's API evolves.
+
 ### Added
 
 - Simplified public API: `Scweet`, `ScweetConfig`, `ScweetDB`, `configure_logging`.

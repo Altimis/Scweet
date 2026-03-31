@@ -1,196 +1,177 @@
-[![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
-[![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
+[![Tests](https://github.com/Altimis/Scweet/actions/workflows/tests.yml/badge.svg)](https://github.com/Altimis/Scweet/actions/workflows/tests.yml)
 [![PyPI Version](https://img.shields.io/pypi/v/scweet.svg)](https://pypi.org/project/scweet/)
+[![PyPI Downloads](https://static.pepy.tech/badge/scweet/month)](https://pepy.tech/projects/scweet)
+[![Stars](https://img.shields.io/github/stars/Altimis/Scweet)](https://github.com/Altimis/Scweet/stargazers)
 [![License](https://img.shields.io/github/license/Altimis/scweet)](https://github.com/Altimis/scweet/blob/main/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-DOCUMENTATION.md-blue)](DOCUMENTATION.md)
+[![Scweet Actor Status](https://apify.com/actor-badge?actor=altimis/scweet)](https://apify.com/altimis/scweet)
 
-# Scweet
+# Scweet — Twitter / X Scraper
 
-A Python library for scraping Twitter/X via its web GraphQL API. No official API access needed — just your browser cookies.
+Scrape tweets, profiles, followers and more from Twitter/X. **No official API key needed** — uses X's own web GraphQL API, authenticated with your browser cookies.
 
-**What you can do:**
+*Last verified working: March 2026*
 
-- **Search tweets** — by keyword, date range, user, hashtag, engagement filters, language, location. Supports raw [Twitter advanced search operators](https://github.com/igorbrigadir/twitter-advanced-search) as the query string
-- **Profile tweets** — fetch a user's timeline
-- **Followers / Following** — scrape follower and following lists
-- **User info** — profile metadata (bio, follower count, verified status, etc.)
-- **Multi-account pooling** — rotate across accounts with automatic rate limiting and cooldowns
-- **Resume** — pick up interrupted scrapes from where they left off
-- **Save to CSV / JSON** — built-in output persistence
-- **Async support** — every method has a sync and async variant
+**What you can scrape:**
+- **Tweets** — by keyword, hashtag, user, date range, engagement filters, language, location
+- **Profile timelines** — a user's full tweet history
+- **Followers / Following** — full account lists at scale
+- **User profiles** — bio, follower count, verification status, and more
 
-## Installation
+---
+
+## Get started
+
+### Hosted — no setup needed
+
+The quickest way to get Twitter/X data: run on Apify with no code, no cookies, and no account management. Free tier included.
+
+[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9)
+
+|  | Free | Paid |
+|---|---|---|
+| Tweets / day | 1,000 | Unlimited |
+| Speed | Standard | Up to 1,000 / min |
+| Price | Free | $0.30 / 1,000 tweets |
+| Export | JSON · CSV · XLSX | JSON · CSV · XLSX |
+
+---
+
+### Python library
+
+**1. Install**
 
 ```bash
 pip install -U Scweet
 ```
 
-## Quick Start
+**2. Get your `auth_token`**
 
-**1. Get your cookies** — Log into Twitter/X, open DevTools (F12) → Application → Cookies → `https://x.com`, copy `auth_token` and `ct0`.
+**From your own account:** Log into [x.com](https://x.com) → DevTools `F12` → **Application** → **Cookies** → `https://x.com` → copy the `auth_token` value.
 
-> Don't want to deal with cookies and account management? Try the [hosted version on Apify](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) — no setup, free tier included.
+<!-- TODO: Replace the link below with your affiliate account provider URL when ready -->
+**Need dedicated accounts?** You can buy ready-to-use X accounts from an account provider and use them directly with Scweet. Paste the `auth_token` alone and Scweet auto-bootstraps the `ct0` CSRF token — or use the `cookies.json` format below for multiple accounts at once.
 
-**2. Create `cookies.json`:**
+**3. Scrape**
+
+```python
+from Scweet import Scweet
+
+# First run: credentials are stored in scweet_state.db automatically
+# Use a proxy to avoid rate limits and bans
+# All methods have async variants: asearch(), aget_profile_tweets(), aget_followers(), ...
+s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@host:port")
+
+# Search and save to CSV  (save_format="json" or "both" also works; use save_dir= and save_name= to control the output path)
+tweets = s.search("bitcoin", since="2025-01-01", limit=500, save=True)
+
+# Profile timeline
+tweets = s.get_profile_tweets(["elonmusk"], limit=200)
+
+# Followers
+users = s.get_followers(["elonmusk"], limit=1000)
+
+# Next run: reuse provisioned accounts — no credentials needed again
+s = Scweet(db_path="scweet_state.db")
+tweets = s.search("ethereum", limit=500, save=True)
+```
+
+**Multiple accounts with per-account proxies** — for higher throughput and reduced ban risk:
 
 ```json
-[{ "username": "your_account", "cookies": { "auth_token": "...", "ct0": "..." } }]
+[
+  { "username": "acct1", "cookies": { "auth_token": "..." }, "proxy": "http://user1:pass1@host1:port1" },
+  { "username": "acct2", "cookies": { "auth_token": "..." }, "proxy": "http://user2:pass2@host2:port2" }
+]
 ```
-
-**3. Scrape:**
 
 ```python
-from Scweet import Scweet
-
-s = Scweet(cookies_file="cookies.json")
-
-# Search tweets
-tweets = s.search("python programming", limit=100)
-tweets = s.search("AI", since="2024-01-01", until="2024-06-01", limit=500)
-
-# Profile tweets
-tweets = s.get_profile_tweets(["elonmusk", "OpenAI"], limit=200)
-
-# Followers / Following
-users = s.get_followers(["elonmusk"], limit=1000)
-users = s.get_following(["OpenAI"], limit=500)
-
-# User info
-profiles = s.get_user_info(["elonmusk", "OpenAI"])
+s = Scweet(cookies_file="cookies.json")  # proxies are read from the file, one per account
 ```
 
-> **Tip:** Always set `limit` — without it, scraping continues until results are exhausted or daily account caps are hit.
+> Always set `limit` — without it, scraping continues until your account's daily cap is hit.
 
-## CLI
+> For the full list of supported search operators, see [twitter-advanced-search](https://github.com/igorbrigadir/twitter-advanced-search).
 
-Scweet ships with a `scweet` command-line tool — use it directly from the terminal without writing any code:
+**From the CLI — no Python code needed:**
 
 ```bash
-# Search tweets
-scweet --auth-token TOKEN search "python" --since 2025-01-01 --limit 100 --pretty
+# Search with proxy, save to CSV
+scweet --auth-token YOUR_AUTH_TOKEN --proxy http://user:pass@host:port search "bitcoin" --since 2025-01-01 --limit 500 --save
 
-# Search with filters
-scweet --auth-token TOKEN search --from elonmusk naval --hashtags-any AI --has-images --limit 50
-
-# Profile tweets
-scweet --auth-token TOKEN profile-tweets elonmusk OpenAI --limit 100
-
-# Followers / Following
-scweet --auth-token TOKEN followers elonmusk --limit 500 --save --save-format json
-scweet --auth-token TOKEN following OpenAI --limit 200
-
-# User info
-scweet --cookies-file cookies.json user-info elonmusk naval --pretty
+# Followers, saved as JSON
+scweet --auth-token YOUR_AUTH_TOKEN followers elonmusk --limit 1000 --save --save-format json
 ```
 
-By default the CLI runs silently — no output is printed. Use `--save` to write to CSV/JSON files, `--pretty` to print to stdout, or both. Errors always surface with a message and non-zero exit code. Pipe `--pretty` output to `jq` for quick filtering.
+For structured search filters, async patterns, resume, multiple accounts, and the full API reference — see [**Full Documentation**](DOCUMENTATION.md).
 
-**Subcommands:** `search`, `profile-tweets`, `followers`, `following`, `user-info`
+---
 
-**Auth options (global):** `--auth-token`, `--cookies-file`, `--env-file`, `--db-path`
+## Why Scweet?
 
-**Config options (global):** `--proxy`, `--concurrency`
+| | twint | snscrape | twscrape | **Scweet** |
+|---|---|---|---|---|
+| **Works in 2026** | ❌ unmaintained | ❌ broken | ✅ | ✅ |
+| Cookie / token auth | ❌ | ❌ | ✅ | ✅ |
+| Multi-account pooling | ❌ | ❌ | ✅ | ✅ |
+| Proxy support | ❌ | ❌ | ✅ | ✅ |
+| Resume interrupted scrapes | ❌ | ❌ | ❌ | ✅ |
+| Built-in CSV / JSON output | ✅ | ✅ | ❌ | ✅ |
+| Sync + async API | ❌ | ❌ | Async only | ✅ both |
+| Hosted, no-setup option | ❌ | ❌ | ❌ | ✅ Apify |
+| Active maintenance | ❌ | ❌ | ⚠️ | ✅ |
 
-Run `scweet --help` or `scweet <subcommand> --help` for the full option list. See [Full Documentation](DOCUMENTATION.md#cli) for all subcommand flags.
+[twint](https://github.com/twintproject/twint) has been unmaintained since 2023. [snscrape](https://github.com/JustAnotherArchivist/snscrape) broke after X's backend changes. [twscrape](https://github.com/vladkens/twscrape) is the closest active alternative — worth knowing, but async-only, no built-in file output, and no resume support.
 
-## Structured Search Filters
+---
 
-```python
-tweets = s.search(
-    since="2024-01-01",
-    from_users=["OpenAI"],
-    min_likes=50,
-    has_links=True,
-    lang="en",
-    limit=200,
-)
-```
+<details>
+<summary><strong>FAQ</strong></summary>
 
-Available filters: `all_words`, `any_words`, `exact_phrases`, `exclude_words`, `hashtags_any`, `from_users`, `to_users`, `mentioning_users`, `tweet_type`, `verified_only`, `has_images`, `has_videos`, `has_links`, `min_likes`, `min_replies`, `min_retweets`, `place`, `geocode`, and more. See [Full Documentation](DOCUMENTATION.md).
+<br>
 
-## Other Account Sources
+**Does it work without an official Twitter API key?**
+Yes. Scweet calls X's internal GraphQL API — the same one the web app uses. No developer account or API key required.
 
-```python
-s = Scweet(cookies={"auth_token": "...", "ct0": "..."})           # Direct cookies
-s = Scweet(auth_token="YOUR_AUTH_TOKEN")                           # Auth token only (ct0 bootstrapped)
-s = Scweet(cookies=[{"auth_token": "t1", "ct0": "c1"}, ...])      # Multi-account pool
-s = Scweet(db_path="scweet_state.db")                              # Reuse provisioned accounts
-```
+**Is it a replacement for twint or snscrape?**
+Yes. Both are broken as of 2024–2025. Scweet uses a different, currently-working approach: cookies + GraphQL instead of legacy unauthenticated endpoints.
 
-## Configuration
+**How many tweets can I scrape?**
+A single account typically handles hundreds to a few thousand tweets per day before hitting rate limits. Multi-account pooling scales this proportionally. The hosted Apify actor manages accounts and rate limits automatically.
 
-```python
-from Scweet import Scweet, ScweetConfig
+**Will my account get banned?**
+Never use your personal account — use dedicated accounts only. To further reduce risk: use **multiple accounts** (distributes the load across them) and pair each with a **proxy** (prevents all requests coming from a single IP). The Apify actor handles both automatically — managed accounts and proxies are included.
 
-s = Scweet(
-    cookies_file="cookies.json",
-    config=ScweetConfig(
-        concurrency=3,
-        proxy="http://user:pass@host:port",
-        daily_requests_limit=50,
-        manifest_scrape_on_init=True,
-    ),
-)
-```
+**Does it work for private accounts?**
+No. Only publicly visible content is accessible.
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `concurrency` | `5` | Parallel workers |
-| `proxy` | `None` | HTTP proxy for API calls |
-| `min_delay_s` | `2.0` | Minimum delay between requests |
-| `daily_requests_limit` | `30` | Max API requests per account per day |
-| `daily_tweets_limit` | `600` | Max tweets per account per day |
-| `manifest_scrape_on_init` | `False` | Auto-fetch fresh GraphQL query IDs on startup |
+**Does it still work in 2025 / 2026?**
+Yes — last verified working in March 2026 against X's current GraphQL API.
 
-For output formats, resume, async patterns, account management, and the full config reference — see [Full Documentation](DOCUMENTATION.md).
+</details>
 
-## Saving Results
+---
 
-```python
-tweets = s.search("bitcoin", since="2024-01-01", limit=200, save=True)
-# → outputs/bitcoin_2024-01-01_2024-03-20.csv
+## Documentation
 
-tweets = s.search("AI", limit=200, save=True, save_format="json")
-# → outputs/AI_2024-03-13_2024-03-20.json
+Full API reference, all config options, structured search filters, async patterns, resume, proxies, and troubleshooting:
 
-tweets = s.search("query", limit=200, save=True, save_name="my_results")
-# → outputs/my_results.csv
-```
+→ [**DOCUMENTATION.md**](DOCUMENTATION.md)
 
-Files are written to `outputs/` by default (configurable via `ScweetConfig(save_dir="my_dir")`). File names are auto-generated from the query and date range, or you can set `save_name` explicitly. Results append to existing files.
+---
 
-## Async Support
+## Community
 
-```python
-import asyncio
-from Scweet import Scweet
+Have a question or want to share what you built with Scweet?
+Open a thread in [**GitHub Discussions**](https://github.com/Altimis/Scweet/discussions).
 
-async def main():
-    s = Scweet(cookies_file="cookies.json")
-    tweets = await s.asearch("python", limit=100)
-    users = await s.aget_followers(["elonmusk"], limit=500)
+**Found it useful? [Star the repo ⭐](https://github.com/Altimis/Scweet/stargazers)** — it helps others find Scweet.
 
-asyncio.run(main())
-```
-
-All methods: `asearch()`, `aget_profile_tweets()`, `aget_followers()`, `aget_following()`, `aget_user_info()`.
-
-## Important Notes
-
-- This is scraping (Twitter/X web GraphQL), not an official API. Behavior may change.
-- You need X account cookies. Rate limits and anti-bot measures are enforced by X.
-- Use responsibly and in compliance with applicable terms and laws.
-
-## Hosted Version
-
-For production workloads, or if you'd rather skip account and proxy management entirely, Scweet is available as a hosted actor on Apify with a free tier.
-
-[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
+---
 
 ## Contributing
 
-PRs, bug reports, and feature suggestions are welcome!
-If you find Scweet useful, consider starring the repo.
+Bug reports, feature suggestions, and PRs are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
-MIT License
+
+*MIT License*
