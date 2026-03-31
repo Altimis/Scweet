@@ -23,12 +23,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd Scweet
           pip install --upgrade pip
           pip install -e .
           pip install pytest pytest-asyncio
 
       - name: Run unit tests
-        run: |
-          cd Scweet
-          pytest tests/ -v --ignore=tests/test_integration.py --tb=short
+        run: pytest tests/ -v --ignore=tests/test_integration.py --tb=short
