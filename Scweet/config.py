@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -16,7 +16,7 @@ class ApiHttpMode(str, Enum):
 class ScweetConfig(BaseModel):
     # Core
     db_path: str = "scweet_state.db"
-    proxy: Optional[dict[str, Any] | str] = None
+    proxy: Optional[Union[dict[str, Any], str]] = None
     concurrency: int = Field(default=5, ge=1)
 
     # Output
