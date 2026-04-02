@@ -2,7 +2,7 @@
 
 Thanks for taking the time. Contributions are welcome — bug reports, fixes, and well-scoped feature additions.
 
-**A note on issue history:** v5 is a complete rewrite using a fundamentally different approach (direct GraphQL API calls via `curl_cffi`) compared to v1–v4, which used browser automation. All issues filed against prior versions were closed when v5 launched — they simply don't apply to the current codebase. If you're seeing low issue count and wondering about project health, this is why.
+**A note on issue history:** v5 is a complete rewrite using a fundamentally different approach (direct GraphQL API calls via `curl_cffi`) compared to v1–v3, which used browser automation. All issues filed against prior versions were closed when v4 launched — they simply don't apply to the current codebase.
 
 ---
 
