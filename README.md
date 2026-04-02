@@ -39,7 +39,7 @@ pip install -U Scweet
 
 **2. Get your `auth_token`**
 
-**From your own account:** Log into [x.com](https://x.com) → DevTools `F12` → **Application** → **Cookies** → `https://x.com` → copy the `auth_token` value.
+Log into [x.com](https://x.com) → DevTools `F12` → **Application** → **Cookies** → `https://x.com` → copy the `auth_token` value.
 
 Paste the `auth_token` alone and Scweet auto-bootstraps the `ct0` CSRF token — or use the `cookies.json` format below for multiple accounts at once.
 
