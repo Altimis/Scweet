@@ -41,8 +41,7 @@ pip install -U Scweet
 
 **From your own account:** Log into [x.com](https://x.com) → DevTools `F12` → **Application** → **Cookies** → `https://x.com` → copy the `auth_token` value.
 
-<!-- TODO: Replace the link below with your affiliate account provider URL when ready -->
-**Need dedicated accounts?** You can buy ready-to-use X accounts from an account provider and use them directly with Scweet. Paste the `auth_token` alone and Scweet auto-bootstraps the `ct0` CSRF token — or use the `cookies.json` format below for multiple accounts at once.
+Paste the `auth_token` alone and Scweet auto-bootstraps the `ct0` CSRF token — or use the `cookies.json` format below for multiple accounts at once.
 
 **3. Scrape**
 
