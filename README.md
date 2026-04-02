@@ -156,7 +156,7 @@ Full API reference, all config options, structured search filters, async pattern
 Have a question or want to share what you built with Scweet?
 Open a thread in [**GitHub Discussions**](https://github.com/Altimis/Scweet/discussions).
 
-**Found it useful? [Star the repo ⭐](https://github.com/Altimis/Scweet/stargazers)** — it helps others find Scweet.
+**Found it useful? [Star the repo ⭐](https://github.com/Altimis/Scweet/stargazers)**
 
 ---
 
