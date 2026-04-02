@@ -27,13 +27,6 @@ The quickest way to get Twitter/X data: run on Apify with no code, no cookies, a
 
 [![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9)
 
-|  | Free | Paid |
-|---|---|---|
-| Tweets / day | 1,000 | Unlimited |
-| Speed | Standard | Up to 1,000 / min |
-| Price | Free | $0.30 / 1,000 tweets |
-| Export | JSON · CSV · XLSX | JSON · CSV · XLSX |
-
 ---
 
 ### Python library
