@@ -9,8 +9,6 @@
 
 Scrape tweets, profiles, followers and more from Twitter/X. **No official API key needed** — uses X's own web GraphQL API, authenticated with your browser cookies.
 
-*Last verified working: March 2026*
-
 **What you can scrape:**
 - **Tweets** — by keyword, hashtag, user, date range, engagement filters, language, location
 - **Profile timelines** — a user's full tweet history
