@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [5.2.0] - 2026-04-03
+
+### Added
+
+- **`proxy=` constructor shorthand** — pass a proxy URL directly to `Scweet(proxy="http://host:port")` without needing `ScweetConfig`. Overrides any proxy set in config.
+
+### Fixed
+
+- Python 3.9 compatibility — replaced `dict[str, Any] | str` union syntax with `Union[dict[str, Any], str]` in `ScweetConfig`. Pydantic evaluates field annotations at runtime, so the `|` syntax (PEP 604, Python 3.10+) caused a `TypeError` on 3.9.
+
+---
+
 ## [5.1.0] - 2026-03-25
 
 ### Added
