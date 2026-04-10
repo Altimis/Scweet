@@ -43,7 +43,7 @@
   <a href="https://apify.com/altimis/scweet?fpr=a40q9">
     <img
       alt="Scweet logo"
-      src="apify_in_out/scweet_logo.png"
+      src="assets/scweet_logo.png"
       width="140"
     >
   </a>
