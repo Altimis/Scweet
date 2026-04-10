@@ -17,6 +17,8 @@ def _add_auth_args(parser: argparse.ArgumentParser) -> None:
     g2.add_argument("--proxy", metavar="PROXY", help="proxy URL or JSON string")
     g2.add_argument("--concurrency", metavar="N", type=int, default=5,
                     help="worker concurrency (default: 5)")
+    g2.add_argument("--manifest-scrape-on-init", action="store_true", default=False,
+                    help="scrape fresh query IDs from X's main.js on startup")
     g2.add_argument("-v", "--verbose", action="store_true",
                     help="enable debug-level logging (default: INFO)")
 
@@ -46,6 +48,7 @@ def _make_client(args: argparse.Namespace):
         cookies_file=args.cookies_file or None,
         env_path=args.env_file or None,
         db_path=args.db_path,
+        manifest_scrape_on_init=args.manifest_scrape_on_init or None,
         config=cfg,
     )
 

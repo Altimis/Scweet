@@ -35,6 +35,10 @@ class Scweet:
         proxy: Proxy URL applied to all accounts, e.g. "http://user:pass@host:port".
             Takes precedence over any proxy set in ``config``. For per-account
             proxies, embed the ``proxy`` field in each entry of your cookies.json.
+        manifest_scrape_on_init: If True, scrape X's main.js bundle at startup
+            to fetch fresh GraphQL query IDs and feature flags. Keeps requests
+            aligned with X's current schema without waiting for a library update.
+            Default: False.
         config: Optional ScweetConfig for advanced settings.
         provision: If True (default), import credentials into the DB on init.
             Set to False to skip credential import and use only accounts that
@@ -51,6 +55,7 @@ class Scweet:
         env_path: Optional[str] = None,
         db_path: str = "scweet_state.db",
         proxy: Optional[str] = None,
+        manifest_scrape_on_init: Optional[bool] = None,
         config: Optional[ScweetConfig] = None,
         provision: bool = True,
     ):
@@ -64,6 +69,9 @@ class Scweet:
         # Constructor proxy always wins over config
         if proxy is not None:
             self._config.proxy = proxy
+        # Constructor manifest_scrape_on_init wins over config
+        if manifest_scrape_on_init is not None:
+            self._config.manifest_scrape_on_init = manifest_scrape_on_init
 
         self._cookies_file = cookies_file
         self._auth_token = auth_token

@@ -30,10 +30,12 @@ Create a `cookies.json` file:
 [
   {
     "username": "your_account",
-    "cookies": { "auth_token": "...", "ct0": "..." }
+    "cookies": { "auth_token": "..." }
   }
 ]
 ```
+
+`ct0` is optional — Scweet bootstraps it automatically from `auth_token`. You can include it if you have it:
 
 ```python
 s = Scweet(cookies_file="cookies.json")
@@ -43,8 +45,8 @@ For multiple accounts with per-account proxies (enables concurrent scraping and 
 
 ```json
 [
-  { "username": "account1", "cookies": { "auth_token": "...", "ct0": "..." }, "proxy": "http://user1:pass1@host1:port1" },
-  { "username": "account2", "cookies": { "auth_token": "...", "ct0": "..." }, "proxy": "http://user2:pass2@host2:port2" }
+  { "username": "account1", "cookies": { "auth_token": "..." }, "proxy": "http://user1:pass1@host1:port1" },
+  { "username": "account2", "cookies": { "auth_token": "..." }, "proxy": "http://user2:pass2@host2:port2" }
 ]
 ```
 
@@ -211,6 +213,7 @@ tweets = s.search(
 | `resume` | `bool` | `False` | Resume from last checkpoint |
 | `save` | `bool` | `False` | Save results to disk |
 | `save_format` | `str` | config value | `"csv"`, `"json"`, or `"both"` |
+| `save_name` | `str` | auto-generated | Base filename for saved output (without extension) |
 
 ### Async variant
 
@@ -245,6 +248,7 @@ tweets = s.get_profile_tweets(
 | `resume` | `bool` | `False` | Resume from last checkpoint |
 | `save` | `bool` | `False` | Save results to disk |
 | `save_format` | `str` | config value | `"csv"`, `"json"`, or `"both"` |
+| `save_name` | `str` | auto-generated | Base filename for saved output (without extension) |
 
 Async: `await s.aget_profile_tweets(["elonmusk"], limit=100)`
 
@@ -269,6 +273,7 @@ users = s.get_following(["OpenAI"], limit=500)
 | `raw_json` | `bool` | `False` | Include full Twitter user payload under `raw` key |
 | `save` | `bool` | `False` | Save results to disk |
 | `save_format` | `str` | config value | `"csv"`, `"json"`, or `"both"` |
+| `save_name` | `str` | auto-generated | Base filename for saved output (without extension) |
 
 ### raw_json option
 
@@ -297,6 +302,7 @@ profiles = s.get_user_info(["elonmusk", "OpenAI"])
 | `users` | `list[str]` | *required* | Usernames or profile URLs |
 | `save` | `bool` | `False` | Save results to disk |
 | `save_format` | `str` | config value | `"csv"`, `"json"`, or `"both"` |
+| `save_name` | `str` | auto-generated | Base filename for saved output (without extension) |
 
 Async: `await s.aget_user_info(["elonmusk"])`
 
@@ -485,13 +491,16 @@ s = Scweet(
 Twitter/X rotates GraphQL query IDs periodically. When IDs go stale, requests return 404. Scweet ships with default IDs that work at release time, but you can auto-fetch fresh ones:
 
 ```python
-s = Scweet(
-    cookies_file="cookies.json",
-    config=ScweetConfig(manifest_scrape_on_init=True),
-)
+s = Scweet(cookies_file="cookies.json", manifest_scrape_on_init=True)
 ```
 
 This fetches the current `main.js` bundle from X on init and extracts the latest query IDs. It adds a few seconds to startup but ensures your requests use current IDs.
+
+From the CLI:
+
+```bash
+scweet --auth-token TOKEN --manifest-scrape-on-init search "query" --limit 100
+```
 
 ---
 
@@ -629,7 +638,7 @@ The sync methods (`search`, `get_followers`, etc.) wrap their async counterparts
 
 ## Error Handling
 
-All Scweet methods raise exceptions on failure — there is no silent empty-result mode. Wrap calls in try/except to handle errors explicitly:
+All Scweet methods raise exceptions on failure. Wrap calls in try/except to handle errors explicitly:
 
 ```python
 from Scweet import Scweet, AccountPoolExhausted, RateLimitError, AuthError, NetworkError, RunFailed
@@ -699,7 +708,7 @@ from Scweet import (
 
 **`RunFailed` / `NetworkError`**
 - Check your internet connection and proxy configuration
-- X may have rotated GraphQL query IDs — enable `manifest_scrape_on_init=True` to auto-fetch fresh ones
+- X may have rotated GraphQL query IDs — pass `manifest_scrape_on_init=True` to `Scweet()` (or `--manifest-scrape-on-init` in the CLI) to auto-fetch fresh ones
 - 404 errors in logs mean stale query IDs (transient) — not bad auth
 
 ---
@@ -731,6 +740,7 @@ scweet [auth options] [config options] <subcommand> [subcommand options]
 |------|-------------|
 | `--proxy PROXY` | Proxy URL or JSON string |
 | `--concurrency N` | Worker concurrency (default: `5`) |
+| `--manifest-scrape-on-init` | Scrape fresh query IDs from X's main.js on startup |
 
 ### Output options
 
