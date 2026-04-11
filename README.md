@@ -55,9 +55,7 @@
 
 ## Hosted — no setup needed
 
-> Run Scweet on Apify with no code, no cookies, and no account management. Free tier included.
-
-[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
+> [Run Scweet on Apify](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) with no code, no cookies, and no account management. Free tier included.
 
 > Running Scweet locally at any real volume usually means dedicated accounts and proxies. You can use a single proxy, a rotating proxy, or assign one per account. If you need a provider, [Webshare](https://www.webshare.io/?referral_code=kdgjcc09945q) works well. Disclosure: affiliate link.
 
