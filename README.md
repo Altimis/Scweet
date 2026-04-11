@@ -46,24 +46,24 @@
 </p>
 
 **What you can scrape:**
-- **Tweets** — by keyword, hashtag, user, date range, engagement filters, language, location
-- **Profile timelines** — a user's full tweet history
-- **Followers / Following** — full account lists at scale
-- **User profiles** — bio, follower count, verification status, and more
+- [**Tweets**](DOCUMENTATION.md#search-api) — by keyword, hashtag, user, date range, engagement filters, language, location
+- [**Profile timelines**](DOCUMENTATION.md#profile-tweets) — a user's full tweet history
+- [**Followers / Following**](DOCUMENTATION.md#followers--following) — full account lists at scale
+- [**User profiles**](DOCUMENTATION.md#user-info) — bio, follower count, verification status, and more
 
 ---
 
 ## Hosted — no setup needed
 
-Run on Apify with no code, no cookies, and no account management. Free tier included.
+> Run Scweet on Apify with no code, no cookies, and no account management. Free tier included.
 
-[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9)
+[![Run on Apify](https://apify.com/static/run-on-apify-button.svg)](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97)
 
 > Running Scweet locally at any real volume usually means dedicated accounts and proxies. You can use a single proxy, a rotating proxy, or assign one per account. If you need a provider, [Webshare](https://www.webshare.io/?referral_code=kdgjcc09945q) works well. Disclosure: affiliate link.
 
 ---
 
-## Python quickstart
+## Quickstart
 
 **1. Install**
 
