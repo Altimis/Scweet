@@ -39,16 +39,6 @@
   </a>
 </p>
 
-<p align="center">
-  <a href="https://apify.com/altimis/scweet?fpr=a40q9">
-    <img
-      alt="Scweet logo"
-      src="assets/scweet_logo.png"
-      width="140"
-    >
-  </a>
-</p>
-
 
 ---
 <p align="center">
