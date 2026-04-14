@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [5.3.0] - 2026-04-14
+
+### Added
+
+- **`manifest_scrape_on_init=` constructor shorthand** — pass `manifest_scrape_on_init=True` directly to `Scweet()` without needing `ScweetConfig`. Overrides the config value (same pattern as `proxy=`).
+- **`--manifest-scrape-on-init` CLI flag** — scrape fresh GraphQL query IDs from X's `main.js` bundle on startup from the command line.
+- **`save_name=` parameter** on `search`, `get_profile_tweets`, `get_followers`, `get_following`, and `get_user_info` — set a custom base filename for saved output (without extension).
+
+### Changed
+
+- Documentation now marks `ct0` as optional in cookies examples — Scweet bootstraps it automatically from `auth_token`.
+- Manifest scrape docs updated to reflect the new top-level constructor arg and CLI flag.
+
+---
+
 ## [5.2.0] - 2026-04-03
 
 ### Added
