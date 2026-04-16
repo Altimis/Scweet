@@ -63,9 +63,13 @@
 <tr>
 <td>
 
+<p>
 Use the hosted Apify Actor when you want Scweet results without running the local Python library or managing Twitter/X cookies, proxies, local accounts, rate limits, retries, or infrastructure.
+</p>
 
+<p>
 This runs on Apify instead of your machine. Use the local library below when you want full Python/CLI control.
+</p>
 
 <p align="center">
   <a href="https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97">
@@ -73,13 +77,14 @@ This runs on Apify instead of your machine. Use the local library below when you
   </a>
 </p>
 
-
-- No code required: configure and run from the Apify Console
-- Prefer code? Use the Actor through Apify's [Python API guide](https://apify.com/altimis/scweet/api/python)
-- No Twitter/X cookies or proxies to provide
-- Search tweets and profile timelines
-- Export results as JSON, CSV, or XLSX from the Apify dataset
-- Free tier included; current usage pricing is shown on the Apify Actor page
+<ul>
+  <li>No code required: configure and run from the Apify Console</li>
+  <li>Prefer code? Use the Actor through Apify's <a href="https://apify.com/altimis/scweet/api/python">Python API guide</a></li>
+  <li>No Twitter/X cookies or proxies to provide</li>
+  <li>Search tweets and profile timelines</li>
+  <li>Export results as JSON, CSV, or XLSX from the Apify dataset</li>
+  <li>Free tier included; current usage pricing is shown on the Apify Actor page</li>
+</ul>
 
 </td>
 </tr>
@@ -189,9 +194,11 @@ Running Scweet locally at any real volume usually means dedicated accounts and p
 <tr>
 <td>
 
-**Need proxies for local Scweet?**
+<p><strong>Need proxies for local Scweet?</strong></p>
 
-[Webshare](https://www.webshare.io/?referral_code=kdgjcc09945q) is a practical option for dedicated or rotating proxies.
+<p>
+<a href="https://www.webshare.io/?referral_code=kdgjcc09945q">Webshare</a> is a practical option for dedicated or rotating proxies.
+</p>
 
 <p align="center">
   <a href="https://www.webshare.io/?referral_code=kdgjcc09945q">
@@ -199,7 +206,7 @@ Running Scweet locally at any real volume usually means dedicated accounts and p
   </a>
 </p>
 
-Disclosure: this is an affiliate link.
+<p>Disclosure: this is an affiliate link.</p>
 
 </td>
 </tr>
