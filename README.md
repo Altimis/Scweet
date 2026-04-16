@@ -1,4 +1,6 @@
-<h1 align="center">Scweet</h1>
+<p align="center">
+  <img src="assets/scweet_banner.png" alt="Scweet" width="480" />
+</p>
 
 <p align="center">
   <strong>Scrape Twitter / X without the official API.</strong>
