@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Scrape Twitter / X without the official API.</strong>
   <br>
-  Hosted on Apify, or run locally with Python and CLI.
+  Hosted on Apify with no cookies or proxies, or run locally with Python and CLI.
 </p>
 
 <p align="center">
@@ -44,7 +44,7 @@
 
 ---
 <p align="center">
-<strong>Scrape tweets, profiles, followers and more from Twitter/X. Uses X's own web GraphQL API, authenticated with your browser cookies. No official API key or developer account needed.<strong>
+<strong>Scrape tweets, profile timelines, followers and more from Twitter/X. Use the hosted Apify Actor when you do not want to manage cookies or proxies, or run locally with your own browser cookies and account pool.</strong>
 </p>
 
 ---
@@ -57,15 +57,39 @@
 
 ---
 
-## Hosted — no setup needed
+## Hosted alternative — no setup needed
 
-> [Run Scweet on Apify](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97) with no code, no cookies, and no account management. Free tier included.
+<table>
+<tr>
+<td>
 
-> Running Scweet locally at any real volume usually means dedicated accounts and proxies. You can use a single proxy, a rotating proxy, or assign one per account. If you need a provider, [Webshare](https://www.webshare.io/?referral_code=kdgjcc09945q) works well. Disclosure: affiliate link.
+Use the hosted Apify Actor when you want Scweet results without running the local Python library or managing Twitter/X cookies, proxies, local accounts, rate limits, retries, or infrastructure.
+
+This runs on Apify instead of your machine. Use the local library below when you want full Python/CLI control.
+
+<p align="center">
+  <a href="https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97">
+    <img alt="Run Scweet on Apify" src="https://img.shields.io/badge/Run%20Scweet%20on-Apify-246DFF?style=for-the-badge&logo=apify&logoColor=white">
+  </a>
+</p>
+
+
+- No code required: configure and run from the Apify Console
+- Prefer code? Use the Actor through Apify's [Python API guide](https://apify.com/altimis/scweet/api/python)
+- No Twitter/X cookies or proxies to provide
+- Search tweets and profile timelines
+- Export results as JSON, CSV, or XLSX from the Apify dataset
+- Free tier included; current usage pricing is shown on the Apify Actor page
+
+</td>
+</tr>
+</table>
 
 ---
 
-## Quickstart
+## Python Quickstart
+
+Use local Scweet when you want full control from Python or the CLI, with your own browser cookies, accounts, proxies, SQLite state, resume behavior, and output files.
 
 **1. Install**
 
@@ -158,6 +182,28 @@ For multi-account runs, use `--cookies-file cookies.json`.
 ## Multiple accounts & proxies
 
 For higher throughput and reduced ban risk, use multiple dedicated accounts with per-account proxies.
+
+Running Scweet locally at any real volume usually means dedicated accounts and proxies. You can use a single proxy, a rotating proxy, or assign one per account.
+
+<table>
+<tr>
+<td>
+
+**Need proxies for local Scweet?**
+
+[Webshare](https://www.webshare.io/?referral_code=kdgjcc09945q) is a practical option for dedicated or rotating proxies.
+
+<p align="center">
+  <a href="https://www.webshare.io/?referral_code=kdgjcc09945q">
+    <img alt="Get proxies on Webshare" src="https://img.shields.io/badge/Get%20proxies-Webshare-1F8BFF?style=for-the-badge">
+  </a>
+</p>
+
+Disclosure: this is an affiliate link.
+
+</td>
+</tr>
+</table>
 
 **`cookies.json` format:**
 
