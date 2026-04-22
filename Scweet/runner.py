@@ -956,9 +956,20 @@ class Runner:
 
                     if unique_added > 0:
                         if global_limit is not None:
-                            logger.info("Collected %d / %d tweets", total_collected, global_limit)
+                            logger.info(
+                                "%s ~ %s: Collected %d / %d tweets",
+                                task_query.get("since"),
+                                task_query.get("until"),
+                                total_collected,
+                                global_limit,
+                            )
                         else:
-                            logger.info("Collected %d tweets", total_collected)
+                            logger.info(
+                                "%s ~ %s: Collected %d tweets",
+                                task_query.get("since"),
+                                task_query.get("until"),
+                                total_collected,
+                            )
 
                     if page_unique_tweets and on_tweets_batch is not None:
                         try:
@@ -991,7 +1002,9 @@ class Runner:
                     )
                     if stop_due_to_empty_pages:
                         logger.info(
-                            "Search done (no more results) account=%s",
+                            "%s ~ %s: Search done (no more results) account=%s",
+                            task_query.get("since"),
+                            task_query.get("until"),
                             account.get("username"),
                         )
 
