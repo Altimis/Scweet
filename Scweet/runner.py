@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import inspect
 import json
@@ -221,12 +221,19 @@ class Runner:
                     run_id = str(created)
 
             n_intervals = max(1, int(_cfg(self.config, "n_splits", 1)))
-            min_interval_s = max(1, int(_cfg(self.config, "scheduler_min_interval_s", 300)))
+            exp_min_raw = _cfg(self.config, "scheduler_exponential_min_s", None)
+            if exp_min_raw is None:
+                exp_min_raw = _cfg(self.config, "scheduler_min_interval_s", 300)
             intervals = split_time_intervals(
                 base_query["since"],
                 base_query["until"],
                 n_intervals,
-                min_interval_s,
+                exponential_count=int(_cfg(self.config, "scheduler_exponential_count", 10)),
+                exponential_min_s=max(1, int(exp_min_raw)),
+                exponential_max_s=max(
+                    1, int(_cfg(self.config, "scheduler_exponential_max_s", 432000))
+                ),
+                exponential_growth=float(_cfg(self.config, "scheduler_exponential_growth", 2.0)),
             )
 
             priority = int(_cfg(self.config, "priority", 1))
@@ -956,9 +963,20 @@ class Runner:
 
                     if unique_added > 0:
                         if global_limit is not None:
-                            logger.info("Collected %d / %d tweets", total_collected, global_limit)
+                            logger.info(
+                                "%s ~ %s: Collected %d / %d tweets",
+                                task_query.get("since"),
+                                task_query.get("until"),
+                                total_collected,
+                                global_limit,
+                            )
                         else:
-                            logger.info("Collected %d tweets", total_collected)
+                            logger.info(
+                                "%s ~ %s: Collected %d tweets",
+                                task_query.get("since"),
+                                task_query.get("until"),
+                                total_collected,
+                            )
 
                     if page_unique_tweets and on_tweets_batch is not None:
                         try:
@@ -991,7 +1009,9 @@ class Runner:
                     )
                     if stop_due_to_empty_pages:
                         logger.info(
-                            "Search done (no more results) account=%s",
+                            "%s ~ %s: Search done (no more results) account=%s",
+                            task_query.get("since"),
+                            task_query.get("until"),
                             account.get("username"),
                         )
 
@@ -1186,6 +1206,9 @@ class Runner:
         try:
             parsed = datetime.strptime(value, _DATE_FMT)
             if end_of_day:
+                now_utc = datetime.now(timezone.utc)
+                if parsed.date() == now_utc.date():
+                    return now_utc.replace(tzinfo=None).strftime(_TS_FMT)
                 parsed = parsed.replace(hour=23, minute=59, second=59)
             return parsed.strftime(_TS_FMT)
         except Exception:

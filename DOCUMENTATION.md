@@ -467,8 +467,13 @@ s = Scweet(
 | `max_task_attempts` | `int` | `3` | Max retry attempts per task |
 | `max_fallback_attempts` | `int` | `3` | Max fallback attempts on failure |
 | `max_account_switches` | `int` | `2` | Max account switches per task |
-| `scheduler_min_interval_s` | `int` | `300` | Minimum time interval split (seconds) |
-| `n_splits` | `int` | `5` | Number of time interval splits for search |
+| `scheduler_min_interval_s` | `int` | `300` | Legacy fallback (seconds): used as ``scheduler_exponential_min_s`` when that field is omitted |
+| `scheduler_max_interval_s` | `int \| None` | `None` | Reserved / unused by the current hybrid scheduler |
+| `scheduler_exponential_count` | `int` | `10` | How many slices at the **newest** end use exponential widths (capped by ``n_splits - 1`` when ``n_splits > 1``) |
+| `scheduler_exponential_growth` | `float` | `2.0` | Multiplier between successive exponential slice widths (must be ``> 1``) |
+| `scheduler_exponential_min_s` | `int` | `900` | Width of the newest slice (seconds), default 15 minutes |
+| `scheduler_exponential_max_s` | `int` | `432000` | Maximum nominal width of any exponential slice (seconds), default 5 days |
+| `n_splits` | `int` | `5` | Total number of search time windows: ``E`` exponential (newest) + ``n_splits - E`` equal-width windows over the older remainder |
 | `priority` | `int` | `1` | Task priority |
 | `proxy_check_on_lease` | `bool` | `True` | Verify proxy connectivity before leasing |
 | `proxy_check_url` | `str` | `"https://x.com/robots.txt"` | URL for proxy check |
