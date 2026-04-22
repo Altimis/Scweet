@@ -18,7 +18,11 @@ def split_time_intervals(
     exponential_max_s: int = 432000,
     exponential_growth: float = 2.0,
 ) -> list[tuple[str, str]]:
-    """Split ``[since, until]`` into contiguous intervals (oldest → newest).
+    """Split ``[since, until]`` into contiguous intervals (newest → oldest).
+
+    Intervals are ordered for task scheduling: the window ending at ``until``
+    appears first so concurrent workers dequeue recent time ranges before older
+    ones. Contiguous coverage of ``[since, until]`` is unchanged.
 
     Up to ``min(exponential_count, n_intervals - 1)`` slices are carved from
     ``until`` backward. Nominal widths are ``exponential_min_s * exponential_growth**i``,
@@ -91,7 +95,7 @@ def split_time_intervals(
             t_left = t_right
 
     out = uniform + exp_chrono
-    return [(a.strftime(_TS_FMT), b.strftime(_TS_FMT)) for a, b in out]
+    return [(a.strftime(_TS_FMT), b.strftime(_TS_FMT)) for a, b in reversed(out)]
 
 
 def build_tasks_for_intervals(

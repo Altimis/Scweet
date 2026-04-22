@@ -93,13 +93,13 @@ def test_split_time_intervals_and_task_generation():
         exponential_max_s=432000,
         exponential_growth=2.0,
     )
-    # Newest side: 15m + 30m + 15m = 1h; no uniform remainder.
+    # Newest side: 15m + 30m + 15m = 1h; no uniform remainder. Recent-first order.
     assert len(intervals) == 3
-    assert intervals[0][0] == since
-    assert intervals[-1][1] == until
-    assert intervals[0] == (since, "2026-02-01_00:15:00_UTC")
+    assert intervals[-1][0] == since
+    assert intervals[0][1] == until
+    assert intervals[0] == ("2026-02-01_00:45:00_UTC", until)
     assert intervals[1] == ("2026-02-01_00:15:00_UTC", "2026-02-01_00:45:00_UTC")
-    assert intervals[2] == ("2026-02-01_00:45:00_UTC", until)
+    assert intervals[2] == (since, "2026-02-01_00:15:00_UTC")
 
     base_query = {"words": ["bitcoin"], "since": since, "until": until}
     tasks = build_tasks_for_intervals(base_query, run_id="run-1", priority=7, intervals=intervals)
@@ -123,9 +123,9 @@ def test_split_time_intervals_uniform_tail():
         exponential_growth=2.0,
     )
     assert len(intervals) == 5
-    assert intervals[0][0] == since
-    assert intervals[-1][1] == until
-    assert intervals[-1][0] == "2026-02-01_03:45:00_UTC"
+    assert intervals[-1][0] == since
+    assert intervals[0][1] == until
+    assert intervals[0][0] == "2026-02-01_03:45:00_UTC"
 
 
 def test_in_memory_task_queue_lease_ack_retry_fail_cancel():
