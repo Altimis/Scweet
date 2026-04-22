@@ -221,12 +221,19 @@ class Runner:
                     run_id = str(created)
 
             n_intervals = max(1, int(_cfg(self.config, "n_splits", 1)))
-            min_interval_s = max(1, int(_cfg(self.config, "scheduler_min_interval_s", 300)))
+            exp_min_raw = _cfg(self.config, "scheduler_exponential_min_s", None)
+            if exp_min_raw is None:
+                exp_min_raw = _cfg(self.config, "scheduler_min_interval_s", 300)
             intervals = split_time_intervals(
                 base_query["since"],
                 base_query["until"],
                 n_intervals,
-                min_interval_s,
+                exponential_count=int(_cfg(self.config, "scheduler_exponential_count", 10)),
+                exponential_min_s=max(1, int(exp_min_raw)),
+                exponential_max_s=max(
+                    1, int(_cfg(self.config, "scheduler_exponential_max_s", 432000))
+                ),
+                exponential_growth=float(_cfg(self.config, "scheduler_exponential_growth", 2.0)),
             )
 
             priority = int(_cfg(self.config, "priority", 1))
