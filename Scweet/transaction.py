@@ -16,6 +16,33 @@ logger = logging.getLogger(__name__)
 from .utils import as_str as _as_str
 
 
+def _extract_ondemand_url(html: str) -> str | None:
+    marker = '"ondemand.s"'
+    pos = html.find(marker)
+    if pos == -1:
+        return None
+    comma = html.rfind(",", 0, pos)
+    if comma == -1:
+        return None
+    colon = html.find(":", comma)
+    if colon == -1:
+        return None
+    chunk_key = html[comma + 1 : colon].strip().strip('"').strip("'")
+    search_start = pos + len(marker)
+    needle = chunk_key + ':"'
+    hash_start = html.find(needle, search_start)
+    if hash_start == -1:
+        return None
+    hash_start += len(needle)
+    hash_end = html.find('"', hash_start)
+    if hash_end == -1:
+        return None
+    ondemand_hash = html[hash_start:hash_end]
+    if not ondemand_hash or not all(c in "0123456789abcdef" for c in ondemand_hash):
+        return None
+    return f"https://abs.twimg.com/responsive-web/client-web/ondemand.s.{ondemand_hash}a.js"
+
+
 class TransactionIdProvider:
     def __init__(
         self,
@@ -76,7 +103,7 @@ class TransactionIdProvider:
         self._deps_checked = True
         try:
             from x_client_transaction import ClientTransaction  # noqa: F401
-            from x_client_transaction.utils import get_ondemand_file_url, handle_x_migration  # noqa: F401
+            from x_client_transaction.utils import handle_x_migration  # noqa: F401
 
             self._deps_available = True
         except Exception:
@@ -88,7 +115,7 @@ class TransactionIdProvider:
         if not self._ensure_dependencies():
             return None
         from x_client_transaction import ClientTransaction
-        from x_client_transaction.utils import get_ondemand_file_url, handle_x_migration
+        from x_client_transaction.utils import handle_x_migration
 
         session = None
         try:
@@ -112,10 +139,9 @@ class TransactionIdProvider:
             if session_headers is not None and hasattr(session_headers, "update"):
                 session_headers.update(headers)
 
-            # Keep actor parity: run migration handling before extracting ondemand.js URL.
             home_page = handle_x_migration(session=session)
 
-            ondemand_url = get_ondemand_file_url(response=home_page)
+            ondemand_url = _extract_ondemand_url(str(home_page))
             if not ondemand_url:
                 logger.warning("Transaction-id bootstrap failed: ondemand URL not found")
                 return None
