@@ -51,6 +51,11 @@ class ScweetConfig(BaseModel):
     max_fallback_attempts: int = Field(default=3, ge=1)
     max_account_switches: int = Field(default=2, ge=0)
     scheduler_min_interval_s: int = Field(default=300, ge=1)
+    scheduler_max_interval_s: Optional[int] = Field(default=None, ge=1)
+    scheduler_exponential_count: int = Field(default=10, ge=1)
+    scheduler_exponential_growth: float = Field(default=2.0, gt=1.0)
+    scheduler_exponential_min_s: int = Field(default=900, ge=1)
+    scheduler_exponential_max_s: int = Field(default=432000, ge=1)
     n_splits: int = Field(default=5, ge=1)
     priority: int = 1
     proxy_check_on_lease: bool = True
