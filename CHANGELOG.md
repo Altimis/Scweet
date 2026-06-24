@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## [5.3.1] - 2026-05-19
+
+### Fixed
+
+- Transaction-id bootstrap failure — Twitter changed the webpack manifest format, breaking the upstream `get_ondemand_file_url` regex (`XClientTransaction` 1.0.2). Replaced with positional string extraction that survives manifest reshuffles.
+
+---
+
 ## [5.3.0] - 2026-04-14
 
 ### Added

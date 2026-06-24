@@ -48,7 +48,7 @@ class TransactionIdProvider:
         self,
         *,
         enabled: bool = True,
-        refresh_ttl_s: int = 15 * 60,
+        refresh_ttl_s: int = 6 * 60 * 60,
         home_url: str = "https://x.com",
         session_factory=None,
         user_agent: Optional[str] = None,
@@ -56,6 +56,7 @@ class TransactionIdProvider:
         prefer_curl_cffi: bool = True,
         impersonate: str = DEFAULT_IMPERSONATE,
         timeout=DEFAULT_HTTP_TIMEOUT,
+        cookies: Optional[dict] = None,
     ):
         self.enabled = bool(enabled)
         self.refresh_ttl_s = max(60, int(refresh_ttl_s))
@@ -65,6 +66,7 @@ class TransactionIdProvider:
         self.timeout = timeout
         self.proxy = proxy
         self._http_proxies = normalize_http_proxies(proxy)
+        self._cookies = cookies
         self.session_factory = session_factory or self._build_default_session_factory()
         self.user_agent_override = _as_str(user_agent)
 
@@ -86,10 +88,13 @@ class TransactionIdProvider:
                     kwargs = {"impersonate": self.impersonate, "timeout": self.timeout}
                     if self._http_proxies:
                         kwargs["proxies"] = self._http_proxies
+                    if self._cookies:
+                        kwargs["cookies"] = self._cookies
                     try:
                         return CurlSession(**kwargs)
                     except TypeError:
                         kwargs.pop("proxies", None)
+                        kwargs.pop("cookies", None)
                         return CurlSession(**kwargs)
 
                 return _factory

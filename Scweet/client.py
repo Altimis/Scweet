@@ -179,6 +179,9 @@ class Scweet:
         tx_kwargs: dict[str, Any] = {"proxy": cfg.proxy, "user_agent": cfg.api_user_agent}
         if cfg.api_http_impersonate:
             tx_kwargs["impersonate"] = cfg.api_http_impersonate
+        tx_cookies = self._get_cookies_for_transaction_init()
+        if tx_cookies:
+            tx_kwargs["cookies"] = tx_cookies
         self._transaction_id_provider = TransactionIdProvider(**tx_kwargs)
 
         self._api_engine = ApiEngine(
@@ -212,6 +215,31 @@ class Scweet:
             },
             outputs={"write_csv": write_csv},
         )
+
+    def _get_cookies_for_transaction_init(self) -> Optional[dict]:
+        """Get cookies from an eligible account for CT bootstrap (only needs auth_token + ct0)."""
+        try:
+            from .repos import _cookies_to_dict
+            from .schema import AccountTable
+            from .storage import session_scope
+            from sqlalchemy import select
+
+            with session_scope(self._config.db_path) as session:
+                stmt = (
+                    select(AccountTable)
+                    .where(AccountTable.cookies_json.isnot(None))
+                    .where(AccountTable.auth_token.isnot(None))
+                    .limit(1)
+                )
+                account = session.execute(stmt).scalar_one_or_none()
+                if account is None:
+                    return None
+                cookies = _cookies_to_dict(account.cookies_json)
+                if cookies.get("auth_token"):
+                    return cookies
+        except Exception:
+            pass
+        return None
 
     # ── Search ──────────────────────────────────────────────────────────
 
