@@ -35,6 +35,14 @@ directory.
   other endpoints also fail.
 - **A lease in `repos.py` is atomic and it must stay atomic.** It writes the lease and the timestamp in one
   statement. A read and then a write lets two workers take the same account.
+- **A 401 or 403 from a page never gives the 30-day block on its own.** The worker confirms with
+  `ApiEngine.probe_account_alive`, a self-lookup of the account's own handle. `compute_cooldown` gives the long
+  block only when `proven_dead` is true, which means the self-lookup also failed. An unconfirmed 401 gives a
+  short cooldown (`auth_unconfirmed`). A session that cannot be built is proven dead. See B1 in
+  `docs/plans/2026-09-04-the-path-to-a-production-ready-library.md`.
+- **A run waits for a cooldown before it fails.** `Runner._acquire_leases_with_wait` waits up to
+  `pool_wait_max_s` and retries every `pool_wait_poll_s`. A cooldown expires, so a run with a small pool
+  finishes instead of failing.
 - **A cooldown that is too long removes an account that a user paid for.** `auth_cooldown_s` defaults to 30
   days. Apply that only when the credentials are proven dead, which means a self-lookup that answers 401 or 403.
   `_map_graphql_errors_to_status` decides this. It reads `AUTH_FAILURE_MESSAGES` and `AUTH_FAILURE_CODES`, and a

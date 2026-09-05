@@ -240,14 +240,7 @@ class Runner:
             # Keep standby workers available for account-switch retries even when the initial task
             # count is small.
             workers_requested = concurrency
-            accounts = await _maybe_await(
-                self.accounts_repo.acquire_leases(
-                    workers_requested,
-                    run_id=run_id,
-                    worker_id_prefix="w",
-                )
-            )
-            accounts = list(accounts or [])
+            accounts = await self._acquire_leases_with_wait(workers_requested, run_id)
             if not accounts:
                 stats.tasks_failed = stats.tasks_total
                 _diag: dict[str, Any] = {}
@@ -369,6 +362,39 @@ class Runner:
         return {
             "proxy": _cfg(self.config, "proxy", None),
         }
+
+    async def _acquire_leases_with_wait(self, workers_requested: int, run_id: Optional[str]) -> list:
+        """Lease accounts, and wait a bounded time for a cooldown to expire when the pool is empty.
+
+        A cooldown expires, so a run that finds every account on a cooldown does not have to fail. It waits up
+        to `pool_wait_max_s` and retries every `pool_wait_poll_s`. The retry picks up the first account whose
+        cooldown expired. `pool_wait_max_s` of 0 keeps the old behaviour, which fails at once.
+        """
+        max_wait = max(0.0, float(_cfg(self.config, "pool_wait_max_s", 120.0)))
+        poll_s = max(0.5, float(_cfg(self.config, "pool_wait_poll_s", 5.0)))
+        waited = 0.0
+        while True:
+            accounts = list(
+                await _maybe_await(
+                    self.accounts_repo.acquire_leases(
+                        workers_requested,
+                        run_id=run_id,
+                        worker_id_prefix="w",
+                    )
+                )
+                or []
+            )
+            if accounts or waited >= max_wait:
+                return accounts
+            sleep_s = min(poll_s, max_wait - waited)
+            logger.info(
+                "No eligible account now. Waiting %.0fs for a cooldown to expire (waited %.0f of %.0f).",
+                sleep_s,
+                waited,
+                max_wait,
+            )
+            await asyncio.sleep(sleep_s)
+            waited += sleep_s
 
     async def _proxy_smoke_check(self, proxy: Any, *, url: str, timeout_s: float) -> tuple[bool, int, str]:
         """Check proxy health with a clean HTTP call (no account cookies/headers)."""
@@ -1124,10 +1150,33 @@ class Runner:
                 break
         finally:
             if lease_id and hasattr(self.accounts_repo, "release"):
+                # A 401 or 403 from a page of tweets is not proof of a dead account. X sends it for a tweet that
+                # one account cannot read, while the credentials still work. Confirm with a self-lookup of the
+                # account's own handle before the 30-day block.
+                proven_dead = False
+                if account_status in (401, 403):
+                    if account_session is not None and hasattr(self.search_engine, "probe_account_alive"):
+                        # The 401 came from a page and the account has an authenticated session. Reuse it to
+                        # test the credentials. Only a self-lookup that also fails gives the long block.
+                        try:
+                            alive = await self.search_engine.probe_account_alive(
+                                account, session=account_session
+                            )
+                            proven_dead = alive is False
+                        except Exception as exc:
+                            logger.warning(
+                                "Self-lookup probe raised for username=%s: %s", account.get("username"), exc
+                            )
+                            proven_dead = False
+                    elif account_session is None:
+                        # No session could be built from these credentials, so the account cannot work now.
+                        # This is not a page error, and a probe cannot run without a session.
+                        proven_dead = True
                 status_value, available_til, cooldown_reason = compute_cooldown(
                     account_status,
                     last_headers,
                     self.config,
+                    proven_dead=proven_dead,
                 )
                 release_fields = {
                     "status": status_value,

@@ -37,9 +37,9 @@ Scweet.search()            the public method, in client.py
   that they asked for and no message that explains it.
 - **A limit is a target and not a boundary.** Measured on 2026-09-04: a limit of 2,000 returned 2,340, which is
   17% above. Any code that bills for each item must not depend on the limit.
-- **`AccountPoolExhausted` ends a run.** When every account holds a cooldown, the run stops with
-  `No eligible accounts (total=N, cooldown=N)`. It does not wait. A user with few accounts therefore sees a
-  failure where a wait of a few minutes would succeed.
+- **A run waits a bounded time for a cooldown before it fails.** When every account holds a cooldown, the run
+  waits up to `pool_wait_max_s` (120s) and retries every `pool_wait_poll_s` (5s), because a cooldown expires.
+  It ends with `AccountPoolExhausted` only after the wait. Set `pool_wait_max_s` to 0 to fail at once.
 - **The default daily caps are small.** `daily_requests_limit` is 30 and `daily_tweets_limit` is 600. One
   account therefore delivers 600 tweets in a day with the defaults. A user who asks for more receives less and
   the cause is a default, not X.

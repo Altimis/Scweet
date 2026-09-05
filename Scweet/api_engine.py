@@ -1567,6 +1567,42 @@ class ApiEngine:
             return endpoint.format(query_id=query_id)
         return endpoint
 
+    async def probe_account_alive(self, account, *, session=None) -> Optional[bool]:
+        """Look up the account's own handle to test its credentials.
+
+        A 401 or a 403 from a page of tweets does not prove that the account is dead. X sends it for a tweet
+        that the account cannot read, while the credentials still work. A self-lookup of the account's own
+        handle needs only valid credentials, so it separates a dead account from a page that one account cannot
+        read.
+
+        Returns True when the lookup answers 200 (the credentials work), False when it answers 401 or 403 (the
+        credentials are dead), and None when the result is inconclusive, for example a network error. The caller
+        applies the 30-day block only for False.
+        """
+        username = account.get("username") if isinstance(account, dict) else getattr(account, "username", None)
+        if not username:
+            return None
+        try:
+            manifest = await self.manifest_provider.get_manifest()
+            url = self._resolve_user_lookup_url(manifest)
+            params = self._build_user_lookup_params(username, manifest)
+            timeout_s = int(getattr(manifest, "timeout_s", 20) or 20)
+            data, status, _headers, _snippet = await self._graphql_get(
+                url=url,
+                params=params,
+                timeout_s=timeout_s,
+                session=session,
+                account_context=account,
+            )
+        except Exception as exc:
+            logger.warning("Self-lookup failed for username=%s: %s", username, exc)
+            return None
+        if status in (401, 403):
+            return False
+        if status == 200 and data is not None:
+            return True
+        return None
+
     def _resolve_profile_timeline_url(self, manifest) -> str:
         query_id = (manifest.query_ids or {}).get(PROFILE_TIMELINE_OPERATION) or DEFAULT_PROFILE_TIMELINE_QUERY_ID
         endpoint = (manifest.endpoints or {}).get(PROFILE_TIMELINE_OPERATION) or DEFAULT_PROFILE_TIMELINE_ENDPOINT

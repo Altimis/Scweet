@@ -58,7 +58,11 @@ def effective_status_with_rate_limit_headers(status_code: Optional[int], headers
 
 
 def compute_cooldown(
-    status_code: Optional[int], headers: Optional[dict], config
+    status_code: Optional[int],
+    headers: Optional[dict],
+    config,
+    *,
+    proven_dead: bool = False,
 ) -> Tuple[int, float, Optional[str]]:
     now_ts = time.time()
     cooldown_default_s = float(_cfg(config, "cooldown_default_s", 120))
@@ -67,8 +71,14 @@ def compute_cooldown(
     cooldown_jitter_s = max(0.0, float(_cfg(config, "cooldown_jitter_s", 10)))
     jitter = random.uniform(0, cooldown_jitter_s) if cooldown_jitter_s > 0 else 0.0
 
+    # A 401 or a 403 from a page of tweets is not proof that the account is dead. X sends it for a tweet that
+    # one account cannot read, while the credentials still work. The 30-day block applies only when a
+    # self-lookup of the account's own handle also fails, which `proven_dead` reports. An unconfirmed 401 gives
+    # a short cooldown, so a healthy account returns in minutes and not in a month.
     if status_code in (401, 403):
-        return int(status_code), now_ts + auth_cooldown_s, "auth_failed"
+        if proven_dead:
+            return int(status_code), now_ts + auth_cooldown_s, "auth_failed"
+        return int(status_code), now_ts + transient_cooldown_s + jitter, "auth_unconfirmed"
 
     # 404 from GraphQL typically means stale query IDs, not bad auth.
     # Use a short transient cooldown so the account can retry quickly.

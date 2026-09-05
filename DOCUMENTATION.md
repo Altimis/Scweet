@@ -460,8 +460,10 @@ s = Scweet(
 | `lease_heartbeat_s` | `float` | `30.0` | Heartbeat interval for active leases |
 | `cooldown_default_s` | `float` | `120.0` | Default cooldown after rate limit |
 | `transient_cooldown_s` | `float` | `120.0` | Cooldown for transient errors (e.g., 404/stale query IDs) |
-| `auth_cooldown_s` | `float` | `2592000.0` | Cooldown for auth failures (30 days) |
+| `auth_cooldown_s` | `float` | `2592000.0` | Cooldown when an account is **proven** dead (30 days). A 401/403 from a page gives only a short cooldown; the long block applies only after a self-lookup of the account's own handle also fails. |
 | `cooldown_jitter_s` | `float` | `10.0` | Random jitter added to cooldowns |
+| `pool_wait_max_s` | `float` | `120.0` | When every account is on cooldown, wait up to this long for one to expire before failing. Set `0` to fail immediately. |
+| `pool_wait_poll_s` | `float` | `5.0` | How often to retry leasing while waiting for a cooldown to expire |
 | `task_retry_base_s` | `int` | `1` | Base delay for task retry backoff |
 | `task_retry_max_s` | `int` | `30` | Max delay for task retry backoff |
 | `max_task_attempts` | `int` | `3` | Max retry attempts per task |

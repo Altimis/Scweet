@@ -52,10 +52,18 @@ def test_compute_cooldown_maps_auth_rate_limit_transient_and_success():
     cfg = _cooldown_config()
     now = time.time()
 
+    # An unconfirmed 401 gives a short cooldown, not the 30-day block. A page 401 is not proof of a dead account.
     status_auth, until_auth, reason_auth = compute_cooldown(401, headers=None, config=cfg)
     assert status_auth == 401
-    assert reason_auth == "auth_failed"
-    assert until_auth >= now + 3599
+    assert reason_auth == "auth_unconfirmed"
+    assert until_auth <= now + 91
+    assert until_auth >= now + 89
+
+    # A proven-dead account, confirmed by a self-lookup, gives the 30-day block.
+    status_dead, until_dead, reason_dead = compute_cooldown(401, headers=None, config=cfg, proven_dead=True)
+    assert status_dead == 401
+    assert reason_dead == "auth_failed"
+    assert until_dead >= now + 3599
 
     reset_ts = int(now + 77)
     status_rl, until_rl, reason_rl = compute_cooldown(

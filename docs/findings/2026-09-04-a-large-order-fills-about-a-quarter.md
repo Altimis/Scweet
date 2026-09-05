@@ -56,7 +56,9 @@ intervals.
 
 1. **The plan does not divide.** This needs a change in `runner.py` and `scheduler.py`, and it needs a test that
    asserts the total across several intervals.
-2. **`AccountPoolExhausted` ends the run instead of waiting.** Every account held a cooldown at that moment, and
+2. **`AccountPoolExhausted` ends the run instead of waiting. Corrected on 2026-09-05.** `Runner` now waits up to
+   `pool_wait_max_s` for a cooldown to expire and retries, so a run with a small pool finishes.
+   Every account held a cooldown at that moment, and
    a cooldown expires. A bounded wait would have finished the run. This is a smaller change and it removes the
    0% case.
 

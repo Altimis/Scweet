@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- An account is no longer blocked for 30 days by a routine message from X. A `401` or `403` from a page of tweets is not proof that an account is dead — X sends it for a tweet one account cannot read, while the credentials still work. The worker now confirms with a self-lookup of the account's own handle before the long block. An unconfirmed error gives a short cooldown, so a healthy account returns in minutes instead of a month. Set `pool_wait_max_s` and the cooldown fields in `ScweetConfig` to tune the behaviour.
+- A run no longer fails at once when every account is on a cooldown. It waits up to `pool_wait_max_s` (120s by default) for a cooldown to expire and retries, because a cooldown expires. Set `pool_wait_max_s=0` to keep the old immediate failure.
 - Account repair no longer reports success when the write fails. `_attempt_account_repair` returned `True` and logged "repair succeeded" even when the database write raised, so an operator believed the pool held a repaired account that was not there. It now returns `False` and logs a warning. A failed account release also logs a warning instead of passing silently, because a failed release drops the account from the pool with no record.
 
 ## [5.3.1] - 2026-05-19

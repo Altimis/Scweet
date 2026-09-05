@@ -62,8 +62,14 @@ A test for each item asserts the message. Read `tests/AGENTS.md` for the gaps in
       the whole session, and `AUTH_FAILURE_CODES` holds the codes 32 and 89 from captured answers of X. The same
       work corrected the opposite fault: the real message of a dead session mapped to nothing.
       `tests/test_graphql_error_mapping.py` holds 21 tests, and 4 mutations each fail one.
-- [ ] **A run waits for a cooldown instead of ending.** `AccountPoolExhausted` ends a run when every account
-      holds a cooldown, and a cooldown expires. Add a bounded wait. This removes the run that returned 0.
+- [x] **A run waits for a cooldown instead of ending.** Done 2026-09-05. `Runner._acquire_leases_with_wait`
+      waits up to `pool_wait_max_s` (120s) and retries every `pool_wait_poll_s` (5s). `pool_wait_max_s=0` keeps
+      the old immediate failure. `tests/test_pool_wait.py` holds 3 tests; a mutation that removes the wait fails 2.
+- [x] **An account leaves the pool only on proven-dead evidence.** Done 2026-09-05 (moved from Phase 2). A page
+      401/403 gives a short cooldown and triggers `ApiEngine.probe_account_alive`, a self-lookup of the account's
+      own handle. Only a self-lookup that also fails gives the 30-day block. The per-endpoint status columns were
+      dropped: the long block now depends on the shared credentials, so nothing per-endpoint remains to track.
+      `tests/test_proven_dead_evidence.py` and `tests/test_cooldown.py` cover it; 3 mutations each fail a test.
 
 ## Phase 3: correctness of the public contract
 
