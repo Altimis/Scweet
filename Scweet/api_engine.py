@@ -741,13 +741,17 @@ class ApiEngine:
             except Exception:
                 max_account_switches = configured_switches
         try:
-            account_requests_per_min = max(1, int(_cfg(self.config, "requests_per_min", 30)))
+            account_window_limit = max(1, int(_cfg(self.config, "window_request_limit", 50)))
         except Exception:
-            account_requests_per_min = 30
+            account_window_limit = 50
         try:
-            account_min_delay_s = max(0.0, float(_cfg(self.config, "min_delay_s", 2.0)))
+            account_window_s = max(1.0, float(_cfg(self.config, "rate_limit_window_s", 900.0)))
         except Exception:
-            account_min_delay_s = 2.0
+            account_window_s = 900.0
+        try:
+            account_min_delay_s = max(0.0, float(_cfg(self.config, "min_delay_s", 0.0)))
+        except Exception:
+            account_min_delay_s = 0.0
 
         if follow_type == "following":
             follows_url = self._resolve_following_url(manifest)
@@ -847,7 +851,8 @@ class ApiEngine:
                             logger.warning("Follows request failed: no eligible account could be leased")
                             break
                         account_limiter = TokenBucketLimiter(
-                            requests_per_min=account_requests_per_min,
+                            capacity=account_window_limit,
+                            refill_window_s=account_window_s,
                             min_delay_s=account_min_delay_s,
                         )
                         heartbeat_stop, heartbeat_task = await self._start_lease_heartbeat(

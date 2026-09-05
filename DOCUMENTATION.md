@@ -447,8 +447,10 @@ s = Scweet(
 | `daily_tweets_limit` | `int` | `600` | Max tweets per account per day |
 | `max_empty_pages` | `int` | `1` | Stop after N consecutive empty result pages |
 | `api_page_size` | `int` | `20` | Tweets per API page (1-100) |
-| `min_delay_s` | `float` | `2.0` | Minimum delay between requests |
-| `requests_per_min` | `int` | `30` | Rate limit per account per minute |
+| `window_request_limit` | `int` | `50` | Requests allowed per account per rate-limit window. X counts the total in a window, so a short run bursts this budget and waits nothing. |
+| `rate_limit_window_s` | `float` | `900.0` | Length of the rate-limit window in seconds (X uses ~15 minutes) |
+| `min_delay_s` | `float` | `0.0` | Optional floor between requests. `0` adds no delay; the window limit already respects X. |
+| `requests_per_min` | `int` | `30` | **Deprecated.** The limiter paces to `window_request_limit` over `rate_limit_window_s`, not to a per-minute rate. Kept so an old config still loads. |
 
 ### Advanced
 

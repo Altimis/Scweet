@@ -33,7 +33,15 @@ class ScweetConfig(BaseModel):
     daily_tweets_limit: int = Field(default=600, ge=1)
     max_empty_pages: int = Field(default=1, ge=1)
     api_page_size: int = Field(default=20, ge=1, le=100)
-    min_delay_s: float = Field(default=2.0, ge=0.0)
+    # X counts requests per account inside a window of about 15 minutes. The limiter holds this many requests
+    # for each account and refills over `rate_limit_window_s`. A short run bursts its budget and waits nothing;
+    # a long run slows to the refill rate. Measured 2026-08-31: X allowed 50 SearchTimeline requests in 15
+    # minutes and returned 429 on request 51.
+    window_request_limit: int = Field(default=50, ge=1)
+    rate_limit_window_s: float = Field(default=900.0, gt=0.0)
+    # An optional floor between two requests from one account. 0 adds no delay. X counts the total in a window,
+    # not the gap, so a floor is not needed to respect the limit; it exists only for a caller who wants one.
+    min_delay_s: float = Field(default=0.0, ge=0.0)
 
     # Advanced
     enable_wal: bool = True
@@ -44,6 +52,8 @@ class ScweetConfig(BaseModel):
     transient_cooldown_s: float = Field(default=120.0, ge=0.0)
     auth_cooldown_s: float = Field(default=30 * 24 * 60 * 60, ge=0.0)
     cooldown_jitter_s: float = Field(default=10.0, ge=0.0)
+    # Deprecated. The limiter paces to `window_request_limit` over `rate_limit_window_s`, not to a per-minute
+    # rate. This field stays so an old configuration still loads, and the limiter no longer reads it.
     requests_per_min: int = Field(default=30, ge=1)
     task_retry_base_s: int = Field(default=1, ge=0)
     task_retry_max_s: int = Field(default=30, ge=0)

@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Rate limiting now paces to X's real window (about 50 requests per account per 15 minutes) instead of a fixed delay between requests. A short run bursts its window budget and finishes far faster, and a long run no longer exceeds the window and triggers `429`s that get accounts blocked. New config: `window_request_limit` (50) and `rate_limit_window_s` (900). `min_delay_s` now defaults to `0` (an optional floor); `requests_per_min` is deprecated.
+
 ### Fixed
 
 - An account is no longer blocked for 30 days by a routine message from X. A `401` or `403` from a page of tweets is not proof that an account is dead — X sends it for a tweet one account cannot read, while the credentials still work. The worker now confirms with a self-lookup of the account's own handle before the long block. An unconfirmed error gives a short cooldown, so a healthy account returns in minutes instead of a month. Set `pool_wait_max_s` and the cooldown fields in `ScweetConfig` to tune the behaviour.

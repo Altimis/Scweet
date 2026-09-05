@@ -73,6 +73,11 @@ A test for each item asserts the message. Read `tests/AGENTS.md` for the gaps in
 
 ## Phase 3: correctness of the public contract
 
+- [x] **Pace to the window of X, not to a fixed delay. Done 2026-09-05.** `TokenBucketLimiter` now holds
+      `window_request_limit` (50) and refills over `rate_limit_window_s` (900s), and starts full, so a short run
+      bursts and a long run stays inside the window. `min_delay_s` defaults to 0. `tests/test_cooldown.py` holds
+      the burst-then-pace test; two mutations (refill over 60s, start empty) each fail it.
+
 - [ ] **Raise the default of `max_empty_pages`.** `config.py:34` sets 1, so the first gap in a chain ends an
       interval. A measurement on one fixed corpus gave 500 tweets at the default and 16,100 at 5. Choose the new
       default from a measurement and record the number.
@@ -80,10 +85,10 @@ A test for each item asserts the message. Read `tests/AGENTS.md` for the gaps in
       request, and no interval is divided again. This is the cause of the fill of 23.5%, and it is the largest
       change in this plan. It needs a test that plans several intervals against a fake page source and asserts
       the total.
-- [ ] **Make a limit a boundary.** Measured: a limit of 2,000 returns 2,340, which is 17% above. The current
-      behaviour is deliberate, because `tests/test_runner.py` asserts 120 items for a limit of 100. Trim before
-      the return, say when a page was cut, and keep the old behaviour behind an explicit option. A caller who
-      bills for each item needs `len(result) <= limit`.
+- [x] **A limit is a floor, not a ceiling. Dropped 2026-09-05.** The overshoot stays. The user owns the data
+      and nothing bills per tweet, so an extra tweet that the library already fetched is a gift, not a defect.
+      Read `docs/decisions/2026-09-05-a-limit-is-a-floor-not-a-ceiling.md`. This differs from a hosted service
+      that bills per item, where a limit must bind.
 - [ ] **Read the dead fields or remove them.** `enable_wal` and `busy_timeout_ms` in `config.py` are read
       nowhere. `storage.py:32` sets both PRAGMA values directly. A user who changes either field changes
       nothing and receives no warning.

@@ -40,6 +40,11 @@ directory.
   block only when `proven_dead` is true, which means the self-lookup also failed. An unconfirmed 401 gives a
   short cooldown (`auth_unconfirmed`). A session that cannot be built is proven dead. See B1 in
   `docs/plans/2026-09-04-the-path-to-a-production-ready-library.md`.
+- **The limiter paces to the window of X, not to the gap between requests.** `TokenBucketLimiter` holds
+  `window_request_limit` (50) tokens and refills over `rate_limit_window_s` (900s), and it starts full. A short
+  run bursts and waits nothing; a long run slows to the refill rate. Do not add a fixed delay: X counts the total
+  in a window, and an even delay made a run of 400 tweets take 373 seconds instead of 41. `requests_per_min` is
+  deprecated and the limiter ignores it.
 - **A run waits for a cooldown before it fails.** `Runner._acquire_leases_with_wait` waits up to
   `pool_wait_max_s` and retries every `pool_wait_poll_s`. A cooldown expires, so a run with a small pool
   finishes instead of failing.

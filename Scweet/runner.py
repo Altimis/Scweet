@@ -767,10 +767,15 @@ class Runner:
         account_session = None
         session_meta: dict[str, Any] = {}
 
-        requests_per_min = int(_cfg(self.config, "requests_per_min", 30))
-        min_delay_s = float(_cfg(self.config, "min_delay_s", 2.0))
+        window_request_limit = int(_cfg(self.config, "window_request_limit", 50))
+        rate_limit_window_s = float(_cfg(self.config, "rate_limit_window_s", 900.0))
+        min_delay_s = float(_cfg(self.config, "min_delay_s", 0.0))
         api_page_size = max(1, min(int(_cfg(self.config, "api_page_size", 20)), 100))
-        limiter = TokenBucketLimiter(requests_per_min=requests_per_min, min_delay_s=min_delay_s)
+        limiter = TokenBucketLimiter(
+            capacity=window_request_limit,
+            refill_window_s=rate_limit_window_s,
+            min_delay_s=min_delay_s,
+        )
 
         retry_base_s = max(0, int(_cfg(self.config, "task_retry_base_s", 1)))
         retry_max_s = max(retry_base_s, int(_cfg(self.config, "task_retry_max_s", 30)))
