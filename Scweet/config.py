@@ -66,6 +66,11 @@ class ScweetConfig(BaseModel):
     max_account_switches: int = Field(default=2, ge=0)
     scheduler_min_interval_s: int = Field(default=300, ge=1)
     n_splits: int = Field(default=5, ge=1)
+    # A cursor chain of X stops at a depth limit while tweets remain in a time range. When a chain ends on a
+    # full page and X gives no cursor, the interval is split in half and re-queried, down to
+    # `scheduler_min_interval_s`. This is the depth cap on that division, so it cannot run for ever. 0 turns
+    # the division off.
+    max_interval_depth: int = Field(default=6, ge=0)
     # When every account holds a cooldown, wait up to this many seconds for one to expire before the run ends
     # with AccountPoolExhausted. A cooldown expires, so a short wait finishes a run that would otherwise fail.
     # Set to 0 to fail at once. `pool_wait_poll_s` is the interval between two attempts to lease.

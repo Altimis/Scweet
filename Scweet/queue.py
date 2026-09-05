@@ -6,7 +6,7 @@ import uuid
 
 
 class InMemoryTaskQueue:
-    """Actor-style in-memory queue with delayed retry support."""
+    """In-memory task queue with delayed retry support."""
 
     def __init__(self, *, stop_event: Optional[asyncio.Event] = None):
         self._queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()

@@ -47,7 +47,7 @@ _LEGACY_KEY_ALIASES = {
     "minlikes": "min_likes",
     "minreplies": "min_replies",
     "minretweets": "min_retweets",
-    # Legacy actor-like aliases.
+    # Legacy aliases.
     "query": "search_query",
     "words_and": "all_words",
     "words_or": "any_words",

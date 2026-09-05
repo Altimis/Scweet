@@ -54,8 +54,10 @@ intervals.
 
 ## Two separate faults, and the second is easier
 
-1. **The plan does not divide.** This needs a change in `runner.py` and `scheduler.py`, and it needs a test that
-   asserts the total across several intervals.
+1. **The plan does not divide. Corrected on 2026-09-05.** When a chain ends on a full page with no cursor,
+   `runner.py` continues from the time of the oldest tweet it saw (`narrow_interval`), re-querying only the
+   unfetched older part, and halves the interval only when that time is not usable (`subdivide_interval`).
+   `tests/test_interval_subdivision.py` asserts the total and that the run spends about one request per page.
 2. **`AccountPoolExhausted` ends the run instead of waiting. Corrected on 2026-09-05.** `Runner` now waits up to
    `pool_wait_max_s` for a cooldown to expire and retries, so a run with a small pool finishes.
    Every account held a cooldown at that moment, and

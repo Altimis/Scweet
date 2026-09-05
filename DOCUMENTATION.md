@@ -473,6 +473,7 @@ s = Scweet(
 | `max_account_switches` | `int` | `2` | Max account switches per task |
 | `scheduler_min_interval_s` | `int` | `300` | Minimum time interval split (seconds) |
 | `n_splits` | `int` | `5` | Number of time interval splits for search |
+| `max_interval_depth` | `int` | `6` | How many times an interval may be halved and re-queried when a cursor chain ends while tweets remain. `0` turns the re-division off. |
 | `priority` | `int` | `1` | Task priority |
 | `proxy_check_on_lease` | `bool` | `True` | Verify proxy connectivity before leasing |
 | `proxy_check_url` | `str` | `"https://x.com/robots.txt"` | URL for proxy check |

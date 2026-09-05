@@ -82,10 +82,13 @@ A test for each item asserts the message. Read `tests/AGENTS.md` for the gaps in
       singly between data pages collected 2 of 6 tweets at 1 and all 6 at 3, and 3 stops at a genuine end of 3
       empty pages while 5 wastes 2 more requests. `tests/test_max_empty_pages.py` holds the measurement; a
       mutation to the default fails it.
-- [ ] **Divide an interval that still holds tweets.** `split_time_intervals` runs one time, before the first
-      request, and no interval is divided again. This is the cause of the fill of 23.5%, and it is the largest
-      change in this plan. It needs a test that plans several intervals against a fake page source and asserts
-      the total.
+- [x] **Divide an interval that still holds tweets. Done 2026-09-05.** When a cursor chain ends on a full page
+      with no cursor, X truncated it at its depth limit. `runner.py` then continues from the time of the oldest
+      tweet it saw, re-querying only the older, unfetched part of the range (`narrow_interval`), and halves the
+      interval only when the oldest time is not usable (`subdivide_interval`). Both are bounded by
+      `scheduler_min_interval_s` and `max_interval_depth` (6), and the global set of seen ids drops any overlap.
+      `tests/test_interval_subdivision.py`: 40 tweets return 5 with it off and all 40 with it on in about 8
+      requests, a sparse range does not split, and four mutations each fail a test.
 - [x] **A limit is a floor, not a ceiling. Dropped 2026-09-05.** The overshoot stays. The user owns the data
       and nothing bills per tweet, so an extra tweet that the library already fetched is a gift, not a defect.
       Read `docs/decisions/2026-09-05-a-limit-is-a-floor-not-a-ceiling.md`. This differs from a hosted service
@@ -122,6 +125,13 @@ Each item below is verified absent on 2026-09-04.
 - **A twelfth argument for `Scweet.__init__`.** The constructor already carries 11.
 - **A change to the atomicity of a lease in `repos.py`.** That concern comes from a reading of the code and not
   from a measurement. Nobody ran two processes against one database. Measure it first.
+
+## Milestone C verified live, 2026-09-05
+
+A run of the library on a real query, on 5G, with 15 accounts of the pool: `bitcoin`, 2026-07-01 to 2026-08-01,
+limit 3,000. It delivered **3,080 tweets in 62 seconds**, all unique. The same shape of query filled about 23.5%
+before milestone C. The 103% is the overshoot that a limit keeps, and 3,080 delivered equal to 3,080 unique shows
+the dedup across the divided intervals holds.
 
 ## How to know that the plan worked
 

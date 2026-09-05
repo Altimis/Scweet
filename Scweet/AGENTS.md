@@ -22,11 +22,7 @@ directory.
 
 ## Invariants. A defect in one of these is silent
 
-- **`scheduler.split_time_intervals` runs one time, before the first request.** It creates `n_splits` intervals
-  and no interval is divided again. A worker follows one chain of pages for each interval, and it stops when X
-  sends no cursor, because `should_continue_with_cursor` in `runner.py` reads `continue_with_cursor` from
-  `api_engine.py`, which is `bool(cursor)`. **Measured 2026-09-04: an order of 20,000 tweets over three months
-  delivered a median of 23.5%.** A user sees no message.
+- **`scheduler.split_time_intervals` runs once, and an interval is divided again when a chain truncates.** A cursor chain of X stops at a depth limit while tweets remain. When a chain ends on a full page with no cursor, `runner.py` continues from the time of the oldest tweet it saw (`narrow_interval`), re-querying only the unfetched older part, and halves the interval (`subdivide_interval`) only when that time is not usable. Both are bounded by `scheduler_min_interval_s` and `max_interval_depth`, and the global set of seen ids drops any overlap.
 - **`api_engine.py` parses the answer of X, and X changes it.** A parser that expects a field which X renames
   returns an empty page, and an empty page looks the same as the end of the results. Take every fixture from a
   real response.

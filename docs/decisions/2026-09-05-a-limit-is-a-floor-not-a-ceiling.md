@@ -23,9 +23,6 @@ The user owns the data. The library scrapes with the user's own accounts and pro
 the user. Nothing bills per tweet, so an extra tweet costs the user nothing and it may be useful. To throw away a
 tweet that the library already fetched and parsed is waste.
 
-This differs from a hosted service that bills for each item. There, a limit must bind, because an overshoot is a
-charge the customer did not ask for. The library has no such constraint.
-
 ## What this means for the code
 
 - `search` and `get_profile_tweets` return at least `limit` tweets when the query holds that many, and they may

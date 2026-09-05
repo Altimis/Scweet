@@ -29,7 +29,13 @@ from .http_utils import apply_proxies_to_session, normalize_http_proxies
 from .limiter import TokenBucketLimiter
 from .models import ProfileTimelineRequest, RunStats, SearchRequest, SearchResult
 from .queue import InMemoryTaskQueue
-from .scheduler import build_tasks_for_intervals, split_time_intervals
+from .scheduler import (
+    build_tasks_for_intervals,
+    narrow_interval,
+    parse_tweet_time,
+    split_time_intervals,
+    subdivide_interval,
+)
 
 _TS_FMT = "%Y-%m-%d_%H:%M:%S_UTC"
 _DATE_FMT = "%Y-%m-%d"
@@ -1077,6 +1083,40 @@ class Runner:
                         account_status = 1
                         continue
 
+                    # The chain ended and X gave no cursor. A full last page means X truncated the chain at its
+                    # depth limit while tweets remain in the range, so split the interval and re-query each half.
+                    # A genuine end returns a partial or empty last page, which does not trigger this. The global
+                    # set of seen ids drops the overlap.
+                    if (
+                        not stop_due_to_empty_pages
+                        and not limit_reached
+                        and tweets_count >= api_page_size
+                    ):
+                        # The oldest tweet on this page is the boundary to continue from. X returns newest
+                        # first, so the tweets that remain are older than this. Compare parsed times, because
+                        # the format of a tweet time does not sort as a string.
+                        oldest_seen = None
+                        oldest_dt = None
+                        for _t in tweets:
+                            _ts = self._tweet_time(_t)
+                            _dt = parse_tweet_time(_ts) if _ts else None
+                            if _dt is not None and (oldest_dt is None or _dt < oldest_dt):
+                                oldest_dt = _dt
+                                oldest_seen = _ts
+                        subdivision_tasks = self._build_subdivision_tasks(
+                            task,
+                            min_interval_s=int(_cfg(self.config, "scheduler_min_interval_s", 300)),
+                            max_depth=int(_cfg(self.config, "max_interval_depth", 6)),
+                            oldest_seen=oldest_seen,
+                        )
+                        if subdivision_tasks:
+                            await queue.enqueue(subdivision_tasks)
+                            logger.info(
+                                "Interval split into %d parts after a full page with no cursor account=%s",
+                                len(subdivision_tasks),
+                                account.get("username"),
+                            )
+
                     await queue.ack(task, stats={"pages": 1, "tweets": unique_added})
                     async with stats_lock:
                         stats.tasks_done += 1
@@ -1288,6 +1328,16 @@ class Runner:
         return str(value) if value else None
 
     @staticmethod
+    def _tweet_time(tweet: Any) -> Optional[str]:
+        if tweet is None:
+            return None
+        if isinstance(tweet, dict):
+            value = tweet.get("timestamp") or tweet.get("created_at")
+        else:
+            value = getattr(tweet, "timestamp", None) or getattr(tweet, "created_at", None)
+        return str(value) if value else None
+
+    @staticmethod
     def _final_status(
         stats: RunStats,
         worker_results: list[Any],
@@ -1376,6 +1426,54 @@ class Runner:
         continuation.pop("lease_id", None)
         continuation.pop("lease_worker_id", None)
         return continuation
+
+    @staticmethod
+    def _build_subdivision_tasks(
+        task: dict[str, Any],
+        *,
+        min_interval_s: int,
+        max_depth: int,
+        oldest_seen: Any = None,
+    ) -> list[dict[str, Any]]:
+        """Continue a truncated interval, from the oldest tweet if possible, or by a half.
+
+        A cursor chain ended while the interval still held tweets. The tweets it missed are older than the
+        oldest one it returned, so `narrow_interval` re-queries only `[since, oldest]`, which has almost no
+        overlap. If the time of the oldest tweet is not usable, `subdivide_interval` re-queries each half
+        instead, and the global set of seen ids drops the overlap. `interval_depth` and the floor bound both.
+        """
+        depth = int(task.get("interval_depth", 0) or 0)
+        if max_depth <= 0 or depth >= max_depth:
+            return []
+        query = task.get("query") or {}
+        if not isinstance(query, dict):
+            return []
+        since = query.get("since")
+        until = query.get("until")
+        if not isinstance(since, str) or not isinstance(until, str):
+            return []
+        try:
+            ranges = narrow_interval(since, until, oldest_seen, min_interval_s)
+            if not ranges:
+                ranges = subdivide_interval(since, until, min_interval_s)
+        except Exception:
+            return []
+        out: list[dict[str, Any]] = []
+        for half_since, half_until in ranges:
+            child = dict(task)
+            child_query = dict(query)
+            child_query["since"] = half_since
+            child_query["until"] = half_until
+            child_query["cursor"] = None
+            child["query"] = child_query
+            child["interval_depth"] = depth + 1
+            child["empty_pages_count"] = 0
+            child["task_id"] = str(uuid.uuid4())
+            child.pop("cursor_history", None)
+            child.pop("lease_id", None)
+            child.pop("lease_worker_id", None)
+            out.append(child)
+        return out
 
     async def _close_account_session(self, session: Any) -> None:
         if self.account_session_builder is not None and hasattr(self.account_session_builder, "close"):
