@@ -57,3 +57,10 @@ These are measured facts about this suite, not opinions.
 2. whether a limit binds, in `runner.py`
 3. the health of an account and the length of a cooldown, in `repos.py` and `cooldown.py`
 4. the parse of a page, in `api_engine.py`, because an empty parse looks the same as the end of the data
+
+## Capturing a log in a test
+
+Do not use `caplog` for a Scweet log. `Scweet/logging_config.py` sets `propagate = False` on the `Scweet`
+logger, and `caplog` attaches to the root logger, so it captures nothing once logging is configured. A test that
+uses `caplog` passes on a fresh process and fails in CI. Attach a handler to the named logger instead. Read the
+`runner_logs` fixture in `tests/test_swallowed_failures.py`.
