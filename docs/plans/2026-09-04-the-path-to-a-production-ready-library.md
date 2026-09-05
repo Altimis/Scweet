@@ -106,7 +106,7 @@ Each item below is verified absent on 2026-09-04.
   and a search of the issues of this repository found 0 requests for one. A control search for "proxy" and
   "docker" returned results, so the absence is real. A user supplies their own accounts and their own proxies,
   and that is the design.
-- **A twelfth argument for `Scweet.__init__`.** Read `strategy/2026-04-10-scweet-simple-surface-plan.md`.
+- **A twelfth argument for `Scweet.__init__`.** The constructor already carries 11.
 - **A change to the atomicity of a lease in `repos.py`.** That concern comes from a reading of the code and not
   from a measurement. Nobody ran two processes against one database. Measure it first.
 

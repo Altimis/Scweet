@@ -9,8 +9,6 @@ The engineering documents. Keep each document short and correct, or delete it.
 | `plans/` | The plan for a piece of work. The name is `YYYY-MM-DD-NNN-<type>-<name>.md`. The type is `feat`, `fix`, `chore`, or `spike`. Git records the progress, not the body of the plan. |
 | `reference/` | A long description of how something works. Delete reference material that is no longer correct rather than keep it. |
 
-`strategy/` holds the older notes about the shape of the product. Read
-`strategy/2026-04-10-scweet-simple-surface-plan.md` before you change a public signature.
 
 ## The rule that matters most
 

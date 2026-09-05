@@ -13,8 +13,6 @@ come before a feature.
 - `Scweet/` — the importable package. Every module is flat inside it, with no sub-package.
 - `tests/` — 21 files and about 254 tests. A pytest marker selects the level.
 - `examples/` — short scripts that a reader can run.
-- `strategy/` — the notes about the shape of the product. Read
-  `strategy/2026-04-10-scweet-simple-surface-plan.md` before you change a public signature.
 - `docs/` — the engineering documents. Read `docs/AGENTS.md`.
 - `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.12.
 
@@ -75,8 +73,8 @@ python -m Scweet --help                       # the CLI
 
 - **All configuration is in `Scweet/config.py`, in one `ScweetConfig` class.** Each field is flat and it holds
   a default. Do not put a fixed parameter value in `runner.py` or `api_engine.py`.
-- **Do not add an argument to `Scweet.__init__`.** The constructor already carries 11. Read
-  `strategy/2026-04-10-scweet-simple-surface-plan.md`: the plan is to narrow this surface and not to grow it.
+- **Do not add an argument to `Scweet.__init__`.** The constructor already carries 11. The plan is to narrow
+  this surface and not to grow it.
 - **A public method returns data. It does not print and it does not exit.** A caller decides what to do with an
   error.
 - **An error message names a cause and an action.** "No eligible accounts" tells a user nothing they can act

@@ -34,3 +34,6 @@ tools/
 
 # Local notes, never published
 .private/
+
+# Local notes, not part of the package
+strategy/

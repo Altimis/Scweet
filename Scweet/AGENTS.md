@@ -44,8 +44,7 @@ directory.
   2.0. X counts the total inside a window of 15 minutes, so an even pace makes a short run slow and it protects
   nothing. Measured on a comparable engine: an even pace made a run of 400 tweets take 373 seconds in place of
   41 seconds.
-- **`client.py` carries 11 constructor arguments already.** `strategy/2026-04-10-scweet-simple-surface-plan.md`
-  says to narrow this surface. Do not add a twelfth.
+- **`client.py` carries 11 constructor arguments already.** Narrow this surface. Do not add a twelfth.
 - **There is no `py.typed` in this directory.** Every annotation in these files is invisible to mypy and to
   pyright in a consumer project.
 
@@ -70,5 +69,5 @@ directory.
 | what a page contains | `api_engine.py` |
 | a default | `config.py` only |
 | the health of an account | `repos.py` and `cooldown.py` |
-| the public surface | `client.py`, and read the strategy note first |
+| the public surface | `client.py`. Narrow it, do not grow it |
 | the search string | `query.py` |
