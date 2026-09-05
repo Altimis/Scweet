@@ -37,6 +37,9 @@ directory.
   statement. A read and then a write lets two workers take the same account.
 - **A cooldown that is too long removes an account that a user paid for.** `auth_cooldown_s` defaults to 30
   days. Apply that only when the credentials are proven dead, which means a self-lookup that answers 401 or 403.
+  `_map_graphql_errors_to_status` decides this. It reads `AUTH_FAILURE_MESSAGES` and `AUTH_FAILURE_CODES`, and a
+  phrase or a code there must describe the session and never one tweet. Measured 2026-09-04: code 89 is
+  "Invalid or expired token" and code 32 is "Could not authenticate you".
 - **`limiter.py` paces requests evenly.** `refill_rate = requests_per_min / 60` and `min_delay_s` defaults to
   2.0. X counts the total inside a window of 15 minutes, so an even pace makes a short run slow and it protects
   nothing. Measured on a comparable engine: an even pace made a run of 400 tweets take 373 seconds in place of

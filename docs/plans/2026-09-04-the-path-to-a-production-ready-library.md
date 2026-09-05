@@ -55,11 +55,12 @@ A test for each item asserts the message. Read `tests/AGENTS.md` for the gaps in
 
 ## Phase 2: stop the losses that cost an account
 
-- [ ] **Match a whole word before a 30-day block.** `api_engine.py:2123` tests `"auth" in message`, and the
-      word `author` contains `auth`. So `"Tweet author restricted who can reply"` maps to 401, and `cooldown.py`
-      gives a 401 a cooldown of `auth_cooldown_s`, which defaults to 30 days. Require the evidence of a real
-      failure of authentication: a self-lookup for the account that answers 401 or 403. A message inside a page
-      of tweets is not evidence. No test covers that function today.
+- [x] **Match a whole word before a 30-day block.** Done 2026-09-04. `api_engine.py` tested `"auth" in message`,
+      and the word `author` contains `auth`, so `"Tweet author restricted who can reply"` mapped to 401 and
+      `cooldown.py` gave the account 30 days. `AUTH_FAILURE_MESSAGES` now holds a phrase only when X sends it for
+      the whole session, and `AUTH_FAILURE_CODES` holds the codes 32 and 89 from captured answers of X. The same
+      work corrected the opposite fault: the real message of a dead session mapped to nothing.
+      `tests/test_graphql_error_mapping.py` holds 21 tests, and 4 mutations each fail one.
 - [ ] **A run waits for a cooldown instead of ending.** `AccountPoolExhausted` ends a run when every account
       holds a cooldown, and a cooldown expires. Add a bounded wait. This removes the run that returned 0.
 

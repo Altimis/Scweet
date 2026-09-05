@@ -32,10 +32,17 @@ So a message about one tweet in one page removes an account from the pool for a 
 shape for a normal restricted reply, which is a common condition and not an error. A user who buys accounts pays
 for this.
 
-**No test covers `_map_graphql_errors_to_status`.**
+**Corrected on 2026-09-04.** `tests/test_graphql_error_mapping.py` holds 21 tests, and the function had none
+before. `AUTH_FAILURE_MESSAGES` now holds a phrase only when X sends it for the whole session, and
+`AUTH_FAILURE_CODES` holds the numeric codes 32 and 89, each from a captured answer of X.
 
-The correction is to match a whole word and to require the evidence of a real authentication failure. A 401 from
-a self-lookup for the account itself is reliable. A message inside a page of tweets is not.
+Two phrases that look correct stay out. X sends "Not authorized to view this Tweet" and
+"Authorization: Denied by access control" for one tweet of a protected account, so a list that holds them repeats
+the defect in a narrow form.
+
+The same measurement found the opposite fault. `{"message": "Invalid or expired token", "code": 89}` is the real
+answer of X for a dead session, and it mapped to nothing, so an account with dead credentials kept its status and
+the pool leased it again.
 
 ## 2. The first empty page ends an interval
 

@@ -53,6 +53,11 @@ Scweet.search()            the public method, in client.py
 - **An account costs money and a user cannot replace one quickly.** Any code that gives an account a long
   cooldown must first separate a dead account from a bad request. When the cause is unknown, apply a short
   cooldown.
+- **A phrase in `AUTH_FAILURE_MESSAGES` describes the session and never one tweet.** `api_engine.py` tested the
+  substring `"auth"`, and the word `author` contains it, so `"Tweet author restricted who can reply"` mapped to
+  401 and `cooldown.py` removed the account for 30 days. For the same reason the list holds no `"not authorized"`
+  and no `"authorization: denied"`: X sends both for one tweet of a protected account. A code in
+  `AUTH_FAILURE_CODES` needs a captured answer of X. The set holds 32 and 89 only.
 - **The package ships no `py.typed`.** Therefore mypy and pyright see no type from Scweet, whatever the
   annotations in the source say.
 

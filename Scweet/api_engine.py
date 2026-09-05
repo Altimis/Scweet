@@ -22,6 +22,27 @@ from .query import build_effective_search_query, normalize_search_input
 
 JSON_DECODE_STATUS = 598
 NETWORK_ERROR_STATUS = 599
+
+# A phrase that proves the session of the account is dead. A 401 costs the account `auth_cooldown_s`, which
+# defaults to 30 days, so each phrase must describe the session and never a single tweet. Not the substring
+# "auth", because the word "author" contains it: X sends "Tweet author restricted who can reply" for a normal
+# restricted reply, and that removed an account of the user for a month.
+#
+# Not "not authorized" and not "authorization: denied". X sends both for one tweet of a protected account, so
+# they describe the tweet and not the session.
+AUTH_FAILURE_MESSAGES = (
+    "invalid or expired token",
+    "could not authenticate you",
+    "bad authentication data",
+    "unauthorized",
+    "authorization failed",
+)
+
+# The numeric codes of X for a dead session. Each one comes from a captured answer of X on 2026-09-04: code 89
+# is "Invalid or expired token" from a self-lookup with expired cookies, and code 32 is "Could not authenticate
+# you" from a request with a bad bearer token. The code is the durable signal, because X can reword a message.
+# Add a code here only with a captured answer, because a wrong code costs the account 30 days.
+AUTH_FAILURE_CODES = frozenset({32, 89})
 HTTP_MODE_AUTO = "auto"
 HTTP_MODE_ASYNC = "async"
 HTTP_MODE_SYNC = "sync"
@@ -2115,14 +2136,17 @@ class ApiEngine:
             message = str(err.get("message") or "").lower()
             extensions = err.get("extensions") or {}
             code = str(extensions.get("code") or extensions.get("errorType") or "").upper()
+            numeric_code = err.get("code")
+            if not isinstance(numeric_code, int):
+                raw = extensions.get("code")
+                numeric_code = raw if isinstance(raw, int) else None
 
             if "rate limit" in message or "too many requests" in message or code in {"RATE_LIMITED", "RATE_LIMIT"}:
                 return 429
             if (
-                "authorization" in message
-                or "auth" in message
-                or "unauthorized" in message
+                any(phrase in message for phrase in AUTH_FAILURE_MESSAGES)
                 or code in {"UNAUTHORIZED", "AUTHENTICATION_ERROR"}
+                or (numeric_code is not None and numeric_code in AUTH_FAILURE_CODES)
             ):
                 return 401
             if "forbidden" in message or "suspended" in message or code in {"FORBIDDEN", "ACCOUNT_SUSPENDED"}:

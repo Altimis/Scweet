@@ -1,4 +1,4 @@
-The tests for the package. 21 files and about 254 tests. They pass in about 11 seconds.
+The tests for the package. 22 files and about 275 tests. They pass in about 12 seconds.
 
 > This document uses ASD-STE100 Simplified Technical English.
 
