@@ -100,8 +100,13 @@ return True
 The write can fail and the next line reports success, and the function returns `True`. An operator who reads the
 log believes the pool holds a repaired account.
 
-An AST walk of the package counts **32 handlers that only `pass`**. Each one converts a fault into a wrong
+An AST walk of the package counted **32 handlers that only `pass`**. Each one converts a fault into a wrong
 result. The one above is the worst, because it also prints a false success.
+
+**Corrected on 2026-09-05.** `_attempt_account_repair` now returns False and logs a warning when the write of the
+account fails, instead of logging success. The swallowed `release` in `api_engine.py` now logs a warning, because
+a failed release drops the account from the pool with no record. The count of bare `except: pass` handlers is 30.
+`tests/test_swallowed_failures.py` holds 5 tests, and a mutation that restores the swallow fails 3 of them.
 
 ## What these four have in common
 

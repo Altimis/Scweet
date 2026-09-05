@@ -477,8 +477,15 @@ class Runner:
                 normalized = normalize_account_record({"username": username or key, "cookies": cookies})
                 try:
                     self.accounts_repo.upsert_account(normalized)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    # The write is the repair. A swallowed error here left the pool without the account and
+                    # the next line logged success, so an operator believed the account was back.
+                    logger.warning(
+                        "Account repair failed to write username=%s: %s",
+                        username or "<unknown>",
+                        exc,
+                    )
+                    return False
                 logger.info("Account repair succeeded via auth_token username=%s", username or "<unknown>")
                 return True
 

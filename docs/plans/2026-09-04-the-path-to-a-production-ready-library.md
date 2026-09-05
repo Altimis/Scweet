@@ -47,9 +47,10 @@ This phase changes no default. It adds a message. A user must learn what the lib
 - [ ] **A run reports the fill.** When a caller asks for N and the run returns fewer, say the number and the
       reason. A user who asks for 20,000 and receives 4,760 must not believe that X holds 4,760.
 - [ ] **A page that is cut says so.** See Phase 3.
-- [ ] **A failure logs as a failure.** `runner.py:479` swallows a failed `upsert_account`, then logs
-      `"Account repair succeeded"` and returns `True`. An AST walk counts 32 handlers in the package that only
-      `pass`. Correct this one first, because it prints a false success.
+- [x] **A failure logs as a failure.** Done 2026-09-05. `_attempt_account_repair` swallowed a failed
+      `upsert_account`, then logged `"Account repair succeeded"` and returned `True`. It now returns `False` and
+      logs a warning, and the swallowed `release` in `api_engine.py` logs a warning too. The count of bare
+      `except: pass` handlers is 30. `tests/test_swallowed_failures.py` holds 5 tests; a mutation fails 3.
 
 A test for each item asserts the message. Read `tests/AGENTS.md` for the gaps in the suite.
 

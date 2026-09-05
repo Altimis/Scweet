@@ -1529,8 +1529,10 @@ class ApiEngine:
                 fields_to_set["last_error_code"] = None
             try:
                 await self._maybe_await(self.accounts_repo.release(lease_id, fields_to_set=fields_to_set, fields_to_inc={}))
-            except Exception:
-                pass
+            except Exception as exc:
+                # A failed release leaves the account marked busy until its lease expires, so it drops from
+                # the pool with no record. Log it: an operator who sees the pool shrink needs the cause.
+                logger.warning("Failed to release lease_id=%s: %s", lease_id, exc)
 
     @staticmethod
     def _is_handoff_eligible_status(status_code: int) -> bool:

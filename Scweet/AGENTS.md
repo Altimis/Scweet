@@ -54,7 +54,10 @@ directory.
   change it and a reader cannot find it.
 - **A module raises. It does not print and it does not exit.** `exceptions.py` holds the types. A caller
   decides.
-- **An exception must not be swallowed.** `except Exception: pass` converts a fault into a wrong result, and a
+- **An exception must not be swallowed, and a write that fails must not log success.** `_attempt_account_repair`
+  in `runner.py` returns False and logs a warning when `upsert_account` fails, and a failed `release` in
+  `api_engine.py` logs a warning, because it drops the account from the pool. 30 bare `except: pass` handlers
+  remain; correct one when you touch its file. `except Exception: pass` converts a fault into a wrong result, and a
   wrong result reaches the user as missing data with no cause.
 - **Never log a secret.** An `auth_token`, a cookie, a `ct0`, a password, and a 2FA secret each belong to a real
   account. Log a username and a status.

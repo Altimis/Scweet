@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Account repair no longer reports success when the write fails. `_attempt_account_repair` returned `True` and logged "repair succeeded" even when the database write raised, so an operator believed the pool held a repaired account that was not there. It now returns `False` and logs a warning. A failed account release also logs a warning instead of passing silently, because a failed release drops the account from the pool with no record.
+
 ## [5.3.1] - 2026-05-19
 
 ### Fixed
