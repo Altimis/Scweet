@@ -15,6 +15,36 @@ import pytest
 from Scweet.runner import Runner
 
 
+class _ListHandler(logging.Handler):
+    """Capture records straight off a named logger.
+
+    `caplog` attaches to the root logger, and `Scweet/logging_config.py` sets `propagate = False` on the Scweet
+    logger, so a record never reaches the root once logging is configured. A handler on the logger itself
+    captures the record whatever the propagation setting is.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.records = []
+
+    def emit(self, record):
+        self.records.append(record)
+
+
+@pytest.fixture()
+def runner_logs():
+    logger = logging.getLogger("Scweet.runner")
+    handler = _ListHandler()
+    logger.addHandler(handler)
+    previous_level = logger.level
+    logger.setLevel(logging.DEBUG)
+    try:
+        yield handler.records
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(previous_level)
+
+
 def _runner_with_repo(repo):
     return Runner(
         config=SimpleNamespace(
@@ -65,26 +95,24 @@ class TestAFailedRepairDoesNotReportSuccess:
 
         assert repaired is False, "a repair whose write failed must not return True"
 
-    def test_a_failed_write_does_not_log_success(self, fake_cookies, caplog):
+    def test_a_failed_write_does_not_log_success(self, fake_cookies, runner_logs):
         runner = _runner_with_repo(_RepoThatFailsToWrite())
         account = {"username": "acct-a", "auth_token": "tok-a"}
 
-        with caplog.at_level(logging.INFO):
-            asyncio.run(runner._attempt_account_repair(account, 401))
+        asyncio.run(runner._attempt_account_repair(account, 401))
 
-        assert not any("repair succeeded" in r.message.lower() for r in caplog.records), (
+        assert not any("repair succeeded" in r.getMessage().lower() for r in runner_logs), (
             "the log claimed the repair succeeded after the write failed"
         )
 
-    def test_a_failed_write_logs_the_failure(self, fake_cookies, caplog):
+    def test_a_failed_write_logs_the_failure(self, fake_cookies, runner_logs):
         runner = _runner_with_repo(_RepoThatFailsToWrite())
         account = {"username": "acct-a", "auth_token": "tok-a"}
 
-        with caplog.at_level(logging.WARNING):
-            asyncio.run(runner._attempt_account_repair(account, 401))
+        asyncio.run(runner._attempt_account_repair(account, 401))
 
         assert any(
-            r.levelno >= logging.WARNING and "acct-a" in r.message for r in caplog.records
+            r.levelno >= logging.WARNING and "acct-a" in r.getMessage() for r in runner_logs
         ), "a failed write left no warning, so an operator cannot see the lost account"
 
 
@@ -99,12 +127,11 @@ class TestARealRepairStillSucceeds:
         assert repaired is True
         assert len(repo.written) == 1
 
-    def test_a_successful_write_logs_success(self, fake_cookies, caplog):
+    def test_a_successful_write_logs_success(self, fake_cookies, runner_logs):
         repo = _RepoThatWrites()
         runner = _runner_with_repo(repo)
         account = {"username": "acct-b", "auth_token": "tok-b"}
 
-        with caplog.at_level(logging.INFO):
-            asyncio.run(runner._attempt_account_repair(account, 401))
+        asyncio.run(runner._attempt_account_repair(account, 401))
 
-        assert any("repair succeeded" in r.message.lower() for r in caplog.records)
+        assert any("repair succeeded" in r.getMessage().lower() for r in runner_logs)
