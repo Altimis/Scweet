@@ -31,7 +31,11 @@ class ScweetConfig(BaseModel):
     # Rate limiting
     daily_requests_limit: int = Field(default=30, ge=1)
     daily_tweets_limit: int = Field(default=600, ge=1)
-    max_empty_pages: int = Field(default=1, ge=1)
+    # X sends an empty page in the middle of a chain while results remain, so a value of 1 ends an interval at
+    # the first gap and loses the rest. Measured on a fixture where empty pages fall singly between data pages:
+    # a value of 1 collected 2 of 6 tweets, and a value of 3 collected all 6 while it stopped at a genuine end
+    # of 3 empty pages. A value of 3 reads past a stray empty page and wastes at most 3 requests at a true end.
+    max_empty_pages: int = Field(default=3, ge=1)
     api_page_size: int = Field(default=20, ge=1, le=100)
     # X counts requests per account inside a window of about 15 minutes. The limiter holds this many requests
     # for each account and refills over `rate_limit_window_s`. A short run bursts its budget and waits nothing;

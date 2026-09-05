@@ -445,7 +445,7 @@ s = Scweet(
 |-------|------|---------|-------------|
 | `daily_requests_limit` | `int` | `30` | Max API requests per account per day |
 | `daily_tweets_limit` | `int` | `600` | Max tweets per account per day |
-| `max_empty_pages` | `int` | `1` | Stop after N consecutive empty result pages |
+| `max_empty_pages` | `int` | `3` | Stop only after N **consecutive** empty result pages. X sends a stray empty page mid-stream, so a value of 1 loses the rest of the results. |
 | `api_page_size` | `int` | `20` | Tweets per API page (1-100) |
 | `window_request_limit` | `int` | `50` | Requests allowed per account per rate-limit window. X counts the total in a window, so a short run bursts this budget and waits nothing. |
 | `rate_limit_window_s` | `float` | `900.0` | Length of the rate-limit window in seconds (X uses ~15 minutes) |

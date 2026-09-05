@@ -49,6 +49,10 @@ the pool leased it again.
 `config.py:34` sets `max_empty_pages` to 1. X sends an empty page in the middle of a chain while results remain,
 so one gap ends the interval and the run reports success.
 
+**Corrected on 2026-09-05: the default is now 3.** A fixture where empty pages fall singly between data pages
+collected 2 of 6 tweets at the value 1 and all 6 at the value 3, while it stopped at a genuine end of 3 empty
+pages. Read `tests/test_max_empty_pages.py`.
+
 `runner.py` then logs `"Search done (no more results)"`, which is false: the stop came from our threshold and not
 from X.
 

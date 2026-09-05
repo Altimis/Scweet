@@ -78,9 +78,10 @@ A test for each item asserts the message. Read `tests/AGENTS.md` for the gaps in
       bursts and a long run stays inside the window. `min_delay_s` defaults to 0. `tests/test_cooldown.py` holds
       the burst-then-pace test; two mutations (refill over 60s, start empty) each fail it.
 
-- [ ] **Raise the default of `max_empty_pages`.** `config.py:34` sets 1, so the first gap in a chain ends an
-      interval. A measurement on one fixed corpus gave 500 tweets at the default and 16,100 at 5. Choose the new
-      default from a measurement and record the number.
+- [x] **Raise the default of `max_empty_pages`. Done 2026-09-05, now 3.** A fixture where empty pages fall
+      singly between data pages collected 2 of 6 tweets at 1 and all 6 at 3, and 3 stops at a genuine end of 3
+      empty pages while 5 wastes 2 more requests. `tests/test_max_empty_pages.py` holds the measurement; a
+      mutation to the default fails it.
 - [ ] **Divide an interval that still holds tweets.** `split_time_intervals` runs one time, before the first
       request, and no interval is divided again. This is the cause of the fill of 23.5%, and it is the largest
       change in this plan. It needs a test that plans several intervals against a fake page source and asserts
