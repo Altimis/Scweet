@@ -31,3 +31,6 @@ Scweet/debug.log
 # Not tracked in v5:
 src/
 tools/
+
+# Local notes, never published
+.private/
