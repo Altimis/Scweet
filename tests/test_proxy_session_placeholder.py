@@ -52,6 +52,16 @@ class TestTheSessionPlaceholder:
         second = _build(builder, "alice")
         assert first != second, "a session built again must get a new session token"
 
+    def test_the_token_is_letters_and_digits_only(self):
+        """The strictest provider accepts only letters and digits in a session name."""
+        import re
+
+        builder = _builder()
+        session, _meta = builder.build(_account("weird.user-name!"))
+        url = session.proxies.get("http", "")
+        token = url.split("session-")[1].split(":")[0]
+        assert re.fullmatch(r"[A-Za-z0-9]+", token), f"session token must be alphanumeric; got {token!r}"
+
     def test_a_proxy_without_the_placeholder_passes_unchanged(self):
         builder = AccountSessionBuilder(session_factory=_FakeSession, proxy="http://u:p@proxy.example.com:8000")
         url = _build(builder, "alice")

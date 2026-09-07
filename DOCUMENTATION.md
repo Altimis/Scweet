@@ -67,7 +67,7 @@ You control how each account reaches the network. There are four modes:
 
 1. **No proxy.** Requests go direct.
 2. **One global proxy.** Pass `proxy="http://user:pass@host:port"`. Every account shares it.
-3. **One proxy session per account.** Put `{session}` in the URL: `proxy="http://user,session-{session}:pass@host:port"`. Each account session replaces the placeholder with a unique token, so a rotating provider pins one exit IP per account. A session that is built again after a transport failure gets a new token and a new exit IP, so a retry recovers instead of reaching the same dead exit. Use the placeholder syntax of your provider around `{session}`.
+3. **One proxy session per account.** Put `{session}` in the URL: `proxy="http://user,session-{session}:pass@host:port"`. Each account session replaces the placeholder with a unique token (letters and digits only), so a rotating provider pins one exit IP per account. A session that is built again after a transport failure gets a new token and a new exit IP, so a retry recovers instead of reaching the same dead exit. The replacement is a plain string substitution, so it works with any provider that names the session inside the URL — write your provider's own syntax around `{session}` (for example `...-session-{session}` or `...-sessid-{session}`). A provider that pins a session by port instead of by name needs mode 4.
 4. **A proxy per account.** Set `"proxy"` on the account record (in the cookies JSON, or with `set_account_proxy`). It overrides the global proxy for that account, and it can also contain `{session}`.
 
 ### Option C: inline cookies

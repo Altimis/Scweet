@@ -103,9 +103,9 @@ def _fill_proxy_session_placeholder(proxy: Any, account: Mapping[str, Any]) -> A
     The random part makes a rebuilt session reach a new exit IP, so a retry does not repeat a dead exit.
     """
     def _token() -> str:
-        # Providers restrict the session name; keep only word characters and ._~ from the username.
-        name = re.sub(r"[^\w._~]", "", str(account.get("username") or "")) or "acct"
-        return f"{name}_{uuid.uuid4().hex[:8]}"
+        # Letters and digits only: the strictest session-name charset any provider enforces.
+        name = re.sub(r"[^A-Za-z0-9]", "", str(account.get("username") or "")) or "acct"
+        return f"{name}{uuid.uuid4().hex[:8]}"
 
     if isinstance(proxy, str) and "{session}" in proxy:
         return proxy.replace("{session}", _token())
