@@ -189,29 +189,7 @@ For multi-account runs, use `--cookies-file cookies.json`.
 
 For higher throughput and reduced ban risk, use multiple dedicated accounts with per-account proxies.
 
-Running Scweet locally at any real volume usually means dedicated accounts and proxies. You can use a single proxy, a rotating proxy, or assign one per account.
-
-<table>
-<tr>
-<td>
-
-<p><strong>Need proxies for local Scweet?</strong></p>
-
-<p>
-<a href="https://www.webshare.io/?referral_code=kdgjcc09945q">Webshare</a> is a practical option for dedicated or rotating proxies.
-</p>
-
-<p align="center">
-  <a href="https://www.webshare.io/?referral_code=kdgjcc09945q">
-    <img alt="Get proxies on Webshare" src="https://img.shields.io/badge/Get%20proxies-Webshare-1F8BFF?style=for-the-badge">
-  </a>
-</p>
-
-<p>Disclosure: this is an affiliate link.</p>
-
-</td>
-</tr>
-</table>
+Running Scweet locally at any real volume usually means dedicated accounts and proxies. You can use a single proxy, a rotating proxy, or assign one per account. On a rotating provider, put `{session}` in the proxy URL to give each account its own session — see "Proxy modes" in DOCUMENTATION.md.
 
 **`cookies.json` format:**
 
