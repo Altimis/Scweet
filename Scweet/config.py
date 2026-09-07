@@ -46,6 +46,12 @@ class ScweetConfig(BaseModel):
     # An optional floor between two requests from one account. 0 adds no delay. X counts the total in a window,
     # not the gap, so a floor is not needed to respect the limit; it exists only for a caller who wants one.
     min_delay_s: float = Field(default=0.0, ge=0.0)
+    # A margin on the rate-limit window. When the header `x-rate-limit-remaining` falls to this value or below,
+    # the account hands its cursor to a fresh account and rests until its window resets. This stops the account
+    # a few requests before X returns 429, because a 429 loses the page and the run must retry it. Measured
+    # 2026-09-06: a live 20,000-tweet order lost about 10% of the data to 429s that a margin prevents. 0 keeps
+    # the old behaviour, which hands off only when the window is fully spent.
+    rate_limit_min_remaining: int = Field(default=2, ge=0)
 
     # Advanced
     enable_wal: bool = True

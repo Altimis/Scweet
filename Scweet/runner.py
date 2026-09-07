@@ -781,6 +781,7 @@ class Runner:
 
         window_request_limit = int(_cfg(self.config, "window_request_limit", 50))
         rate_limit_window_s = float(_cfg(self.config, "rate_limit_window_s", 900.0))
+        rate_limit_min_remaining = int(_cfg(self.config, "rate_limit_min_remaining", 2))
         min_delay_s = float(_cfg(self.config, "min_delay_s", 0.0))
         api_page_size = max(1, min(int(_cfg(self.config, "api_page_size", 20)), 100))
         limiter = TokenBucketLimiter(
@@ -967,7 +968,15 @@ class Runner:
                 if response_headers:
                     last_headers = response_headers
                 effective_status_code = effective_status_with_rate_limit_headers(raw_status_code, response_headers)
-                preemptive_rate_limited = raw_status_code == 200 and effective_status_code == 429
+                # Hand off a few requests before X returns 429. A 429 loses the page and forces a retry, so the
+                # run stops the account at a margin above zero (see `rate_limit_min_remaining`) and rests it
+                # until its window resets. The account's cursor continues on a fresh account.
+                remaining = parse_rate_limit_remaining(response_headers)
+                preemptive_rate_limited = (
+                    raw_status_code == 200
+                    and remaining is not None
+                    and remaining <= rate_limit_min_remaining
+                )
                 next_cursor = (response or {}).get("cursor")
 
                 tweets = self._extract_tweets(response)
@@ -1084,7 +1093,9 @@ class Runner:
                     if continuation_task is not None:
                         await queue.enqueue([continuation_task])
                         if preemptive_rate_limited:
-                            account_status = effective_status_code
+                            # Rest this account until its window resets. `compute_cooldown` reads
+                            # `x-rate-limit-reset` for status 429. The cursor already went to the queue above.
+                            account_status = 429
                             break
                         account_status = 1
                         continue
@@ -1127,7 +1138,8 @@ class Runner:
                     async with stats_lock:
                         stats.tasks_done += 1
                     if preemptive_rate_limited:
-                        account_status = effective_status_code
+                        # Rest this account until its window resets, so it is not re-leased into a 429.
+                        account_status = 429
                         break
                     account_status = 1
                     if limit_reached:
