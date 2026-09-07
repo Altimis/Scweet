@@ -13,11 +13,8 @@ class InMemoryTaskQueue:
         self._pending_delays = 0
         self._pending_tasks: set[asyncio.Task] = set()
         self._stop_event = stop_event
-        # The set of workers that hold a task now. A worker that finds the queue empty must not exit while
-        # another worker still holds a task, because that task can enqueue a continuation or a split of an
-        # interval. If an idle worker exits too soon, the work of a truncated interval falls to the few workers
-        # that survive, and each of those exhausts the request budget of its account. The run ends only when the
-        # queue is empty, no delayed task waits, and no worker holds a task.
+        # Workers that hold a task now. An idle worker must not exit while one of these can still enqueue a
+        # continuation; the run ends only when the queue is empty, no delay waits, and this set is empty.
         self._active_workers: set[str] = set()
 
     async def enqueue(self, tasks: list[dict]) -> None:
@@ -46,11 +43,7 @@ class InMemoryTaskQueue:
             return task
 
     def release_worker(self, worker_id: str) -> None:
-        """Drop a worker from the active set when it exits its loop.
-
-        A worker that leaves the loop on a break, a fatal error, or a cooldown still holds its last task in the
-        active set. It must leave the set, or the other workers wait for ever for it to finish.
-        """
+        """Drop an exiting worker from the active set, or the other workers wait for ever for it."""
         self._active_workers.discard(worker_id)
 
     async def ack(self, task: dict, stats: Optional[dict] = None) -> bool:

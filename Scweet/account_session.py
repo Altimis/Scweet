@@ -98,13 +98,9 @@ def _record_get(record: Mapping[str, Any], *keys: str) -> Any:
 
 
 def _fill_proxy_session_placeholder(proxy: Any, account: Mapping[str, Any]) -> Any:
-    """Replace `{session}` in a proxy value with a token unique to this account and this build.
+    """Replace `{session}` with a token unique to this account and this build.
 
-    A rotating proxy provider pins one exit IP to a session name inside the proxy URL. With one static URL,
-    every account shares one exit IP, and when that IP dies, every retry dies with it, because the retry
-    reaches the same exit. The token holds the account name, so each account keeps its own exit IP for the
-    life of one session. The token also holds a random part, so a session that is built again after a failure
-    gets a new exit IP. A proxy without the placeholder passes through unchanged.
+    The random part makes a rebuilt session reach a new exit IP, so a retry does not repeat a dead exit.
     """
     def _token() -> str:
         # Providers restrict the session name; keep only word characters and ._~ from the username.

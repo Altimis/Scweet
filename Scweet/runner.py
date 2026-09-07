@@ -229,11 +229,8 @@ class Runner:
             n_intervals = max(1, int(_cfg(self.config, "n_splits", 1)))
             min_interval_s = max(1, int(_cfg(self.config, "scheduler_min_interval_s", 300)))
 
-            # Acquire the accounts before the run splits the time range. The number of intervals must be at
-            # least the number of accounts, so every account gets initial work. A run that splits into fewer
-            # intervals than accounts leaves the extra accounts idle, and each active account then exhausts its
-            # request budget on a dense interval. The narrowing of a truncated interval is serial, so the split
-            # is the only source of parallelism across accounts.
+            # Lease before the split: the continuation of an interval is serial, so the split is the only
+            # source of parallelism across accounts, and it must give every account initial work.
             concurrency = max(1, int(_cfg(self.config, "concurrency", n_intervals or 1)))
             workers_requested = concurrency
             accounts = await self._acquire_leases_with_wait(workers_requested, run_id)
@@ -262,8 +259,7 @@ class Runner:
                     account.get("lease_id"),
                 )
 
-            # Split into at least one interval per leased account. split_time_intervals still caps the count so
-            # no interval falls below the floor, so a short time range does not over-split.
+            # At least one interval per account; split_time_intervals caps the count at the floor.
             effective_splits = max(n_intervals, len(accounts))
             intervals = split_time_intervals(
                 base_query["since"],
@@ -968,9 +964,7 @@ class Runner:
                 if response_headers:
                     last_headers = response_headers
                 effective_status_code = effective_status_with_rate_limit_headers(raw_status_code, response_headers)
-                # Hand off a few requests before X returns 429. A 429 loses the page and forces a retry, so the
-                # run stops the account at a margin above zero (see `rate_limit_min_remaining`) and rests it
-                # until its window resets. The account's cursor continues on a fresh account.
+                # Stop a margin above zero: the remaining count can lag one request, and a 429 loses the page.
                 remaining = parse_rate_limit_remaining(response_headers)
                 preemptive_rate_limited = (
                     raw_status_code == 200
@@ -1093,25 +1087,20 @@ class Runner:
                     if continuation_task is not None:
                         await queue.enqueue([continuation_task])
                         if preemptive_rate_limited:
-                            # Rest this account until its window resets. `compute_cooldown` reads
-                            # `x-rate-limit-reset` for status 429. The cursor already went to the queue above.
+                            # 429 makes compute_cooldown rest the account until x-rate-limit-reset.
                             account_status = 429
                             break
                         account_status = 1
                         continue
 
-                    # The chain ended and X gave no cursor. A full last page means X truncated the chain at its
-                    # depth limit while tweets remain in the range, so split the interval and re-query each half.
-                    # A genuine end returns a partial or empty last page, which does not trigger this. The global
-                    # set of seen ids drops the overlap.
+                    # A full last page with no cursor means X truncated the chain while tweets remain; a
+                    # genuine end gives a partial or empty last page.
                     if (
                         not stop_due_to_empty_pages
                         and not limit_reached
                         and tweets_count >= api_page_size
                     ):
-                        # The oldest tweet on this page is the boundary to continue from. X returns newest
-                        # first, so the tweets that remain are older than this. Compare parsed times, because
-                        # the format of a tweet time does not sort as a string.
+                        # Compare parsed times, because the tweet time format does not sort as a string.
                         oldest_seen = None
                         oldest_dt = None
                         for _t in tweets:
@@ -1138,7 +1127,7 @@ class Runner:
                     async with stats_lock:
                         stats.tasks_done += 1
                     if preemptive_rate_limited:
-                        # Rest this account until its window resets, so it is not re-leased into a 429.
+                        # 429 makes compute_cooldown rest the account until x-rate-limit-reset.
                         account_status = 429
                         break
                     account_status = 1
@@ -1213,13 +1202,10 @@ class Runner:
                 break
         finally:
             if hasattr(queue, "release_worker"):
-                # This worker leaves its loop. Drop it from the active set so the other workers do not wait for
-                # it. A worker that exits on a break or an error still holds its last task in the set.
+                # Leave the active set of the queue, or the other workers wait for this one for ever.
                 queue.release_worker(worker_id)
             if lease_id and hasattr(self.accounts_repo, "release"):
-                # A 401 or 403 from a page of tweets is not proof of a dead account. X sends it for a tweet that
-                # one account cannot read, while the credentials still work. Confirm with a self-lookup of the
-                # account's own handle before the 30-day block.
+                # A page 401/403 is not proof of a dead account; only a failed self-lookup earns the long block.
                 proven_dead = False
                 if account_status in (401, 403):
                     if account_session is not None and hasattr(self.search_engine, "probe_account_alive"):
@@ -1457,16 +1443,10 @@ class Runner:
         max_depth: int,
         oldest_seen: Any = None,
     ) -> list[dict[str, Any]]:
-        """Continue a truncated interval. The sort of the search decides the method.
+        """Continue a truncated interval. The sort decides the method.
 
-        A `Latest` search returns tweets newest first, so a cursor chain truncates near the newest end and the
-        tweets it missed are older than the oldest one it returned. `narrow_interval` re-queries `[since,
-        oldest]`, which has almost no overlap. `interval_depth` and the floor bound the depth.
-
-        A `Top` search ranks tweets by engagement, not by time. The top tweets of a range and the top tweets of
-        each half are mostly the same tweets, so the run does not continue a Top interval. A measured live Top
-        order that halved read 767 pages for 1,873 unique tweets, which is 88% waste. The initial split already
-        gives the top tweets of each window. Read the return of an empty list below.
+        A `Latest` search is newest first, so the run re-queries `[since, oldest seen]`, which holds exactly
+        the missed tweets. A `Top` search is ranked, not in time order, so the run does not continue it.
         """
         depth = int(task.get("interval_depth", 0) or 0)
         if max_depth <= 0 or depth >= max_depth:
@@ -1482,12 +1462,8 @@ class Runner:
         sort = str(raw.get("search_sort") or raw.get("display_type") or "Top").strip().lower()
         is_latest = sort in {"latest", "recent"}
         if not is_latest:
-            # A Top search ranks tweets by engagement, not by time. The top tweets of a range and the top
-            # tweets of each half are mostly the same tweets, so a half re-fetches what the parent already
-            # returned. A live 20,000-tweet Top order that halved read 767 pages and returned 1,873 unique
-            # tweets, which is 88% waste. So the run does not continue a Top interval. The initial split still
-            # gives one interval per account, which returns the top tweets of each window. A large volume of
-            # tweets needs the Latest sort, not Top.
+            # Not halving for Top, because the top tweets of a range and of each half are mostly the same
+            # tweets; a measured live Top order that halved was 88% duplicate pages.
             return []
         try:
             ranges = narrow_interval(since, until, oldest_seen, min_interval_s)

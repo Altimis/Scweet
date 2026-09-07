@@ -31,26 +31,16 @@ class ScweetConfig(BaseModel):
     # Rate limiting
     daily_requests_limit: int = Field(default=30, ge=1)
     daily_tweets_limit: int = Field(default=600, ge=1)
-    # X sends an empty page in the middle of a chain while results remain, so a value of 1 ends an interval at
-    # the first gap and loses the rest. Measured on a fixture where empty pages fall singly between data pages:
-    # a value of 1 collected 2 of 6 tweets, and a value of 3 collected all 6 while it stopped at a genuine end
-    # of 3 empty pages. A value of 3 reads past a stray empty page and wastes at most 3 requests at a true end.
+    # Not 1, because X sends a stray empty page mid-chain while results remain, and 1 loses the rest.
     max_empty_pages: int = Field(default=3, ge=1)
     api_page_size: int = Field(default=20, ge=1, le=100)
-    # X counts requests per account inside a window of about 15 minutes. The limiter holds this many requests
-    # for each account and refills over `rate_limit_window_s`. A short run bursts its budget and waits nothing;
-    # a long run slows to the refill rate. Measured 2026-08-31: X allowed 50 SearchTimeline requests in 15
-    # minutes and returned 429 on request 51.
+    # X counts requests per account per window; measured 2026-08-31: 50 allowed, request 51 gave 429.
     window_request_limit: int = Field(default=50, ge=1)
     rate_limit_window_s: float = Field(default=900.0, gt=0.0)
-    # An optional floor between two requests from one account. 0 adds no delay. X counts the total in a window,
-    # not the gap, so a floor is not needed to respect the limit; it exists only for a caller who wants one.
+    # An optional floor between two requests. X counts the window total, not the gap, so 0 is safe.
     min_delay_s: float = Field(default=0.0, ge=0.0)
-    # A margin on the rate-limit window. When the header `x-rate-limit-remaining` falls to this value or below,
-    # the account hands its cursor to a fresh account and rests until its window resets. This stops the account
-    # a few requests before X returns 429, because a 429 loses the page and the run must retry it. Measured
-    # 2026-09-06: a live 20,000-tweet order lost about 10% of the data to 429s that a margin prevents. 0 keeps
-    # the old behaviour, which hands off only when the window is fully spent.
+    # Hand off when x-rate-limit-remaining falls to this value. Not 0, because the header can lag one
+    # request behind X, and a 429 loses the page.
     rate_limit_min_remaining: int = Field(default=2, ge=0)
 
     # Advanced
@@ -72,16 +62,10 @@ class ScweetConfig(BaseModel):
     max_account_switches: int = Field(default=2, ge=0)
     scheduler_min_interval_s: int = Field(default=300, ge=1)
     n_splits: int = Field(default=5, ge=1)
-    # A cursor chain of X stops at a depth limit while tweets remain in a time range. When a chain ends on a
-    # full page and X gives no cursor, the run continues the interval (see `_build_subdivision_tasks`), down to
-    # `scheduler_min_interval_s`. The real bounds are the floor and the order limit, because each continuation
-    # strictly shrinks the interval and stops at the floor. This is a safety backstop against a split that does
-    # not converge. A low value strangles a large order: a value of 6 filled only about 17% of a 20,000-tweet
-    # order in a live test, because the order needs about 174 continuations. 0 turns the division off.
+    # A backstop on the continuation of a truncated interval; the interval floor and the result limit are the
+    # real bounds. Not a low value, because 6 filled only 17% of a live 20,000-tweet order. 0 turns it off.
     max_interval_depth: int = Field(default=100, ge=0)
-    # When every account holds a cooldown, wait up to this many seconds for one to expire before the run ends
-    # with AccountPoolExhausted. A cooldown expires, so a short wait finishes a run that would otherwise fail.
-    # Set to 0 to fail at once. `pool_wait_poll_s` is the interval between two attempts to lease.
+    # Wait this long for a cooldown to expire before AccountPoolExhausted; 0 fails at once.
     pool_wait_max_s: float = Field(default=120.0, ge=0.0)
     pool_wait_poll_s: float = Field(default=5.0, gt=0.0)
     priority: int = 1
