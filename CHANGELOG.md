@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- A proxy URL can now contain a `{session}` placeholder, for example `http://user,session-{session}:pass@proxy.example.com:8000`. Each account session replaces it with a unique token, so each account keeps its own exit IP on a rotating proxy. Without it, every account shares one exit IP, and when that exit IP dies, every retry reaches the same dead exit and the run loses data. With it, a session that is built again after a transport failure gets a new token and a new exit IP, so a retry recovers. A proxy without the placeholder works unchanged.
+
 ### Changed
 
 - Rate limiting now paces to X's real window (about 50 requests per account per 15 minutes) instead of a fixed delay between requests. A short run bursts its window budget and finishes far faster, and a long run no longer exceeds the window and triggers `429`s that get accounts blocked. New config: `window_request_limit` (50) and `rate_limit_window_s` (900). `min_delay_s` now defaults to `0` (an optional floor); `requests_per_min` is deprecated.

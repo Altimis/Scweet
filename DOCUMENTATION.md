@@ -61,6 +61,15 @@ s = Scweet(auth_token="YOUR_AUTH_TOKEN")
 s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@host:port")
 ```
 
+### Proxy modes
+
+You control how each account reaches the network. There are four modes:
+
+1. **No proxy.** Requests go direct.
+2. **One global proxy.** Pass `proxy="http://user:pass@host:port"`. Every account shares it.
+3. **One proxy session per account.** Put `{session}` in the URL: `proxy="http://user,session-{session}:pass@host:port"`. Each account session replaces the placeholder with a unique token, so a rotating provider pins one exit IP per account. A session that is built again after a transport failure gets a new token and a new exit IP, so a retry recovers instead of reaching the same dead exit. Use the placeholder syntax of your provider around `{session}`.
+4. **A proxy per account.** Set `"proxy"` on the account record (in the cookies JSON, or with `set_account_proxy`). It overrides the global proxy for that account, and it can also contain `{session}`.
+
 ### Option C: inline cookies
 
 Pass cookies directly — useful for scripts and one-off runs:

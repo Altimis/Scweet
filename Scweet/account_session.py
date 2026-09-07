@@ -5,6 +5,8 @@ import inspect
 import json
 import logging
 import os
+import re
+import uuid
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional, Tuple
 
@@ -93,6 +95,29 @@ def _record_get(record: Mapping[str, Any], *keys: str) -> Any:
         if key in record and record[key] not in (None, ""):
             return record[key]
     return None
+
+
+def _fill_proxy_session_placeholder(proxy: Any, account: Mapping[str, Any]) -> Any:
+    """Replace `{session}` in a proxy value with a token unique to this account and this build.
+
+    A rotating proxy provider pins one exit IP to a session name inside the proxy URL. With one static URL,
+    every account shares one exit IP, and when that IP dies, every retry dies with it, because the retry
+    reaches the same exit. The token holds the account name, so each account keeps its own exit IP for the
+    life of one session. The token also holds a random part, so a session that is built again after a failure
+    gets a new exit IP. A proxy without the placeholder passes through unchanged.
+    """
+    def _token() -> str:
+        # Providers restrict the session name; keep only word characters and ._~ from the username.
+        name = re.sub(r"[^\w._~]", "", str(account.get("username") or "")) or "acct"
+        return f"{name}_{uuid.uuid4().hex[:8]}"
+
+    if isinstance(proxy, str) and "{session}" in proxy:
+        return proxy.replace("{session}", _token())
+    if isinstance(proxy, dict):
+        if any(isinstance(v, str) and "{session}" in v for v in proxy.values()):
+            token = _token()
+            return {k: (v.replace("{session}", token) if isinstance(v, str) else v) for k, v in proxy.items()}
+    return proxy
 
 
 @dataclass(frozen=True)
@@ -253,8 +278,11 @@ class AccountSessionBuilder:
 
         try:
             account_proxy = _normalize_proxy_payload(_record_get(account, "proxy_json", "proxy"))
-            account_proxies = normalize_http_proxies(account_proxy)
-            effective_proxies = account_proxies if account_proxies is not None else self._http_proxies
+            proxy_source = account_proxy if account_proxy is not None else self.proxy
+            proxy_source = _fill_proxy_session_placeholder(proxy_source, account)
+            effective_proxies = normalize_http_proxies(proxy_source)
+            if effective_proxies is None:
+                effective_proxies = self._http_proxies
             apply_proxies_to_session(session, effective_proxies)
             self._apply_cookies(session, material.cookies)
             self._apply_headers(session, material)
