@@ -86,7 +86,9 @@ class _CorpusEngine:
 def _config(max_interval_depth, page=5):
     base = ScweetConfig(
         n_splits=1,
-        concurrency=2,
+        # One account, so the run makes exactly one initial interval. This isolates the split of a truncated
+        # interval from the rule that gives one interval per account. See TestOneIntervalPerAccount.
+        concurrency=1,
         scheduler_min_interval_s=300,
         min_delay_s=0.0,
         api_page_size=page,
@@ -102,7 +104,7 @@ TOTAL = 40
 PAGE = 5
 
 
-def _run(max_interval_depth):
+def _run(max_interval_depth, display_type="Latest"):
     engine = _CorpusEngine(TOTAL, DAY_START, DAY_END, PAGE)
     runner = Runner(
         config=_config(max_interval_depth, PAGE),
@@ -114,7 +116,9 @@ def _run(max_interval_depth):
     async def _go():
         return await asyncio.wait_for(
             runner.run_search(
-                SearchRequest(since=DAY_START, until=DAY_END, search_query="q")
+                SearchRequest(
+                    since=DAY_START, until=DAY_END, search_query="q", display_type=display_type
+                )
             ),
             timeout=30,
         )
@@ -176,3 +180,122 @@ class TestTheRunSplitsATruncatedInterval:
         result = asyncio.run(_go())
         assert result.stats.tweets_count == 3
         assert engine.calls == 1, "a sparse range must not split; it made more than one call"
+
+
+def _truncated_task(display_type):
+    """A task whose interval ended on a full page, ready for a continuation decision."""
+    return {
+        "task_id": "t",
+        "interval_depth": 0,
+        "query": {
+            "raw": {"search_query": "q", "display_type": display_type},
+            "since": DAY_START,
+            "until": DAY_END,
+            "cursor": None,
+        },
+    }
+
+
+class TestTheSortDecidesTheContinuation:
+    """A `Latest` search continues a truncated interval. A `Top` search does not.
+
+    A `Latest` search returns tweets newest first, so the run narrows from the oldest tweet and re-queries only
+    the older part. A `Top` search ranks tweets by engagement, so the top tweets of a range and the top tweets
+    of each half are mostly the same tweets. A live 20,000-tweet Top order that halved read 767 pages for 1,873
+    unique tweets, which is 88% waste. So the run does not continue a Top interval.
+    """
+
+    def test_a_latest_interval_continues(self):
+        tasks = Runner._build_subdivision_tasks(
+            _truncated_task("Latest"),
+            min_interval_s=300,
+            max_depth=8,
+            oldest_seen="Wed Jun 15 12:00:00 +0000 2026",
+        )
+        assert tasks, "a truncated Latest interval must produce a continuation"
+
+    def test_a_top_interval_does_not_continue(self):
+        tasks = Runner._build_subdivision_tasks(
+            _truncated_task("Top"),
+            min_interval_s=300,
+            max_depth=8,
+            oldest_seen="Wed Jun 15 12:00:00 +0000 2026",
+        )
+        assert tasks == [], (
+            "a Top interval must not be continued, because halving a ranked result re-fetches the same tweets"
+        )
+
+    def test_the_default_sort_top_does_not_continue(self):
+        # The default display_type is Top, so a caller who does not set the sort gets the Top behaviour.
+        task = _truncated_task("Top")
+        task["query"]["raw"].pop("display_type")
+        tasks = Runner._build_subdivision_tasks(
+            task, min_interval_s=300, max_depth=8, oldest_seen="Wed Jun 15 12:00:00 +0000 2026"
+        )
+        assert tasks == []
+
+
+class _CountingAccountsRepo:
+    """Records the number of accounts asked for, and hands out that many."""
+
+    def __init__(self):
+        self.requested = None
+
+    def acquire_leases(self, count, run_id, worker_id_prefix):
+        self.requested = count
+        return [{"username": f"a{i}", "lease_id": f"L{i}"} for i in range(max(1, count))]
+
+    def record_usage(self, lease_id, pages=0, tweets=0):
+        pass
+
+    def release(self, lease_id, fields_to_set, fields_to_inc=None):
+        return True
+
+
+class TestOneIntervalPerAccount:
+    """The run splits the range into at least one interval per account, so no account stays idle.
+
+    The narrowing of a truncated interval is serial, so the initial split is the only source of parallelism
+    across accounts. If the run makes fewer intervals than accounts, the extra accounts do no work, and each
+    active account exhausts its request budget on a dense interval.
+    """
+
+    def _count_initial_tasks(self, n_splits, concurrency):
+        base = ScweetConfig(
+            n_splits=n_splits,
+            concurrency=concurrency,
+            scheduler_min_interval_s=300,
+            min_delay_s=0.0,
+            api_page_size=5,
+            max_empty_pages=1,
+            max_interval_depth=0,  # off, so only the initial split makes tasks
+        )
+        engine = _CorpusEngine(TOTAL, DAY_START, DAY_END, PAGE)
+        runner = Runner(
+            config=SimpleNamespace(**base.model_dump()),
+            repos={"accounts_repo": _CountingAccountsRepo()},
+            engines={"api_engine": engine},
+            outputs=None,
+        )
+
+        async def _go():
+            return await asyncio.wait_for(
+                runner.run_search(
+                    SearchRequest(since=DAY_START, until=DAY_END, search_query="q", display_type="Latest")
+                ),
+                timeout=20,
+            )
+
+        return asyncio.run(_go())
+
+    def test_more_accounts_than_splits_makes_one_interval_per_account(self):
+        # n_splits=1 but 4 accounts: without the rule the run makes 1 interval and 3 accounts idle.
+        result = self._count_initial_tasks(n_splits=1, concurrency=4)
+        assert result.stats.tasks_total >= 4, (
+            f"the run must make at least one interval per account; got {result.stats.tasks_total} for 4 accounts"
+        )
+
+    def test_more_splits_than_accounts_keeps_the_splits(self):
+        # n_splits=6 with 2 accounts: the larger split count wins, so depth of coverage is not lost.
+        result = self._count_initial_tasks(n_splits=6, concurrency=2)
+        assert result.stats.tasks_total >= 6

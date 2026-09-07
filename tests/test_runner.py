@@ -58,11 +58,18 @@ class _FakeRunsRepo:
         )
 
 
-def _runner_config(*, n_splits: int = 1, concurrency: int = 1, retry_base_s: int = 0, retry_max_s: int = 0):
+def _runner_config(
+    *,
+    n_splits: int = 1,
+    concurrency: int = 1,
+    retry_base_s: int = 0,
+    retry_max_s: int = 0,
+    min_interval_s: int = 300,
+):
     return SimpleNamespace(
         n_splits=n_splits,
         concurrency=concurrency,
-        scheduler_min_interval_s=300,
+        scheduler_min_interval_s=min_interval_s,
         task_retry_base_s=retry_base_s,
         task_retry_max_s=retry_max_s,
         max_task_attempts=3,
@@ -227,7 +234,7 @@ def test_runner_retry_path_requeues_and_releases_with_cooldown():
         runs = _FakeRunsRepo()
         engine = _RetryThenSuccessEngine()
         runner = Runner(
-            config=_runner_config(n_splits=1, concurrency=2),
+            config=_runner_config(n_splits=1, concurrency=2, min_interval_s=3600),
             repos={"accounts_repo": accounts, "runs_repo": runs},
             engines={"api_engine": engine},
             outputs=None,
@@ -293,7 +300,7 @@ def test_runner_preemptive_rate_limit_header_handoffs_after_success_page():
         runs = _FakeRunsRepo()
         engine = _HeaderRateLimitedEngine()
         runner = Runner(
-            config=_runner_config(n_splits=1, concurrency=2),
+            config=_runner_config(n_splits=1, concurrency=2, min_interval_s=3600),
             repos={"accounts_repo": accounts, "runs_repo": runs},
             engines={"api_engine": engine},
             outputs=None,
@@ -350,7 +357,7 @@ def test_runner_auth_error_triggers_auth_failed_cooldown_and_release_fields():
         accounts = _FakeAccountsRepo(["acct-a", "acct-b"])
         engine = _AuthThenSuccessEngine()
         runner = Runner(
-            config=_runner_config(n_splits=1, concurrency=2),
+            config=_runner_config(n_splits=1, concurrency=2, min_interval_s=3600),
             repos={"accounts_repo": accounts},
             engines={"api_engine": engine},
             outputs=None,

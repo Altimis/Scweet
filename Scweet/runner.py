@@ -228,23 +228,13 @@ class Runner:
 
             n_intervals = max(1, int(_cfg(self.config, "n_splits", 1)))
             min_interval_s = max(1, int(_cfg(self.config, "scheduler_min_interval_s", 300)))
-            intervals = split_time_intervals(
-                base_query["since"],
-                base_query["until"],
-                n_intervals,
-                min_interval_s,
-            )
 
-            priority = int(_cfg(self.config, "priority", 1))
-            tasks = build_tasks_for_intervals(base_query, run_id, priority, intervals)
-            if request.initial_cursor and tasks:
-                first_query = tasks[0].setdefault("query", {})
-                first_query["cursor"] = request.initial_cursor
-            stats.tasks_total = len(tasks)
-
-            concurrency = max(1, int(_cfg(self.config, "concurrency", len(tasks) or 1)))
-            # Keep standby workers available for account-switch retries even when the initial task
-            # count is small.
+            # Acquire the accounts before the run splits the time range. The number of intervals must be at
+            # least the number of accounts, so every account gets initial work. A run that splits into fewer
+            # intervals than accounts leaves the extra accounts idle, and each active account then exhausts its
+            # request budget on a dense interval. The narrowing of a truncated interval is serial, so the split
+            # is the only source of parallelism across accounts.
+            concurrency = max(1, int(_cfg(self.config, "concurrency", n_intervals or 1)))
             workers_requested = concurrency
             accounts = await self._acquire_leases_with_wait(workers_requested, run_id)
             if not accounts:
@@ -271,6 +261,22 @@ class Runner:
                     account.get("id"),
                     account.get("lease_id"),
                 )
+
+            # Split into at least one interval per leased account. split_time_intervals still caps the count so
+            # no interval falls below the floor, so a short time range does not over-split.
+            effective_splits = max(n_intervals, len(accounts))
+            intervals = split_time_intervals(
+                base_query["since"],
+                base_query["until"],
+                effective_splits,
+                min_interval_s,
+            )
+            priority = int(_cfg(self.config, "priority", 1))
+            tasks = build_tasks_for_intervals(base_query, run_id, priority, intervals)
+            if request.initial_cursor and tasks:
+                first_query = tasks[0].setdefault("query", {})
+                first_query["cursor"] = request.initial_cursor
+            stats.tasks_total = len(tasks)
 
             queue = self.queue_cls(stop_event=global_stop_event)
             await queue.enqueue(tasks)
@@ -1106,7 +1112,7 @@ class Runner:
                         subdivision_tasks = self._build_subdivision_tasks(
                             task,
                             min_interval_s=int(_cfg(self.config, "scheduler_min_interval_s", 300)),
-                            max_depth=int(_cfg(self.config, "max_interval_depth", 6)),
+                            max_depth=int(_cfg(self.config, "max_interval_depth", 100)),
                             oldest_seen=oldest_seen,
                         )
                         if subdivision_tasks:
@@ -1439,12 +1445,16 @@ class Runner:
         max_depth: int,
         oldest_seen: Any = None,
     ) -> list[dict[str, Any]]:
-        """Continue a truncated interval, from the oldest tweet if possible, or by a half.
+        """Continue a truncated interval. The sort of the search decides the method.
 
-        A cursor chain ended while the interval still held tweets. The tweets it missed are older than the
-        oldest one it returned, so `narrow_interval` re-queries only `[since, oldest]`, which has almost no
-        overlap. If the time of the oldest tweet is not usable, `subdivide_interval` re-queries each half
-        instead, and the global set of seen ids drops the overlap. `interval_depth` and the floor bound both.
+        A `Latest` search returns tweets newest first, so a cursor chain truncates near the newest end and the
+        tweets it missed are older than the oldest one it returned. `narrow_interval` re-queries `[since,
+        oldest]`, which has almost no overlap. `interval_depth` and the floor bound the depth.
+
+        A `Top` search ranks tweets by engagement, not by time. The top tweets of a range and the top tweets of
+        each half are mostly the same tweets, so the run does not continue a Top interval. A measured live Top
+        order that halved read 767 pages for 1,873 unique tweets, which is 88% waste. The initial split already
+        gives the top tweets of each window. Read the return of an empty list below.
         """
         depth = int(task.get("interval_depth", 0) or 0)
         if max_depth <= 0 or depth >= max_depth:
@@ -1455,6 +1465,17 @@ class Runner:
         since = query.get("since")
         until = query.get("until")
         if not isinstance(since, str) or not isinstance(until, str):
+            return []
+        raw = query.get("raw") if isinstance(query.get("raw"), dict) else {}
+        sort = str(raw.get("search_sort") or raw.get("display_type") or "Top").strip().lower()
+        is_latest = sort in {"latest", "recent"}
+        if not is_latest:
+            # A Top search ranks tweets by engagement, not by time. The top tweets of a range and the top
+            # tweets of each half are mostly the same tweets, so a half re-fetches what the parent already
+            # returned. A live 20,000-tweet Top order that halved read 767 pages and returned 1,873 unique
+            # tweets, which is 88% waste. So the run does not continue a Top interval. The initial split still
+            # gives one interval per account, which returns the top tweets of each window. A large volume of
+            # tweets needs the Latest sort, not Top.
             return []
         try:
             ranges = narrow_interval(since, until, oldest_seen, min_interval_s)
