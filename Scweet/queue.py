@@ -13,6 +13,12 @@ class InMemoryTaskQueue:
         self._pending_delays = 0
         self._pending_tasks: set[asyncio.Task] = set()
         self._stop_event = stop_event
+        # The set of workers that hold a task now. A worker that finds the queue empty must not exit while
+        # another worker still holds a task, because that task can enqueue a continuation or a split of an
+        # interval. If an idle worker exits too soon, the work of a truncated interval falls to the few workers
+        # that survive, and each of those exhausts the request budget of its account. The run ends only when the
+        # queue is empty, no delayed task waits, and no worker holds a task.
+        self._active_workers: set[str] = set()
 
     async def enqueue(self, tasks: list[dict]) -> None:
         for task in tasks:
@@ -22,19 +28,30 @@ class InMemoryTaskQueue:
             await self._queue.put(task)
 
     async def lease(self, worker_id: str) -> Optional[dict]:
+        # The worker asks for the next task, so it no longer holds its previous one.
+        self._active_workers.discard(worker_id)
         while True:
             if self._stop_event and self._stop_event.is_set():
                 return None
             try:
                 task = self._queue.get_nowait()
             except asyncio.QueueEmpty:
-                if self._queue.empty() and self._pending_delays == 0:
+                if self._queue.empty() and self._pending_delays == 0 and not self._active_workers:
                     return None
                 await asyncio.sleep(0.05)
                 continue
+            self._active_workers.add(worker_id)
             task["lease_id"] = task.get("lease_id") or str(uuid.uuid4())
             task["lease_worker_id"] = worker_id
             return task
+
+    def release_worker(self, worker_id: str) -> None:
+        """Drop a worker from the active set when it exits its loop.
+
+        A worker that leaves the loop on a break, a fatal error, or a cooldown still holds its last task in the
+        active set. It must leave the set, or the other workers wait for ever for it to finish.
+        """
+        self._active_workers.discard(worker_id)
 
     async def ack(self, task: dict, stats: Optional[dict] = None) -> bool:
         if stats:

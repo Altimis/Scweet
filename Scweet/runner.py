@@ -1194,6 +1194,10 @@ class Runner:
                 # Non-success exits this account worker to allow cooldown/account-switch flow.
                 break
         finally:
+            if hasattr(queue, "release_worker"):
+                # This worker leaves its loop. Drop it from the active set so the other workers do not wait for
+                # it. A worker that exits on a break or an error still holds its last task in the set.
+                queue.release_worker(worker_id)
             if lease_id and hasattr(self.accounts_repo, "release"):
                 # A 401 or 403 from a page of tweets is not proof of a dead account. X sends it for a tweet that
                 # one account cannot read, while the credentials still work. Confirm with a self-lookup of the
