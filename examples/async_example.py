@@ -23,7 +23,8 @@ logging.basicConfig(level=logging.INFO)
 async def main() -> None:
     s = Scweet(
         cookies_file="examples/cookies.json",
-        proxy="http://user:pass@host:port",       # recommended — use a dedicated proxy
+        # {session} gives each account its own proxy session on a rotating provider; a plain URL works too.
+        proxy="http://user,session-{session}:pass@host:port",
         config=ScweetConfig(
             concurrency=3,
             manifest_scrape_on_init=True,
@@ -40,7 +41,7 @@ async def main() -> None:
 
     # With structured filters
     tweets = await s.asearch(
-        since="2025-01-01",
+        since="2026-01-01",
         from_users=["OpenAI"],
         min_likes=50,
         has_links=True,

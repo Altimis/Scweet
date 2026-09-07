@@ -857,7 +857,7 @@ scweet --auth-token TOKEN search "ChatGPT" --limit 200 --pretty
 
 # Search with date range and engagement filters
 scweet --auth-token TOKEN search "AI tools" \
-  --since 2025-01-01 --until 2025-06-01 \
+  --since 2026-01-01 --until 2026-06-01 \
   --min-likes 100 --has-images --limit 500
 
 # Tweets from specific accounts containing a hashtag
@@ -876,7 +876,7 @@ scweet --auth-token TOKEN followers elonmusk --limit 1000 --pretty | jq '.[].use
 scweet --auth-token TOKEN user-info elonmusk OpenAI sama --pretty
 
 # Resume a previously interrupted search
-scweet --auth-token TOKEN search "python" --since 2025-01-01 --resume
+scweet --auth-token TOKEN search "python" --since 2026-01-01 --resume
 ```
 
 ### Help

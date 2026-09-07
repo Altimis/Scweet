@@ -32,7 +32,9 @@ def main() -> None:
     #
     s = Scweet(
         cookies_file="examples/cookies.json",
-        proxy="http://user:pass@host:port",       # recommended — use a dedicated proxy
+        # {session} gives each account its own proxy session (own exit IP) on a rotating provider,
+        # and a retry after a transport failure gets a fresh one. A plain URL works too.
+        proxy="http://user,session-{session}:pass@host:port",
         config=ScweetConfig(
             concurrency=3,
             daily_requests_limit=50,
@@ -46,17 +48,18 @@ def main() -> None:
     # Without it, scraping continues until results are exhausted
     # or your account's daily caps are hit.
 
-    # Simple query (defaults to last 7 days)
+    # Simple query (defaults to the last 30 days)
     tweets = s.search("python programming", limit=50)
     print(f"Simple search: {len(tweets)} tweets")
 
-    # With date range
-    tweets = s.search("bitcoin", since="2025-01-01", until="2025-02-01", limit=100)
+    # With date range. For a large volume use display_type="Latest": the default "Top" is a ranked
+    # selection, so it holds far fewer tweets than the full timeline.
+    tweets = s.search("bitcoin", since="2026-01-01", until="2026-02-01", display_type="Latest", limit=100)
     print(f"Date range search: {len(tweets)} tweets")
 
     # Structured filters
     tweets = s.search(
-        since="2025-01-01",
+        since="2026-01-01",
         from_users=["elonmusk"],
         min_likes=100,
         has_images=True,
@@ -69,7 +72,7 @@ def main() -> None:
     # Combining query + filters
     tweets = s.search(
         "AI tools",
-        since="2025-01-01",
+        since="2026-01-01",
         any_words=["chatgpt", "claude", "gemini"],
         exclude_words=["spam"],
         min_likes=50,
@@ -80,7 +83,7 @@ def main() -> None:
     # Save results to disk
     tweets = s.search(
         "machine learning",
-        since="2025-01-01",
+        since="2026-01-01",
         limit=100,
         save=True,                # write to disk
         save_format="both",       # csv + json
@@ -88,7 +91,7 @@ def main() -> None:
     print(f"Saved search: {len(tweets)} tweets")
 
     # Resume an interrupted search
-    tweets = s.search("bitcoin", since="2025-01-01", until="2025-06-01", limit=500, resume=True)
+    tweets = s.search("bitcoin", since="2026-01-01", until="2026-06-01", limit=500, resume=True)
     print(f"Resumed search: {len(tweets)} tweets")
 
     # ── Profile tweets ───────────────────────────────────────────────

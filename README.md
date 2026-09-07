@@ -113,11 +113,12 @@ Scweet auto-bootstraps the `ct0` CSRF token from `auth_token` alone — or use t
 ```python
 from Scweet import Scweet
 
-# Credentials are stored in scweet_state.db automatically on first run
-s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@host:port")
+# Credentials are stored in scweet_state.db automatically on first run.
+# A proxy is recommended. {session} gives each account its own proxy session on a rotating provider.
+s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user,session-{session}:pass@host:port")
 
 # Search tweets — save to CSV (save_format="json" or "both" also works)
-tweets = s.search("bitcoin", since="2025-01-01", limit=500, save=True)
+tweets = s.search("bitcoin", since="2026-01-01", limit=500, save=True)
 
 # Reuse provisioned accounts on subsequent runs — no credentials needed
 s = Scweet(db_path="scweet_state.db")
@@ -173,7 +174,7 @@ For the full list of supported search operators, see [twitter-advanced-search](h
 ```bash
 # Search with proxy, save to CSV
 scweet --auth-token YOUR_AUTH_TOKEN --proxy http://user:pass@host:port \
-  search "bitcoin" --since 2025-01-01 --limit 500 --save
+  search "bitcoin" --since 2026-01-01 --limit 500 --save
 
 # Followers, saved as JSON
 scweet --auth-token YOUR_AUTH_TOKEN \
