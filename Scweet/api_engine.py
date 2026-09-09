@@ -747,10 +747,7 @@ class ApiEngine:
                 max_account_switches = max(0, int(follows_request.max_account_switches))
             except Exception:
                 max_account_switches = configured_switches
-        try:
-            account_window_limit = max(1, int(_cfg(self.config, "window_request_limit", 50)))
-        except Exception:
-            account_window_limit = 50
+        account_window_limit = self._relationship_window_limit()
         try:
             account_window_s = max(1.0, float(_cfg(self.config, "rate_limit_window_s", 900.0)))
         except Exception:
@@ -2158,6 +2155,14 @@ class ApiEngine:
             count = max(1, min(int(hinted_page_size), 100))
 
         return int(count)
+
+    def _relationship_window_limit(self) -> int:
+        # The followers paths never read the search key: the graph endpoint allows 50 requests in a window
+        # and X restricts an account there more easily (measured 2026-09-07), so it keeps its own margin.
+        try:
+            return max(1, int(_cfg(self.config, "relationship_window_request_limit", 45)))
+        except Exception:
+            return 45
 
     @staticmethod
     def _coerce_positive_int(value: Any) -> Optional[int]:

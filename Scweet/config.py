@@ -45,6 +45,9 @@ class ScweetConfig(BaseModel):
     # Hand off when x-rate-limit-remaining falls to this value. Not 0, because the header can lag one
     # request behind X, and a 429 loses the page.
     rate_limit_min_remaining: int = Field(default=2, ge=0)
+    # The graph endpoint allows 50 requests in a window, and X restricts an account there more easily than
+    # at a search (measured 2026-09-07), so the followers paths keep a margin of 5.
+    relationship_window_request_limit: int = Field(default=45, ge=1)
 
     # Advanced
     enable_wal: bool = True

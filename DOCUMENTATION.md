@@ -457,6 +457,7 @@ s = Scweet(
 | `max_empty_pages` | `int` | `3` | Stop only after N **consecutive** empty result pages. X sends a stray empty page mid-stream, so a value of 1 loses the rest of the results. |
 | `api_page_size` | `int` | `20` | Tweets per API page (1-100) |
 | `window_request_limit` | `int` | `50` | Requests allowed per account per rate-limit window. X counts the total in a window, so a short run bursts this budget and waits nothing. |
+| `relationship_window_request_limit` | `int` | `45` | Window budget for the followers/following paths. X allows 50 there and restricts an account more easily than at a search, so this budget keeps a margin of 5. |
 | `rate_limit_window_s` | `float` | `900.0` | Length of the rate-limit window in seconds (X uses ~15 minutes) |
 | `min_delay_s` | `float` | `1.0` | Floor between two requests of one account, so a burst does not arrive at wire speed. `0` removes the floor; the window limit still respects X. |
 | `rate_limit_min_remaining` | `int` | `2` | Hand off an account when `x-rate-limit-remaining` falls to this value, and rest it until `x-rate-limit-reset`. The margin stops the account a few requests before X answers `429`, which loses a page. `0` hands off only when the window is fully spent. |
