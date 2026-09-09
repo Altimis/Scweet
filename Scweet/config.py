@@ -25,7 +25,9 @@ class ScweetConfig(BaseModel):
 
     # HTTP tuning
     api_http_mode: ApiHttpMode = ApiHttpMode.AUTO
-    api_http_impersonate: Optional[str] = None
+    # "chrome" follows the newest Chrome fingerprint that the installed curl_cffi supports, so the TLS
+    # fingerprint does not age while the cookies stay current.
+    api_http_impersonate: Optional[str] = "chrome"
     api_user_agent: Optional[str] = None
 
     # Rate limiting

@@ -25,7 +25,7 @@ DEFAULT_USER_AGENT = (
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/122.0.0.0 Safari/537.36"
 )
-DEFAULT_IMPERSONATE = os.getenv("SCWEET_HTTP_IMPERSONATE", "chrome120")
+DEFAULT_IMPERSONATE = os.getenv("SCWEET_HTTP_IMPERSONATE", "chrome")
 DEFAULT_HTTP_TIMEOUT = (10, 30)
 HTTP_MODE_AUTO = "auto"
 HTTP_MODE_ASYNC = "async"

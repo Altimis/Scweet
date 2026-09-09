@@ -10,3 +10,8 @@ def test_daily_caps_defaults():
 def test_daily_caps_stay_coherent_with_page_size():
     config = ScweetConfig()
     assert config.daily_requests_limit * config.api_page_size == config.daily_tweets_limit
+
+
+def test_impersonation_follows_the_installed_curl_cffi():
+    config = ScweetConfig()
+    assert config.api_http_impersonate == "chrome"

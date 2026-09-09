@@ -445,7 +445,7 @@ s = Scweet(
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `api_http_mode` | `str` | `"auto"` | HTTP mode: `"auto"`, `"async"`, `"sync"` |
-| `api_http_impersonate` | `str \| None` | `None` | Browser impersonation target for curl_cffi |
+| `api_http_impersonate` | `str \| None` | `"chrome"` | Browser impersonation target for curl_cffi. `"chrome"` follows the newest Chrome fingerprint that the installed curl_cffi supports. |
 | `api_user_agent` | `str \| None` | `None` | Custom User-Agent string |
 
 ### Rate Limiting

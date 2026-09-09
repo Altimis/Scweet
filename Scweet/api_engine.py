@@ -1421,7 +1421,7 @@ class ApiEngine:
             api_http_mode=self.http_mode,
             proxy=_cfg(self.config, "proxy", None),
             user_agent=_cfg(self.config, "api_user_agent", None),
-            impersonate=str(_cfg(self.config, "api_http_impersonate", "chrome120") or "chrome120"),
+            impersonate=str(_cfg(self.config, "api_http_impersonate", "chrome") or "chrome"),
         )
         try:
             built = await self._maybe_await(builder.build(account))
@@ -1479,7 +1479,7 @@ class ApiEngine:
             api_http_mode=self.http_mode,
             proxy=_cfg(self.config, "proxy", None),
             user_agent=_cfg(self.config, "api_user_agent", None),
-            impersonate=str(_cfg(self.config, "api_http_impersonate", "chrome120") or "chrome120"),
+            impersonate=str(_cfg(self.config, "api_http_impersonate", "chrome") or "chrome"),
         )
         try:
             built = await self._maybe_await(builder.build(account))

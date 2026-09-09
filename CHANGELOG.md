@@ -7,6 +7,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 
 - The daily caps per account rose: `daily_requests_limit` from 30 to 300, `daily_tweets_limit` from 600 to 6,000. The window limiter still bounds the burst rate to X's measured allowance (50 requests per 15 minutes).
+- `api_http_impersonate` now defaults to `"chrome"`, which follows the newest Chrome fingerprint that the installed `curl_cffi` supports. Before, the engine pinned `chrome120` (a December 2023 browser), and an old TLS fingerprint next to current cookies is a mismatch that anti-bot systems weigh.
 
 ### Fixed
 
