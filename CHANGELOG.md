@@ -2,7 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## [5.5.0] - 2026-09-09
+
+A search works again. Released 5.4.0 returned HTTP 404 for every search, from every account, because X
+changed the page that the library reads to bootstrap itself. This release repairs that, and it raises the
+defaults that made a first run smaller and slower than the accounts allow. Every change below is verified
+with a live run against real accounts.
+
+### Fixed
+
+- **A search works again. Upgrade from 5.4.0 and 5.3: in those versions every search returned HTTP 404 from every account, and the library could not repair itself.** Both bootstrap paths read `https://x.com`, which answers a short shell page: it holds no `main.js` reference and no `"ondemand.s"` marker. So the manifest scrape found no bundle and kept a stale query ID, and the transaction-ID bootstrap built no `x-client-transaction-id` header. X answers 404 when that header is absent. Both paths now read `https://x.com/home`, and the six bundled query IDs are refreshed. The failure looks like a dead account, and it is not: a 404 from every account describes the request, not the credentials.
+- A proxy URL that carries a `{session}` placeholder works on every path. The proxy check on lease, the transaction-ID bootstrap, and the cookie bootstrap from an `auth_token` each sent the literal text `{session}` as the proxy user name, and a provider answers HTTP 407 for that name. Only the account session builder replaced it.
+- A locked account is no longer read as a successful empty page. X locks an account behind a human challenge and answers HTTP 200 with code 326 in the body. The engine now maps that answer to a `locked` status, rests the account for `locked_cooldown_s` (default 1 hour), and logs the unlock page (`https://x.com/account/access`). Before, the locked account stayed in rotation and silently returned nothing.
 
 ### Changed
 
@@ -11,12 +22,6 @@ All notable changes to this project are documented in this file.
 - `min_delay_s` now defaults to `1.0`: a floor between two requests of one account, so a burst does not arrive at wire speed. X counts the window total, so the floor costs little. Set `0` to remove it.
 - The followers/following paths now hold their own window budget, `relationship_window_request_limit` (default 45). X allows 50 requests per window at the graph endpoint and restricts an account there more easily than at a search, so the budget keeps a margin of 5 instead of spending the full search budget.
 - `search()` sorts by `"Latest"` by default. `"Top"` is a ranked selection: a measured 20,000-tweet Top order returned about 1,900 unique tweets because the ranked pages repeat. `"Latest"` is chronological and fills a volume order. Pass `display_type="Top"` for the old behavior. Note: a resume checkpoint keys on the full query including `display_type`, so a resume started under the old default does not match a run under the new default.
-
-### Fixed
-
-- **A search works again.** Every search returned HTTP 404 from every account, and the library could not repair itself. Both bootstrap paths read `https://x.com`, which answers a short shell page: it holds no `main.js` reference and no `"ondemand.s"` marker. So the manifest scrape found no bundle and kept a stale query ID, and the transaction-ID bootstrap built no `x-client-transaction-id` header. X answers 404 when that header is absent. Both paths now read `https://x.com/home`, and the six bundled query IDs are refreshed.
-- A proxy URL that carries a `{session}` placeholder works on every path. The proxy check on lease, the transaction-ID bootstrap, and the cookie bootstrap from an `auth_token` each sent the literal text `{session}` as the proxy user name, and a provider answers HTTP 407 for that name. Only the account session builder replaced it.
-- A locked account is no longer read as a successful empty page. X locks an account behind a human challenge and answers HTTP 200 with code 326 in the body. The engine now maps that answer to a `locked` status, rests the account for `locked_cooldown_s` (default 1 hour), and logs the unlock page (`https://x.com/account/access`). Before, the locked account stayed in rotation and silently returned nothing.
 
 ## [5.4.0] - 2026-09-07
 
