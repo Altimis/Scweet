@@ -474,6 +474,7 @@ s = Scweet(
 | `transient_cooldown_s` | `float` | `120.0` | Cooldown for transient errors (e.g., 404/stale query IDs) |
 | `auth_cooldown_s` | `float` | `2592000.0` | Cooldown when an account is **proven** dead (30 days). A 401/403 from a page gives only a short cooldown; the long block applies only after a self-lookup of the account's own handle also fails. |
 | `cooldown_jitter_s` | `float` | `10.0` | Random jitter added to cooldowns |
+| `locked_cooldown_s` | `float` | `3600.0` | Rest time for an account that X locked behind a human challenge (code 326 in a 200 answer). The log names the unlock page; the account retries after each rest until you unlock it. |
 | `pool_wait_max_s` | `float` | `120.0` | When every account is on cooldown, wait up to this long for one to expire before failing. Set `0` to fail immediately. |
 | `pool_wait_poll_s` | `float` | `5.0` | How often to retry leasing while waiting for a cooldown to expire |
 | `task_retry_base_s` | `int` | `1` | Base delay for task retry backoff |

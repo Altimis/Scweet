@@ -43,6 +43,13 @@ AUTH_FAILURE_MESSAGES = (
 # you" from a request with a bad bearer token. The code is the durable signal, because X can reword a message.
 # Add a code here only with a captured answer, because a wrong code costs the account 30 days.
 AUTH_FAILURE_CODES = frozenset({32, 89})
+
+# X locks an account behind a human challenge and still answers HTTP 200 with an empty timeline. The body
+# then holds code 326 with a bounce to https://x.com/account/access. Captured 2026-09-07 from a Followers
+# request. Without this code the answer counts as a successful empty page and the account never rests.
+ACCOUNT_LOCKED_CODES = frozenset({326})
+ACCOUNT_LOCKED_STATUS = 423
+
 HTTP_MODE_AUTO = "auto"
 HTTP_MODE_ASYNC = "async"
 HTTP_MODE_SYNC = "sync"
@@ -2186,6 +2193,9 @@ class ApiEngine:
 
             if "rate limit" in message or "too many requests" in message or code in {"RATE_LIMITED", "RATE_LIMIT"}:
                 return 429
+            # A lock is a fact about the whole account, and X reports it with HTTP 200.
+            if numeric_code is not None and numeric_code in ACCOUNT_LOCKED_CODES:
+                return ACCOUNT_LOCKED_STATUS
             if (
                 any(phrase in message for phrase in AUTH_FAILURE_MESSAGES)
                 or code in {"UNAUTHORIZED", "AUTHENTICATION_ERROR"}
@@ -2245,6 +2255,12 @@ class ApiEngine:
             if isinstance(payload, dict) and payload.get("errors"):
                 mapped = self._map_graphql_errors_to_status(payload.get("errors"))
                 if mapped is not None:
+                    if mapped == ACCOUNT_LOCKED_STATUS:
+                        logger.warning(
+                            "Account %s is locked by X. Open https://x.com/account/access with that "
+                            "account to unlock it. The account rests until then.",
+                            account_label,
+                        )
                     logger.info("API request endpoint=%s status=%s account=%s", url, mapped, account_label)
                     return None, mapped, headers, text_snippet
 

@@ -71,6 +71,12 @@ def compute_cooldown(
     cooldown_jitter_s = max(0.0, float(_cfg(config, "cooldown_jitter_s", 10)))
     jitter = random.uniform(0, cooldown_jitter_s) if cooldown_jitter_s > 0 else 0.0
 
+    # 423 is a lock of the whole account (code 326 in a 200 answer). Only the user can clear it, at
+    # https://x.com/account/access, so the account rests and retries later instead of a 30-day block.
+    if status_code == 423:
+        locked_cooldown_s = float(_cfg(config, "locked_cooldown_s", 3600))
+        return 423, now_ts + locked_cooldown_s + jitter, "locked"
+
     # A page 401/403 is not proof of a dead account; only `proven_dead` (a failed self-lookup) earns the
     # long block, else the account returns after a short cooldown.
     if status_code in (401, 403):

@@ -8,6 +8,10 @@ All notable changes to this project are documented in this file.
 
 - The daily caps per account rose: `daily_requests_limit` from 30 to 300, `daily_tweets_limit` from 600 to 6,000. The window limiter still bounds the burst rate to X's measured allowance (50 requests per 15 minutes).
 
+### Fixed
+
+- A locked account is no longer read as a successful empty page. X locks an account behind a human challenge and answers HTTP 200 with code 326 in the body. The engine now maps that answer to a `locked` status, rests the account for `locked_cooldown_s` (default 1 hour), and logs the unlock page (`https://x.com/account/access`). Before, the locked account stayed in rotation and silently returned nothing.
+
 ## [5.4.0] - 2026-09-07
 
 ### Added

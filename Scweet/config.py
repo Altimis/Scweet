@@ -51,6 +51,8 @@ class ScweetConfig(BaseModel):
     cooldown_default_s: float = Field(default=120.0, ge=0.0)
     transient_cooldown_s: float = Field(default=120.0, ge=0.0)
     auth_cooldown_s: float = Field(default=30 * 24 * 60 * 60, ge=0.0)
+    # A locked account needs the user at x.com/account/access; the account retries each hour until then.
+    locked_cooldown_s: float = Field(default=3600.0, ge=0.0)
     cooldown_jitter_s: float = Field(default=10.0, ge=0.0)
     # Deprecated. The limiter paces to `window_request_limit` over `rate_limit_window_s`, not to a per-minute
     # rate. This field stays so an old configuration still loads, and the limiter no longer reads it.
