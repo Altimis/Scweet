@@ -1,4 +1,4 @@
-The tests for the package. 22 files and about 275 tests. They pass in about 12 seconds.
+The tests for the package. 35 files and 346 tests. They pass in about 130 seconds.
 
 > This document uses ASD-STE100 Simplified Technical English.
 
@@ -36,17 +36,19 @@ pytest tests/test_runner.py -q                         # one file
 
 These are measured facts about this suite, not opinions.
 
-1. **No test asserts that a run across several intervals collects what it asked for.** This is the gap that let
-   a real defect reach a release. Measured on 2026-09-04: an order of 20,000 tweets over three months delivered
-   4,760, then 0, then 4,700, a median fill of 23.5%. Every one of the 254 tests passed while that was true. A
-   test that plans several intervals with a fake page source, and asserts the total, would have caught it.
-2. **No test covers the continuation of a cursor across an interval boundary.** `should_continue_with_cursor` in
-   `runner.py` decides how far a run reaches, and nothing pins its behaviour.
-3. **No test asserts that a limit is a boundary.** Measured on 2026-09-04: a limit of 2,000 returned 2,340,
-   which is 17% above. A test that asks for N and asserts `len(result) <= N` would have caught it.
-4. **There is no fixture directory and no captured response from X.** `tests/test_api_engine.py` holds 784 lines
-   and no mock, so it builds its data inline. A real captured page belongs in a file, so a reader can see what X
-   sends.
+1. **No test of this suite can see that the library cannot reach X at all.** This is the gap that let a release
+   ship with no working search. Measured 2026-09-09: released 5.4.0 answered 404 for every search from every
+   account, because both bootstrap paths read a page of X that holds no marker. All 336 tests passed while that
+   was true. A unit test cannot see a stale query id, a header that X needs, or a proxy user name that a
+   provider rejects. **Only a live run finds this class of defect. Run one before a release.**
+2. **A test asserts that a run across several intervals fills its order.** `tests/test_interval_subdivision.py`
+   holds 12 tests with a fake page source: the fill, the cost of a narrow interval, the proof that `Top` must
+   not narrow, and one interval for each account.
+3. **No test asserts that a limit is a boundary, and that is deliberate.** Measured on 2026-09-04: a limit of
+   2,000 returned 2,340. The user owns the data, so the overshoot stays, and
+   `test_runner_treats_limit_as_stop_signal_and_keeps_overshoot_from_last_page` pins that behaviour.
+4. **There is no fixture directory.** A captured answer of X lives inline in the test that reads it, for example
+   `LOCKED_ERROR` in `tests/test_locked_account.py`. Copy a real answer, never an invented shape.
 5. **`tests/test_integration.py` never runs in CI.** The workflow passes
    `--ignore=tests/test_integration.py`. So the only tests that touch a real account run when a person
    remembers. State in a pull request whether you ran them.

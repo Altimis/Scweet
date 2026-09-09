@@ -7,8 +7,8 @@ directory.
 
 | Module | Lines | Function |
 |---|---:|---|
-| `api_engine.py` | 2,648 | It builds each GraphQL request, sends it, and parses the answer. The largest and the most fragile file, because X changes its answers. |
-| `runner.py` | 1,392 | It plans the intervals, starts the workers, leases the accounts, and decides when a task continues or stops. |
+| `api_engine.py` | 2,736 | It builds each GraphQL request, sends it, and parses the answer. The largest and the most fragile file, because X changes its answers. |
+| `runner.py` | 1,568 | It plans the intervals, starts the workers, leases the accounts, and decides when a task continues or stops. |
 | `auth.py` | 927 | It turns credentials into a session. It reads an accounts file, and it repairs a token. |
 | `repos.py` | 821 | The lease of an account in SQLite, the heartbeat, the release, and the cooldown. |
 | `client.py` | 816 | The public class `Scweet`. Every method that a user calls lives here. |
@@ -16,7 +16,8 @@ directory.
 | `manifest.py` | 471 | It reads the query IDs of X. An old query ID answers 404 for every request. |
 | `query.py` | 404 | It joins the structured filters into one search string for X. |
 | `cli.py` | 326 | The command line. `python -m Scweet`. |
-| `config.py` | ~90 | `ScweetConfig`. **Every parameter belongs here.** |
+| `config.py` | 139 | `ScweetConfig`. **Every parameter belongs here.** |
+| `transaction.py` | 216 | It builds the `x-client-transaction-id` header. Without it X answers 404. |
 | `limiter.py` | ~50 | The token bucket for each account. |
 | `scheduler.py` | ~70 | It divides a period into intervals. |
 
@@ -29,6 +30,16 @@ directory.
 - **`manifest.py` holds the query IDs, and a stale ID answers 404 for every account.** A 404 from every account
   therefore describes our configuration and not the accounts. Never retire an account from one 404 when the
   other endpoints also fail.
+- **The bootstrap of the manifest and of the transaction id reads `https://x.com/home`.** Measured 2026-09-09:
+  `https://x.com` answers about 33,000 bytes and holds no `main.js` reference and no `"ondemand.s"` marker,
+  while `/home` answers about 297,000 bytes and holds both, with no cookie. `handle_x_migration` of
+  `x_client_transaction` reads `https://x.com` itself, so `transaction.py` retries against `home_url` when the
+  page of the migration holds no marker. A missing `x-client-transaction-id` header gives 404 with an empty
+  body for every request.
+- **A path that builds a session fills the `{session}` placeholder with
+  `fill_proxy_session_placeholder`.** A literal placeholder is not a valid session name and the provider
+  answers 407. Four paths need it: `account_session.py`, the check on lease in `runner.py`, `transaction.py`,
+  and `bootstrap_cookies_from_auth_token` in `auth.py`.
 - **A lease in `repos.py` is atomic and it must stay atomic.** It writes the lease and the timestamp in one
   statement. A read and then a write lets two workers take the same account.
 - **A 401 or 403 from a page never gives the 30-day block on its own.** The worker confirms with
@@ -62,7 +73,7 @@ directory.
   decides.
 - **An exception must not be swallowed, and a write that fails must not log success.** `_attempt_account_repair`
   in `runner.py` returns False and logs a warning when `upsert_account` fails, and a failed `release` in
-  `api_engine.py` logs a warning, because it drops the account from the pool. 30 bare `except: pass` handlers
+  `api_engine.py` logs a warning, because it drops the account from the pool. 31 bare `except: pass` handlers
   remain; correct one when you touch its file. `except Exception: pass` converts a fault into a wrong result, and a
   wrong result reaches the user as missing data with no cause.
 - **Never log a secret.** An `auth_token`, a cookie, a `ct0`, a password, and a 2FA secret each belong to a real

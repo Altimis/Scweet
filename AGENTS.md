@@ -11,7 +11,7 @@ come before a feature.
 ## Map
 
 - `Scweet/` — the importable package. Every module is flat inside it, with no sub-package.
-- `tests/` — 21 files and about 254 tests. A pytest marker selects the level.
+- `tests/` — 35 files and 346 tests. A pytest marker selects the level.
 - `examples/` — short scripts that a reader can run.
 - `docs/` — the engineering documents. Read `docs/AGENTS.md`.
 - `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.12.
@@ -29,25 +29,42 @@ Scweet.search()            the public method, in client.py
 
 ## Invariants. A defect in one of these is silent
 
-- **An interval is planned one time and it is never divided again.** `split_time_intervals` creates `n_splits`
-  intervals before the run starts. A worker then follows one chain of pages for each interval and it stops when
-  X sends no cursor: `should_continue_with_cursor` in `runner.py` reads `continue_with_cursor`, which is
-  `bool(cursor)` in `api_engine.py`. **Measured on 2026-09-04: an order of 20,000 tweets over three months
-  delivered 4,760, then 0, then 4,700, which is a median fill of 23.5%.** A user receives a quarter of the data
-  that they asked for and no message that explains it.
+- **An interval is planned one time, and a truncated chain continues.** `split_time_intervals` creates
+  `max(n_splits, the count of accounts)` intervals before the run starts. When a chain ends on a full page with
+  no cursor, X truncated it while tweets remain: `runner.py` continues from the time of the oldest tweet for a
+  `Latest` search, and halves the range for a `Top` search, because a ranked range holds the same tweets.
+  `scheduler_min_interval_s` and `max_interval_depth` bound both. Measured live on 2026-09-06: an order of
+  20,000 tweets with the `Latest` sort filled about 90%, against about 21% before this behaviour.
 - **A limit is a target and not a boundary.** Measured on 2026-09-04: a limit of 2,000 returned 2,340, which is
-  17% above. Any code that bills for each item must not depend on the limit.
+  17% above. The user owns the data, so the overshoot stays. Any code that bills for each item must not depend
+  on the limit.
+- **Both bootstrap paths read `https://x.com/home` and never `https://x.com`.** Measured 2026-09-09: `x.com`
+  answers about 33,000 bytes with no `main.js` reference and no `"ondemand.s"` marker, and `x.com/home` answers
+  about 297,000 bytes with both, without a cookie. The scrape of the manifest and the bootstrap of the
+  transaction id each need one of those markers. Without the transaction id, X answers 404 with an empty body
+  for every request from every account, and that 404 describes our request and never the credentials.
+- **Each path that builds a session fills the `{session}` placeholder of the proxy.** `account_session.py`
+  holds `fill_proxy_session_placeholder`, and the check on lease, the bootstrap of the transaction id, and the
+  bootstrap of the cookies each call it. A literal `{session}` is not a valid session name: measured
+  2026-09-09, the provider answered HTTP 407 for 15 of 15 checks and the run stopped before it reached X.
 - **A run waits a bounded time for a cooldown before it fails.** When every account holds a cooldown, the run
   waits up to `pool_wait_max_s` (120s) and retries every `pool_wait_poll_s` (5s), because a cooldown expires.
   It ends with `AccountPoolExhausted` only after the wait. Set `pool_wait_max_s` to 0 to fail at once.
 - **The daily caps bound one account.** `daily_requests_limit` is 300 and `daily_tweets_limit` is 6,000. One
   account therefore delivers up to 6,000 tweets in a day with the defaults. A run that needs more in one day
   needs more accounts, or an explicit higher cap.
-- **The limiter paces each request evenly.** `TokenBucketLimiter` sets `refill_rate = requests_per_min / 60`
-  and `min_delay_s` defaults to 2.0. X counts the total inside a window of 15 minutes and not the gap between
-  two requests, so an even pace makes a short run slow with no benefit.
+- **The limiter paces to the window of X, not to the gap between two requests.** `TokenBucketLimiter` holds
+  `window_request_limit` (50) tokens and refills over `rate_limit_window_s` (900s), and it starts full, so a
+  short run bursts and waits nothing. `min_delay_s` (1.0) is only a floor, so a burst does not arrive at wire
+  speed. X counts the total inside the window, and an even pace made a run of 400 tweets take 373 seconds in
+  place of 41. `requests_per_min` is deprecated and the limiter ignores it.
 - **X permits about 50 search requests for each account in each 15 minutes.** Measured on 2026-08-31:
-  the header `x-rate-limit-limit` was 50 and request 51 answered 429. Give a measurement if you change a rate.
+  the header `x-rate-limit-limit` was 50 and request 51 answered 429. The graph endpoint of the followers also
+  allows 50, and X restricts an account there more easily, so `relationship_window_request_limit` holds 45.
+  Give a measurement if you change a rate.
+- **A search sorts by `Latest` by default.** `Top` is a ranked selection and its pages repeat: measured
+  2026-09-06, an order of 20,000 with `Top` returned about 1,900 unique tweets. Do not offer `Top` for a volume
+  order.
 - **An account costs money and a user cannot replace one quickly.** Any code that gives an account a long
   cooldown must first separate a dead account from a bad request. When the cause is unknown, apply a short
   cooldown.
@@ -56,6 +73,10 @@ Scweet.search()            the public method, in client.py
   401 and `cooldown.py` removed the account for 30 days. For the same reason the list holds no `"not authorized"`
   and no `"authorization: denied"`: X sends both for one tweet of a protected account. A code in
   `AUTH_FAILURE_CODES` needs a captured answer of X. The set holds 32 and 89 only.
+- **X can refuse with HTTP 200.** A locked account answers 200 with an empty list and code 326 in the body,
+  with a bounce to `https://x.com/account/access`. Captured 2026-09-07. `ACCOUNT_LOCKED_CODES` maps that code
+  to status 423, and `cooldown.py` rests the account for `locked_cooldown_s` (1 hour) with the reason `locked`,
+  because only the user can clear the lock. Without that branch the answer counts as a successful empty page.
 - **The package ships no `py.typed`.** Therefore mypy and pyright see no type from Scweet, whatever the
   annotations in the source say.
 
