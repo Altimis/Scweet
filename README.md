@@ -81,7 +81,7 @@ This runs on Apify instead of your machine. Use the local library below when you
   <li>No code required: configure and run from the Apify Console</li>
   <li>Prefer code? Use the Actor through Apify's <a href="https://apify.com/altimis/scweet/api/python">Python API guide</a></li>
   <li>No Twitter/X cookies or proxies to provide</li>
-  <li>Search tweets and profile timelines</li>
+  <li>Search tweets, profile timelines, and follower / following lists</li>
   <li>Export results as JSON, CSV, or XLSX from the Apify dataset</li>
   <li>Free tier included; current usage pricing is shown on the Apify Actor page</li>
 </ul>
