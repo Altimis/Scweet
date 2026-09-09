@@ -91,7 +91,7 @@ def test_manifest_provider_remote_failure_falls_back_to_cache_then_local(tmp_pat
         ttl_s=300,
     )
     local_manifest = asyncio.run(fresh_provider.get_manifest())
-    assert local_manifest.version.startswith("v4-default")
+    assert local_manifest.version.startswith("v5-default")
 
 
 def test_manifest_provider_invalid_remote_payload_falls_back_without_crashing(tmp_path, monkeypatch):

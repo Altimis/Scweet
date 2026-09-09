@@ -93,5 +93,7 @@ def test_transaction_provider_returns_none_when_ondemand_url_unavailable(monkeyp
     tx_id = provider.generate(method="GET", path="/i/api/graphql/qid/SearchTimeline")
 
     assert tx_id is None
-    assert session.get_calls == []
+    # The provider retries once against home_url, because handle_x_migration reads https://x.com, which
+    # serves a shell with no ondemand marker. Here that page also lacks it, so the bootstrap still fails.
+    assert [call["url"] for call in session.get_calls] == ["https://x.com/home"]
     assert session.closed is True

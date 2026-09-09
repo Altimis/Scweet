@@ -35,14 +35,14 @@ _ENDPOINT_TEMPLATES = {
 }
 
 _DEFAULT_MANIFEST = {
-    "version": "v4-default-4",
+    "version": "v5-default-1",
     "query_ids": {
-        "search_timeline": "rkp6b4vtR9u7v3naGoOzUQ",
-        "user_lookup_screen_name": "IGgvgiOx4QZndDHuD3x9TQ",
-        "profile_timeline": "O0epvwaQPUx-bT9YlqlL6w",
-        "followers": "Enf9DNUZYiT037aersI5gg",
-        "following": "ntIPnH1WMBKW--4Tn1q71A",
-        "verified_followers": "4zBtcnE_c0v8wn1Zx0yF5Q",
+        "search_timeline": "KPSo2_UWdOMpPJwjhfT1Qg",
+        "user_lookup_screen_name": "KybxDj9RrADIITXlGG8kpw",
+        "profile_timeline": "OeFjWKHutsuyWXZGmLr02A",
+        "followers": "sF7aRC2fRq7OGOOp_qHntA",
+        "following": "4EQGMEhtdVw8NeVBDQHESQ",
+        "verified_followers": "UmyQcnz4ojpneJPQeMlPeg",
     },
     "endpoints": {
         "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline",
@@ -113,7 +113,7 @@ _DEFAULT_MANIFEST = {
 
 
 class ManifestModel(BaseModel):
-    version: str = "v4-default-4"
+    version: str = "v5-default-1"
     fingerprint: Optional[str] = None
     query_ids: dict[str, str] = Field(default_factory=dict)
     endpoints: dict[str, str] = Field(default_factory=dict)
@@ -356,7 +356,9 @@ class ManifestProvider:
 
 def scrape_manifest_from_x(
     *,
-    home_url: str = "https://x.com",
+    # Not "https://x.com": that URL answers a 32 KB shell that carries no bundle reference. The /home
+    # path serves the full document, and it needs no cookie.
+    home_url: str = "https://x.com/home",
     impersonate: str = "chrome",
     timeout: int = 15,
 ) -> dict[str, Any]:
