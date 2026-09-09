@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- The daily caps per account rose: `daily_requests_limit` from 30 to 300, `daily_tweets_limit` from 600 to 6,000. The window limiter still bounds the burst rate to X's measured allowance (50 requests per 15 minutes).
+
 ## [5.4.0] - 2026-09-07
 
 ### Added

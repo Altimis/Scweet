@@ -40,9 +40,9 @@ Scweet.search()            the public method, in client.py
 - **A run waits a bounded time for a cooldown before it fails.** When every account holds a cooldown, the run
   waits up to `pool_wait_max_s` (120s) and retries every `pool_wait_poll_s` (5s), because a cooldown expires.
   It ends with `AccountPoolExhausted` only after the wait. Set `pool_wait_max_s` to 0 to fail at once.
-- **The default daily caps are small.** `daily_requests_limit` is 30 and `daily_tweets_limit` is 600. One
-  account therefore delivers 600 tweets in a day with the defaults. A user who asks for more receives less and
-  the cause is a default, not X.
+- **The daily caps bound one account.** `daily_requests_limit` is 300 and `daily_tweets_limit` is 6,000. One
+  account therefore delivers up to 6,000 tweets in a day with the defaults. A run that needs more in one day
+  needs more accounts, or an explicit higher cap.
 - **The limiter paces each request evenly.** `TokenBucketLimiter` sets `refill_rate = requests_per_min / 60`
   and `min_delay_s` defaults to 2.0. X counts the total inside a window of 15 minutes and not the gap between
   two requests, so an even pace makes a short run slow with no benefit.

@@ -29,8 +29,8 @@ class ScweetConfig(BaseModel):
     api_user_agent: Optional[str] = None
 
     # Rate limiting
-    daily_requests_limit: int = Field(default=30, ge=1)
-    daily_tweets_limit: int = Field(default=600, ge=1)
+    daily_requests_limit: int = Field(default=300, ge=1)
+    daily_tweets_limit: int = Field(default=6000, ge=1)
     # Not 1, because X sends a stray empty page mid-chain while results remain, and 1 loses the rest.
     max_empty_pages: int = Field(default=3, ge=1)
     api_page_size: int = Field(default=20, ge=1, le=100)
