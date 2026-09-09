@@ -133,7 +133,7 @@ def test_parser_search_lang():
 
 def test_parser_search_display_type_default():
     args = parse("search", "q")
-    assert args.display_type == "Top"
+    assert args.display_type == "Latest"
 
 
 def test_parser_search_display_type_latest():

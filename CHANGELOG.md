@@ -10,6 +10,7 @@ All notable changes to this project are documented in this file.
 - `api_http_impersonate` now defaults to `"chrome"`, which follows the newest Chrome fingerprint that the installed `curl_cffi` supports. Before, the engine pinned `chrome120` (a December 2023 browser), and an old TLS fingerprint next to current cookies is a mismatch that anti-bot systems weigh.
 - `min_delay_s` now defaults to `1.0`: a floor between two requests of one account, so a burst does not arrive at wire speed. X counts the window total, so the floor costs little. Set `0` to remove it.
 - The followers/following paths now hold their own window budget, `relationship_window_request_limit` (default 45). X allows 50 requests per window at the graph endpoint and restricts an account there more easily than at a search, so the budget keeps a margin of 5 instead of spending the full search budget.
+- `search()` sorts by `"Latest"` by default. `"Top"` is a ranked selection: a measured 20,000-tweet Top order returned about 1,900 unique tweets because the ranked pages repeat. `"Latest"` is chronological and fills a volume order. Pass `display_type="Top"` for the old behavior. Note: a resume checkpoint keys on the full query including `display_type`, so a resume started under the old default does not match a run under the new default.
 
 ### Fixed
 

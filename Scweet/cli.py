@@ -206,8 +206,8 @@ def build_parser() -> argparse.ArgumentParser:
     f.add_argument("--since", metavar="DATE", help="start date YYYY-MM-DD")
     f.add_argument("--until", metavar="DATE", help="end date YYYY-MM-DD")
     f.add_argument("--lang", metavar="CODE", help="language code, e.g. en")
-    f.add_argument("--display-type", choices=["Top", "Latest"], default="Top",
-                   metavar="{Top,Latest}", help="Top or Latest (default: Top)")
+    f.add_argument("--display-type", choices=["Top", "Latest"], default="Latest",
+                   metavar="{Top,Latest}", help="Latest or Top (default: Latest)")
     f.add_argument("--from", dest="from_users", nargs="+", metavar="USER",
                    help="tweets from these users")
     f.add_argument("--to", nargs="+", metavar="USER",

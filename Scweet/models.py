@@ -35,7 +35,7 @@ class SearchRequest(BaseModel):
     within: Optional[str] = None
     lang: Optional[str] = None
     limit: Optional[int] = None
-    display_type: str = "Top"
+    display_type: str = "Latest"
     resume: bool = False
     save_dir: str = "outputs"
     custom_csv_name: Optional[str] = None

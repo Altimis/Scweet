@@ -276,7 +276,7 @@ class Scweet:
         within: Optional[str] = None,
         # Standard params:
         lang: Optional[str] = None,
-        display_type: str = "Top",
+        display_type: str = "Latest",
         limit: Optional[int] = None,
         max_empty_pages: Optional[int] = None,
         resume: bool = False,
@@ -376,7 +376,7 @@ class Scweet:
         within: Optional[str] = None,
         # Standard params:
         lang: Optional[str] = None,
-        display_type: str = "Top",
+        display_type: str = "Latest",
         limit: Optional[int] = None,
         max_empty_pages: Optional[int] = None,
         resume: bool = False,

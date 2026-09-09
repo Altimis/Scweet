@@ -52,8 +52,8 @@ def main() -> None:
     tweets = s.search("python programming", limit=50)
     print(f"Simple search: {len(tweets)} tweets")
 
-    # With date range. For a large volume use display_type="Latest": the default "Top" is a ranked
-    # selection, so it holds far fewer tweets than the full timeline.
+    # With date range. The default sort "Latest" is chronological and fills a volume order. "Top" is a
+    # ranked selection, so it holds far fewer tweets than the full timeline.
     tweets = s.search("bitcoin", since="2026-01-01", until="2026-02-01", display_type="Latest", limit=100)
     print(f"Date range search: {len(tweets)} tweets")
 

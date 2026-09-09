@@ -216,7 +216,7 @@ tweets = s.search(
 | `since` | `str` | 30 days ago | Start date (`YYYY-MM-DD`) |
 | `until` | `str` | today | End date (`YYYY-MM-DD`) |
 | `lang` | `str` | `None` | Language filter (e.g., `"en"`) |
-| `display_type` | `str` | `"Top"` | `"Top"` or `"Latest"` |
+| `display_type` | `str` | `"Latest"` | `"Latest"` (chronological, fills a volume order) or `"Top"` (a ranked selection with far fewer tweets) |
 | `limit` | `int` | `None` | Max tweets to collect. `None` = no cap (scrapes until exhausted). **Recommended to always set.** |
 | `max_empty_pages` | `int` | config value | Stop after N consecutive empty pages |
 | `resume` | `bool` | `False` | Resume from last checkpoint |
@@ -706,7 +706,7 @@ from Scweet import (
 
 **Empty results / fewer tweets than expected**
 - Check your date range — Twitter search is often shallow on older dates
-- Try `display_type="Latest"` to get chronological results instead of "Top"
+- Check `display_type` — the default `"Latest"` is chronological; `"Top"` is a ranked selection and holds far fewer tweets
 - Your account may have hit its daily cap (`daily_requests_limit` / `daily_tweets_limit` in `ScweetConfig`). Check with `ScweetDB("scweet_state.db").accounts_summary()`
 - Run with logging enabled to see what's happening: `logging.basicConfig(level=logging.INFO)`
 
@@ -789,7 +789,7 @@ scweet --auth-token TOKEN search [QUERY] [options]
 | `--until DATE` | End date `YYYY-MM-DD` |
 | `--limit N` | Max tweets to return |
 | `--lang CODE` | Language code (e.g. `en`) |
-| `--display-type {Top,Latest}` | Default: `Top` |
+| `--display-type {Top,Latest}` | Default: `Latest` |
 | `--from USER [USER ...]` | Tweets from these users |
 | `--to USER [USER ...]` | Tweets sent to these users |
 | `--mention USER [USER ...]` | Tweets mentioning these users |
