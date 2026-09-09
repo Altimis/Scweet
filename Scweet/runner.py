@@ -25,6 +25,7 @@ from .exceptions import (
     RateLimitError,
     RunFailed,
 )
+from .account_session import fill_proxy_session_placeholder
 from .http_utils import apply_proxies_to_session, normalize_http_proxies
 from .limiter import TokenBucketLimiter
 from .models import ProfileTimelineRequest, RunStats, SearchRequest, SearchResult
@@ -872,6 +873,9 @@ class Runner:
                 account_proxy = _normalize_proxy_payload(account.get("proxy_json") or account.get("proxy"))
                 if account_proxy is None:
                     account_proxy = _normalize_proxy_payload(_cfg(self.config, "proxy", None))
+                # The check must send the same URL as the session: a literal {session} is not a valid
+                # session name, and the provider answers 407 for every account.
+                account_proxy = fill_proxy_session_placeholder(account_proxy, account)
                 has_proxy = normalize_http_proxies(account_proxy) is not None
                 if has_proxy:
                     proxy_check_url = str(

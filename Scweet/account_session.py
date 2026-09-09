@@ -97,7 +97,7 @@ def _record_get(record: Mapping[str, Any], *keys: str) -> Any:
     return None
 
 
-def _fill_proxy_session_placeholder(proxy: Any, account: Mapping[str, Any]) -> Any:
+def fill_proxy_session_placeholder(proxy: Any, account: Mapping[str, Any]) -> Any:
     """Replace `{session}` with a token unique to this account and this build.
 
     The random part makes a rebuilt session reach a new exit IP, so a retry does not repeat a dead exit.
@@ -275,7 +275,7 @@ class AccountSessionBuilder:
         try:
             account_proxy = _normalize_proxy_payload(_record_get(account, "proxy_json", "proxy"))
             proxy_source = account_proxy if account_proxy is not None else self.proxy
-            proxy_source = _fill_proxy_session_placeholder(proxy_source, account)
+            proxy_source = fill_proxy_session_placeholder(proxy_source, account)
             effective_proxies = normalize_http_proxies(proxy_source)
             if effective_proxies is None:
                 effective_proxies = self._http_proxies

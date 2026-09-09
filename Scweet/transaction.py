@@ -49,7 +49,9 @@ class TransactionIdProvider:
         *,
         enabled: bool = True,
         refresh_ttl_s: int = 6 * 60 * 60,
-        home_url: str = "https://x.com",
+        # Not "https://x.com": that URL answers a 32 KB shell that holds no ondemand.s marker, so the
+        # bootstrap finds no file, the header is dropped, and X answers 404 for every GraphQL request.
+        home_url: str = "https://x.com/home",
         session_factory=None,
         user_agent: Optional[str] = None,
         proxy: Any = None,
@@ -65,7 +67,13 @@ class TransactionIdProvider:
         self.impersonate = impersonate
         self.timeout = timeout
         self.proxy = proxy
-        self._http_proxies = normalize_http_proxies(proxy)
+        # A {session} placeholder must carry a real token here too: a literal placeholder is not a valid
+        # session name, and the provider answers 407 for the bootstrap of every account.
+        from .account_session import fill_proxy_session_placeholder
+
+        self._http_proxies = normalize_http_proxies(
+            fill_proxy_session_placeholder(proxy, {"username": "manifest"})
+        )
         self._cookies = cookies
         self.session_factory = session_factory or self._build_default_session_factory()
         self.user_agent_override = _as_str(user_agent)
@@ -147,6 +155,14 @@ class TransactionIdProvider:
             home_page = handle_x_migration(session=session)
 
             ondemand_url = _extract_ondemand_url(str(home_page))
+            if not ondemand_url:
+                # handle_x_migration reads https://x.com, which answers a 32 KB shell with no
+                # ondemand.s marker. self.home_url serves the full document that carries it.
+                home_response = session.get(self.home_url, timeout=20, allow_redirects=True)
+                home_text = str(getattr(home_response, "text", "") or "")
+                ondemand_url = _extract_ondemand_url(home_text)
+                if ondemand_url:
+                    home_page = BeautifulSoup(home_text, "html.parser")
             if not ondemand_url:
                 logger.warning("Transaction-id bootstrap failed: ondemand URL not found")
                 return None

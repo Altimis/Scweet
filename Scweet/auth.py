@@ -696,7 +696,11 @@ def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30, *, p
 
     session = None
     token_fp = _token_fingerprint(token)
-    proxies = normalize_http_proxies(proxy)
+    # A {session} placeholder needs a real token: a literal placeholder is not a valid session name and
+    # the provider answers 407.
+    from .account_session import fill_proxy_session_placeholder
+
+    proxies = normalize_http_proxies(fill_proxy_session_placeholder(proxy, {"username": "authboot"}))
     try:
         session = _SESSION_FACTORY()
         if session is None:
