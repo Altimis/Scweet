@@ -14,6 +14,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- **A search works again.** Every search returned HTTP 404 from every account, and the library could not repair itself. Both bootstrap paths read `https://x.com`, which answers a short shell page: it holds no `main.js` reference and no `"ondemand.s"` marker. So the manifest scrape found no bundle and kept a stale query ID, and the transaction-ID bootstrap built no `x-client-transaction-id` header. X answers 404 when that header is absent. Both paths now read `https://x.com/home`, and the six bundled query IDs are refreshed.
+- A proxy URL that carries a `{session}` placeholder works on every path. The proxy check on lease, the transaction-ID bootstrap, and the cookie bootstrap from an `auth_token` each sent the literal text `{session}` as the proxy user name, and a provider answers HTTP 407 for that name. Only the account session builder replaced it.
 - A locked account is no longer read as a successful empty page. X locks an account behind a human challenge and answers HTTP 200 with code 326 in the body. The engine now maps that answer to a `locked` status, rests the account for `locked_cooldown_s` (default 1 hour), and logs the unlock page (`https://x.com/account/access`). Before, the locked account stayed in rotation and silently returned nothing.
 
 ## [5.4.0] - 2026-09-07
