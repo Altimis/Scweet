@@ -39,8 +39,9 @@ class ScweetConfig(BaseModel):
     # X counts requests per account per window; measured 2026-08-31: 50 allowed, request 51 gave 429.
     window_request_limit: int = Field(default=50, ge=1)
     rate_limit_window_s: float = Field(default=900.0, gt=0.0)
-    # An optional floor between two requests. X counts the window total, not the gap, so 0 is safe.
-    min_delay_s: float = Field(default=0.0, ge=0.0)
+    # A floor between two requests of one account, so a burst does not arrive at wire speed. X counts the
+    # window total, so the floor costs little; 0 removes it.
+    min_delay_s: float = Field(default=1.0, ge=0.0)
     # Hand off when x-rate-limit-remaining falls to this value. Not 0, because the header can lag one
     # request behind X, and a 429 loses the page.
     rate_limit_min_remaining: int = Field(default=2, ge=0)
