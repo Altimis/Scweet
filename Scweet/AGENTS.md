@@ -38,9 +38,10 @@ directory.
   `docs/plans/2026-09-04-the-path-to-a-production-ready-library.md`.
 - **The limiter paces to the window of X, not to the gap between requests.** `TokenBucketLimiter` holds
   `window_request_limit` (50) tokens and refills over `rate_limit_window_s` (900s), and it starts full. A short
-  run bursts and waits nothing; a long run slows to the refill rate. Do not add a fixed delay: X counts the total
-  in a window, and an even delay made a run of 400 tweets take 373 seconds instead of 41. `requests_per_min` is
-  deprecated and the limiter ignores it.
+  run bursts and waits nothing; a long run slows to the refill rate. `min_delay_s` (1.0) is only a floor between
+  two requests of one account, so a burst does not arrive at wire speed. Do not pace evenly across the window: X
+  counts the total in a window, and an even delay made a run of 400 tweets take 373 seconds instead of 41.
+  `requests_per_min` is deprecated and the limiter ignores it.
 - **A run waits for a cooldown before it fails.** `Runner._acquire_leases_with_wait` waits up to
   `pool_wait_max_s` and retries every `pool_wait_poll_s`. A cooldown expires, so a run with a small pool
   finishes instead of failing.
@@ -49,10 +50,6 @@ directory.
   `_map_graphql_errors_to_status` decides this. It reads `AUTH_FAILURE_MESSAGES` and `AUTH_FAILURE_CODES`, and a
   phrase or a code there must describe the session and never one tweet. Measured 2026-09-04: code 89 is
   "Invalid or expired token" and code 32 is "Could not authenticate you".
-- **`limiter.py` paces requests evenly.** `refill_rate = requests_per_min / 60` and `min_delay_s` defaults to
-  2.0. X counts the total inside a window of 15 minutes, so an even pace makes a short run slow and it protects
-  nothing. Measured on a comparable engine: an even pace made a run of 400 tweets take 373 seconds in place of
-  41 seconds.
 - **`client.py` carries 11 constructor arguments already.** Narrow this surface. Do not add a twelfth.
 - **There is no `py.typed` in this directory.** Every annotation in these files is invisible to mypy and to
   pyright in a consumer project.
