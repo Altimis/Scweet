@@ -283,7 +283,7 @@ Never use your personal account — use dedicated accounts only. To reduce risk 
 No. Only publicly visible content is accessible.
 
 **Does it still work in 2025 / 2026?**
-Yes — last verified working in March 2026 against X's current GraphQL API.
+Yes — last verified with the 5.5.0 release (2026-09-09) against X's current GraphQL API.
 
 </details>
 
