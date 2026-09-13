@@ -33,7 +33,7 @@
   <a href="https://pepy.tech/projects/scweet">
     <img alt="PyPI Downloads" src="https://static.pepy.tech/badge/scweet/month">
   </a>
-  <a href="https://github.com/Altimis/scweet/blob/main/LICENSE">
+  <a href="https://github.com/Altimis/Scweet/blob/master/LICENSE.txt">
     <img alt="License" src="https://img.shields.io/github/license/Altimis/scweet">
   </a>
   <a href="https://apify.com/altimis/scweet">
