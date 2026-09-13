@@ -21,6 +21,7 @@ class _FakeClient:
         self.profile_tweets_calls = []
         self.followers_calls = []
         self.following_calls = []
+        self.verified_followers_calls = []
         self.user_info_calls = []
 
     def search(self, *args, **kwargs):
@@ -38,6 +39,10 @@ class _FakeClient:
     def get_following(self, *args, **kwargs):
         self.following_calls.append((args, kwargs))
         return [{"id": "4"}]
+
+    def get_verified_followers(self, *args, **kwargs):
+        self.verified_followers_calls.append((args, kwargs))
+        return [{"id": "5"}]
 
     def get_user_info(self, *args, **kwargs):
         self.user_info_calls.append((args, kwargs))
@@ -393,6 +398,18 @@ def test_parser_following_raw_json():
     assert args.raw_json is True
 
 
+# ── Parser: verified-followers ────────────────────────────────────────────
+
+def test_parser_verified_followers_users():
+    args = parse("verified-followers", "elonmusk", "naval")
+    assert args.users == ["elonmusk", "naval"]
+
+
+def test_parser_verified_followers_raw_json():
+    args = parse("verified-followers", "elonmusk", "--raw-json")
+    assert args.raw_json is True
+
+
 # ── Parser: user-info ─────────────────────────────────────────────────────
 
 def test_parser_user_info_single():
@@ -585,6 +602,21 @@ def test_cmd_followers_calls_client(monkeypatch, capsys):
     assert positional[0] == ["elonmusk"]
     assert kwargs["limit"] == 100
     assert kwargs["raw_json"] is True
+    assert capsys.readouterr().out == ""
+
+
+def test_cmd_verified_followers_calls_client(monkeypatch, capsys):
+    import Scweet.cli as cli_mod
+    fake = _FakeClient()
+    monkeypatch.setattr(cli_mod, "_make_client", lambda args: fake)
+
+    args = parse("verified-followers", "elonmusk", "--limit", "100")
+    args.func(args)
+
+    assert len(fake.verified_followers_calls) == 1
+    positional, kwargs = fake.verified_followers_calls[0]
+    assert positional[0] == ["elonmusk"]
+    assert kwargs["limit"] == 100
     assert capsys.readouterr().out == ""
 
 

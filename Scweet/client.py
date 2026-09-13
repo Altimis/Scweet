@@ -607,6 +607,49 @@ class Scweet:
             save_name=save_name,
         )
 
+    def get_verified_followers(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Fetch the verified followers of the given users. Returns list of user dicts.
+
+        Pass ``raw_json=True`` to include the full GraphQL payload under a ``raw`` key.
+        """
+        return asyncio.run(
+            self.aget_verified_followers(
+                users, limit=limit, max_empty_pages=max_empty_pages,
+                resume=resume, raw_json=raw_json, save=save, save_format=save_format,
+                save_name=save_name,
+            )
+        )
+
+    async def aget_verified_followers(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Async variant of :meth:`get_verified_followers`."""
+        return await self._run_follows(
+            users, "verified_followers", limit=limit, max_empty_pages=max_empty_pages,
+            resume=resume, raw_json=raw_json, save=save, save_format=save_format,
+            save_name=save_name,
+        )
+
     async def _run_follows(
         self,
         users: list[str],

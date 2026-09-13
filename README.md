@@ -157,6 +157,7 @@ tweets = s.get_profile_tweets(["elonmusk"], limit=200)
 ```python
 followers = s.get_followers(["elonmusk"], limit=1000)
 following = s.get_following(["elonmusk"], limit=1000)
+verified  = s.get_verified_followers(["elonmusk"], limit=1000)
 ```
 
 ### User profiles

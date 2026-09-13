@@ -111,7 +111,7 @@ s = Scweet(db_path="scweet_state.db", provision=False)
 
 ## Controlling Limits
 
-Every method that paginates (`search`, `get_profile_tweets`, `get_followers`, `get_following`) accepts a **`limit`** parameter — the maximum number of items to collect in that call. If omitted (`None`), scraping continues until results are exhausted or account daily caps are hit.
+Every method that paginates (`search`, `get_profile_tweets`, `get_followers`, `get_following`, `get_verified_followers`) accepts a **`limit`** parameter — the maximum number of items to collect in that call. If omitted (`None`), scraping continues until results are exhausted or account daily caps are hit.
 
 **Always set a `limit`** to avoid burning through your account quota unexpectedly:
 
@@ -271,7 +271,12 @@ users = s.get_followers(["elonmusk"], limit=1000)
 
 # Following
 users = s.get_following(["OpenAI"], limit=500)
+
+# Verified followers only
+users = s.get_verified_followers(["elonmusk"], limit=500)
 ```
+
+All three methods share the parameters below and return the same user record.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -293,7 +298,9 @@ users = s.get_followers(["elonmusk"], limit=100, raw_json=True)
 # users[0]["raw"] contains the full GraphQL user object
 ```
 
-Async: `await s.aget_followers(["elonmusk"], limit=500)` / `await s.aget_following(["OpenAI"], limit=500)`
+Async: `await s.aget_followers(["elonmusk"], limit=500)` / `await s.aget_following(["OpenAI"], limit=500)` / `await s.aget_verified_followers(["elonmusk"], limit=500)`
+
+CLI: `scweet ... verified-followers elonmusk --limit 500 --save`
 
 ---
 
@@ -362,7 +369,7 @@ Returned by `search()` and `get_profile_tweets()`.
 
 ### User record
 
-Returned by `get_followers()`, `get_following()`, and `get_user_info()`.
+Returned by `get_followers()`, `get_following()`, `get_verified_followers()`, and `get_user_info()`.
 
 | Field | Type | Description |
 |-------|------|-------------|

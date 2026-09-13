@@ -163,6 +163,22 @@ def cmd_following(args: argparse.Namespace) -> None:
         _print_results(results)
 
 
+def cmd_verified_followers(args: argparse.Namespace) -> None:
+    client = _make_client(args)
+    results = client.get_verified_followers(
+        args.users,
+        limit=args.limit,
+        max_empty_pages=args.max_empty_pages,
+        resume=args.resume,
+        raw_json=args.raw_json,
+        save=args.save,
+        save_format=args.save_format,
+        save_name=args.save_name,
+    )
+    if args.pretty:
+        _print_results(results)
+
+
 def cmd_user_info(args: argparse.Namespace) -> None:
     client = _make_client(args)
     results = client.get_user_info(
@@ -289,6 +305,19 @@ def build_parser() -> argparse.ArgumentParser:
                        help="return raw API JSON instead of normalized dicts")
     _add_output_args(p_fng)
     p_fng.set_defaults(func=cmd_following)
+
+    # ── verified-followers ──────────────────────────────────────────────
+    p_vf = sub.add_parser("verified-followers", help="get verified followers of users",
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_vf.add_argument("users", nargs="+", metavar="USER",
+                      help="one or more @handles")
+    p_vf.add_argument("--limit", type=int, metavar="N")
+    p_vf.add_argument("--max-empty-pages", type=int, metavar="N")
+    p_vf.add_argument("--resume", action="store_true")
+    p_vf.add_argument("--raw-json", action="store_true",
+                      help="return raw API JSON instead of normalized dicts")
+    _add_output_args(p_vf)
+    p_vf.set_defaults(func=cmd_verified_followers)
 
     # ── user-info ───────────────────────────────────────────────────────
     p_ui = sub.add_parser("user-info", help="get user profile info",

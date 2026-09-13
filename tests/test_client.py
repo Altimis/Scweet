@@ -322,6 +322,14 @@ def test_following_routes_to_runner(tmp_path):
     assert capture.follows_calls[0].follow_type == "following"
 
 
+def test_verified_followers_routes_to_runner(tmp_path):
+    client, capture = _client_with_runner(tmp_path)
+    result = asyncio.run(client.aget_verified_followers(["OpenAI"]))
+    assert result == []
+    assert len(capture.follows_calls) == 1
+    assert capture.follows_calls[0].follow_type == "verified_followers"
+
+
 def test_user_info_routes_to_runner(tmp_path):
     client, capture = _client_with_runner(tmp_path)
     result = asyncio.run(client.aget_user_info(["OpenAI"]))
