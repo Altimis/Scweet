@@ -1,0 +1,106 @@
+[
+  {
+    "type": "verified_followers",
+    "target": {
+      "raw": "elonmusk",
+      "source": "users",
+      "user_id": "",
+      "username": "elonmusk",
+      "profile_url": ""
+    },
+    "user_id": "1812620751574376448",
+    "username": "Thornix_defi",
+    "name": "Thornix _",
+    "description": "Crypto Enthusiast",
+    "location": null,
+    "created_at": "Sun Jul 14 22:51:04 +0000 2024",
+    "followers_count": 0,
+    "following_count": 0,
+    "statuses_count": 0,
+    "favourites_count": 0,
+    "media_count": 0,
+    "listed_count": 0,
+    "verified": false,
+    "blue_verified": true,
+    "protected": false,
+    "profile_image_url": "https://pbs.twimg.com/profile_images/1812620861171511296/6C-YjAxI_normal.jpg",
+    "profile_banner_url": null,
+    "url": null,
+    "raw": {
+      "__typename": "User",
+      "action_counts": {
+        "favorites_count": 763
+      },
+      "affiliates_highlighted_label": {},
+      "avatar": {
+        "image_url": "https://pbs.twimg.com/profile_images/1812620861171511296/6C-YjAxI_normal.jpg"
+      },
+      "banner": {
+        "image_url": "https://pbs.twimg.com/profile_banners/1812620751574376448/1726669882"
+      },
+      "core": {
+        "created_at": "Sun Jul 14 22:51:04 +0000 2024",
+        "name": "Thornix _",
+        "screen_name": "Thornix_defi"
+      },
+      "follow_request_sent": false,
+      "has_graduated_access": true,
+      "id": "VXNlcjoxODEyNjIwNzUxNTc0Mzc2NDQ4",
+      "is_blue_verified": true,
+      "location": {
+        "location": ""
+      },
+      "media_permissions": {
+        "can_media_tag": true
+      },
+      "notifications_settings": {
+        "notifications_enabled": false
+      },
+      "parody_commentary_fan_label": "None",
+      "pinned_items": {},
+      "possibly_sensitive": false,
+      "privacy": {
+        "protected": false
+      },
+      "profile_bio": {
+        "description": "Crypto Enthusiast",
+        "entities": {
+          "description": {}
+        }
+      },
+      "profile_image_shape": "Circle",
+      "profile_metadata": {
+        "profile_interstitial_type": ""
+      },
+      "profile_translation": {
+        "translator_type": "none"
+      },
+      "relationship_counts": {
+        "followers": 45,
+        "following": 422
+      },
+      "relationship_perspectives": {
+        "blocked_by": false,
+        "blocking": false,
+        "followed_by": false,
+        "following": false,
+        "live_following": false,
+        "muting": false
+      },
+      "rest_id": "1812620751574376448",
+      "super_follow_eligible": false,
+      "super_followed_by": false,
+      "super_following": false,
+      "tweet_counts": {
+        "media_tweets": 1,
+        "tweets": 452
+      },
+      "verification": {
+        "verified": false
+      },
+      "website": {
+        "url": ""
+      }
+    }
+  }
+]

@@ -1,0 +1,174 @@
+{
+  "input": {
+    "raw": "elonmusk",
+    "source": "users"
+  },
+  "user_id": "44196397",
+  "username": "elonmusk",
+  "name": "Elon Musk",
+  "description": "https://t.co/ZdBx5WABYx",
+  "location": null,
+  "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+  "followers_count": 0,
+  "following_count": 0,
+  "statuses_count": 0,
+  "favourites_count": 0,
+  "media_count": 0,
+  "listed_count": 0,
+  "verified": false,
+  "blue_verified": true,
+  "protected": false,
+  "profile_image_url": "https://pbs.twimg.com/profile_images/2053244804520427520/m8mdWZCG_normal.jpg",
+  "profile_banner_url": null,
+  "url": null,
+  "raw": {
+    "__typename": "User",
+    "action_counts": {
+      "favorites_count": 247852
+    },
+    "affiliates_highlighted_label": {
+      "label": {
+        "badge": {
+          "url": "https://pbs.twimg.com/profile_images/1955359038532653056/OSHY3ewP_bigger.jpg"
+        },
+        "description": "X",
+        "url": {
+          "url": "https://twitter.com/X",
+          "urlType": "DeepLink"
+        },
+        "userLabelDisplayType": "Badge",
+        "userLabelType": "BusinessLabel"
+      }
+    },
+    "avatar": {
+      "image_url": "https://pbs.twimg.com/profile_images/2053244804520427520/m8mdWZCG_normal.jpg"
+    },
+    "banner": {
+      "image_url": "https://pbs.twimg.com/profile_banners/44196397/1774145451"
+    },
+    "business_account": {},
+    "core": {
+      "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+      "name": "Elon Musk",
+      "screen_name": "elonmusk"
+    },
+    "creator_subscriptions_count": 250,
+    "follow_request_sent": false,
+    "has_graduated_access": true,
+    "has_hidden_subscriptions_on_profile": true,
+    "highlights_info": {
+      "can_highlight_tweets": true,
+      "highlighted_tweets": "1066"
+    },
+    "id": "VXNlcjo0NDE5NjM5Nw==",
+    "is_blue_verified": true,
+    "is_profile_translatable": false,
+    "legacy_extended_profile": {},
+    "location": {
+      "location": ""
+    },
+    "media_permissions": {
+      "can_media_tag": false
+    },
+    "notifications_settings": {
+      "notifications_enabled": false
+    },
+    "parody_commentary_fan_label": "None",
+    "pinned_items": {
+      "tweet_ids_str": [
+        "2098932438055469451"
+      ]
+    },
+    "possibly_sensitive": false,
+    "premium_gifting_eligible": false,
+    "privacy": {
+      "protected": false
+    },
+    "professional": {
+      "category": [],
+      "professional_type": "Creator",
+      "rest_id": "1679729435447275522"
+    },
+    "profile_bio": {
+      "description": "https://t.co/ZdBx5WABYx",
+      "entities": {
+        "description": {
+          "urls": [
+            {
+              "display_url": "Terafab.AI",
+              "expanded_url": "http://Terafab.AI",
+              "indices": [
+                0,
+                23
+              ],
+              "url": "https://t.co/ZdBx5WABYx"
+            }
+          ]
+        }
+      }
+    },
+    "profile_image_shape": "Circle",
+    "profile_metadata": {
+      "profile_interstitial_type": ""
+    },
+    "profile_sort_enabled": true,
+    "profile_translation": {
+      "translator_type": "none"
+    },
+    "relationship_counts": {
+      "followers": 241659598,
+      "following": 1406
+    },
+    "relationship_perspectives": {
+      "blocked_by": false,
+      "blocking": false,
+      "followed_by": false,
+      "following": false,
+      "live_following": false,
+      "muting": false
+    },
+    "rest_id": "44196397",
+    "super_follow_eligible": true,
+    "super_followed_by": false,
+    "super_following": false,
+    "tweet_counts": {
+      "media_tweets": 4717,
+      "tweets": 108482
+    },
+    "user_seed_tweet_count": 0,
+    "verification": {
+      "verified": false
+    },
+    "verification_info": {
+      "is_identity_verified": false,
+      "reason": {
+        "description": {
+          "entities": [
+            {
+              "from_index": 54,
+              "ref": {
+                "url": "https://twitter.com/X",
+                "url_type": "ExternalUrl"
+              },
+              "to_index": 56
+            },
+            {
+              "from_index": 63,
+              "ref": {
+                "url": "https://help.twitter.com/en/rules-and-policies/profile-labels",
+                "url_type": "ExternalUrl"
+              },
+              "to_index": 73
+            }
+          ],
+          "text": "This account is verified because it's an affiliate of @X on X. Learn more"
+        },
+        "override_verified_year": -3000,
+        "verified_since_msec": "-156836000000000"
+      }
+    },
+    "website": {
+      "url": ""
+    }
+  }
+}

@@ -1770,6 +1770,14 @@ class ApiEngine:
             return 0
 
     @staticmethod
+    def _first_present(*values: Any) -> Any:
+        """The first value that is not None. A real 0 wins over a later number."""
+        for value in values:
+            if value is not None:
+                return value
+        return None
+
+    @staticmethod
     def _first_non_empty_str(*values: Any) -> Optional[str]:
         for value in values:
             if value is None:
@@ -1793,8 +1801,49 @@ class ApiEngine:
         location_node = user_result.get("location") if isinstance(user_result.get("location"), dict) else {}
         profile_bio = user_result.get("profile_bio") if isinstance(user_result.get("profile_bio"), dict) else {}
         entities = legacy.get("entities") if isinstance(legacy.get("entities"), dict) else {}
+        if not entities:
+            entities = (
+                profile_bio.get("entities") if isinstance(profile_bio.get("entities"), dict) else {}
+            )
+        # X empties `legacy` and sends the counts in the nodes below. Captured
+        # 2026-09-13: legacy was {} and relationship_counts held 241,659,598.
+        relationship_counts = (
+            user_result.get("relationship_counts")
+            if isinstance(user_result.get("relationship_counts"), dict)
+            else {}
+        )
+        tweet_counts = (
+            user_result.get("tweet_counts") if isinstance(user_result.get("tweet_counts"), dict) else {}
+        )
+        action_counts = (
+            user_result.get("action_counts") if isinstance(user_result.get("action_counts"), dict) else {}
+        )
+        banner = user_result.get("banner") if isinstance(user_result.get("banner"), dict) else {}
+        website = user_result.get("website") if isinstance(user_result.get("website"), dict) else {}
+        pinned_items = (
+            user_result.get("pinned_items") if isinstance(user_result.get("pinned_items"), dict) else {}
+        )
+        verification_info = (
+            user_result.get("verification_info")
+            if isinstance(user_result.get("verification_info"), dict)
+            else {}
+        )
 
-        url_value = self._first_non_empty_str(legacy.get("url"))
+        pinned_tweet_ids = [
+            str(value)
+            for value in (
+                legacy.get("pinned_tweet_ids_str") or pinned_items.get("tweet_ids_str") or []
+            )
+            if value
+        ]
+        description_node = entities.get("description") if isinstance(entities.get("description"), dict) else {}
+        description_urls = [
+            row.get("expanded_url") or row.get("url")
+            for row in (description_node.get("urls") or [])
+            if isinstance(row, dict) and (row.get("expanded_url") or row.get("url"))
+        ]
+
+        url_value = self._first_non_empty_str(legacy.get("url"), website.get("url"))
         if not url_value:
             url_node = entities.get("url") if isinstance(entities.get("url"), dict) else {}
             url_candidates = url_node.get("urls") if isinstance(url_node.get("urls"), list) else []
@@ -1842,15 +1891,28 @@ class ApiEngine:
                 legacy.get("created_at"),
                 core.get("created_at"),
             ),
-            "followers_count": self._as_int(legacy.get("followers_count")),
-            "following_count": self._as_int(legacy.get("friends_count")),
-            "statuses_count": self._as_int(legacy.get("statuses_count")),
-            "favourites_count": self._as_int(legacy.get("favourites_count")),
-            "media_count": self._as_int(legacy.get("media_count")),
+            "followers_count": self._as_int(
+                self._first_present(legacy.get("followers_count"), relationship_counts.get("followers"))
+            ),
+            "following_count": self._as_int(
+                self._first_present(legacy.get("friends_count"), relationship_counts.get("following"))
+            ),
+            "statuses_count": self._as_int(
+                self._first_present(legacy.get("statuses_count"), tweet_counts.get("tweets"))
+            ),
+            "favourites_count": self._as_int(
+                self._first_present(
+                    legacy.get("favourites_count"), action_counts.get("favorites_count")
+                )
+            ),
+            "media_count": self._as_int(
+                self._first_present(legacy.get("media_count"), tweet_counts.get("media_tweets"))
+            ),
             "listed_count": self._as_int(legacy.get("listed_count")),
             "verified": verified_value,
             "blue_verified": blue_verified_value,
             "protected": protected_value,
+            "identity_verified": bool(verification_info.get("is_identity_verified", False)),
             "profile_image_url": self._first_non_empty_str(
                 legacy.get("profile_image_url_https"),
                 legacy.get("profile_image_url"),
@@ -1859,8 +1921,11 @@ class ApiEngine:
             "profile_banner_url": self._first_non_empty_str(
                 legacy.get("profile_banner_url"),
                 avatar.get("banner_image_url"),
+                banner.get("image_url"),
             ),
             "url": url_value,
+            "pinned_tweet_ids": pinned_tweet_ids,
+            "description_urls": description_urls,
         }
 
     def _map_user_result_to_profile_record(
@@ -1894,9 +1959,12 @@ class ApiEngine:
             "verified": bool(normalized.get("verified", False)),
             "blue_verified": bool(normalized.get("blue_verified", False)),
             "protected": bool(normalized.get("protected", False)),
+            "identity_verified": bool(normalized.get("identity_verified", False)),
             "profile_image_url": normalized.get("profile_image_url"),
             "profile_banner_url": normalized.get("profile_banner_url"),
             "url": normalized.get("url"),
+            "pinned_tweet_ids": normalized.get("pinned_tweet_ids") or [],
+            "description_urls": normalized.get("description_urls") or [],
             "raw": user_result,
         }
 
@@ -1932,9 +2000,12 @@ class ApiEngine:
             "verified": bool(normalized.get("verified", False)),
             "blue_verified": bool(normalized.get("blue_verified", False)),
             "protected": bool(normalized.get("protected", False)),
+            "identity_verified": bool(normalized.get("identity_verified", False)),
             "profile_image_url": normalized.get("profile_image_url"),
             "profile_banner_url": normalized.get("profile_banner_url"),
             "url": normalized.get("url"),
+            "pinned_tweet_ids": normalized.get("pinned_tweet_ids") or [],
+            "description_urls": normalized.get("description_urls") or [],
             "raw": user_result,
         }
 
@@ -2395,6 +2466,156 @@ class ApiEngine:
         thread.start()
         return await done
 
+    @staticmethod
+    def _opt_int(value: Any) -> Optional[int]:
+        if value is None or value == "":
+            return None
+        try:
+            return int(value)
+        except Exception:
+            return None
+
+    def _tweet_result_to_record(
+        self, tweet_result_raw: dict[str, Any], entry_id: str = "", nest: bool = True
+    ) -> TweetRecord:
+        tweet_result = tweet_result_raw
+        if "tweet" in tweet_result_raw and isinstance(tweet_result_raw.get("tweet"), dict):
+            tweet_result = tweet_result_raw["tweet"]
+
+        legacy = tweet_result.get("legacy", {}) if isinstance(tweet_result.get("legacy"), dict) else {}
+        user_result = (
+            tweet_result.get("core", {})
+            .get("user_results", {})
+            .get("result", {})
+        )
+        user_legacy = user_result.get("legacy", {}) if isinstance(user_result, dict) else {}
+        user_core = user_result.get("core", {}) if isinstance(user_result, dict) else {}
+
+        screen_name = (
+            (user_legacy.get("screen_name") if isinstance(user_legacy, dict) else None)
+            or (user_core.get("screen_name") if isinstance(user_core, dict) else None)
+        )
+        user_name = (
+            (user_legacy.get("name") if isinstance(user_legacy, dict) else None)
+            or (user_core.get("name") if isinstance(user_core, dict) else None)
+        )
+
+        tweet_id = (
+            legacy.get("id_str")
+            or tweet_result.get("rest_id")
+            or entry_id.replace("tweet-", "")
+        )
+
+        note_text = (
+            tweet_result.get("note_tweet", {})
+            .get("note_tweet_results", {})
+            .get("result", {})
+            .get("text")
+        )
+        text = note_text or legacy.get("full_text") or ""
+
+        media_urls: list[str] = []
+        video_links: list[str] = []
+        for media in (legacy.get("extended_entities", {}) or {}).get("media", []) or []:
+            if not isinstance(media, dict):
+                continue
+            url = media.get("media_url_https")
+            if isinstance(url, str) and url:
+                media_urls.append(url)
+            best_url: Optional[str] = None
+            best_rate = -1
+            for variant in (media.get("video_info") or {}).get("variants") or []:
+                if not isinstance(variant, dict):
+                    continue
+                # An m3u8 playlist is a stream index, not a file a user can save.
+                if variant.get("content_type") != "video/mp4":
+                    continue
+                variant_url = variant.get("url")
+                if not isinstance(variant_url, str) or not variant_url:
+                    continue
+                rate = variant.get("bitrate")
+                rate = rate if isinstance(rate, int) else 0
+                if rate > best_rate:
+                    best_url, best_rate = variant_url, rate
+            if best_url:
+                video_links.append(best_url)
+
+        tweet_url = None
+        if screen_name and tweet_id:
+            tweet_url = f"https://x.com/{screen_name}/status/{tweet_id}"
+
+        # embedded_text: quoted tweet text or full retweet text
+        embedded_text: Optional[str] = None
+        qt = tweet_result.get("quoted_status_result") or {}
+        if isinstance(qt, dict) and qt:
+            qt_legacy = qt.get("result", {}).get("legacy", {})
+            if isinstance(qt_legacy, dict):
+                embedded_text = qt_legacy.get("full_text") or None
+        if embedded_text is None:
+            rt = legacy.get("retweeted_status_result") or {}
+            if isinstance(rt, dict) and rt:
+                rt_legacy = rt.get("result", {}).get("legacy", {})
+                if isinstance(rt_legacy, dict):
+                    embedded_text = rt_legacy.get("full_text") or None
+
+        entities = legacy.get("entities", {}) if isinstance(legacy.get("entities"), dict) else {}
+        hashtags = [
+            h.get("text")
+            for h in entities.get("hashtags", []) or []
+            if isinstance(h, dict) and h.get("text")
+        ]
+        mentions = [
+            m.get("screen_name")
+            for m in entities.get("user_mentions", []) or []
+            if isinstance(m, dict) and m.get("screen_name")
+        ]
+        url_list = [
+            u.get("expanded_url") or u.get("url")
+            for u in entities.get("urls", []) or []
+            if isinstance(u, dict) and (u.get("expanded_url") or u.get("url"))
+        ]
+
+        quoted_tweet: Optional[TweetRecord] = None
+        retweeted_tweet: Optional[TweetRecord] = None
+        if nest:
+            # One level of depth only. The raw of a nested record stays None,
+            # because the raw of the parent already holds the nested node.
+            qt_node = (tweet_result.get("quoted_status_result") or {}).get("result")
+            if isinstance(qt_node, dict):
+                quoted_tweet = self._tweet_result_to_record(qt_node, nest=False)
+                quoted_tweet.raw = None
+            rt_node = (legacy.get("retweeted_status_result") or {}).get("result")
+            if isinstance(rt_node, dict):
+                retweeted_tweet = self._tweet_result_to_record(rt_node, nest=False)
+                retweeted_tweet.raw = None
+
+        return TweetRecord(
+            tweet_id=str(tweet_id),
+            user=TweetUser(screen_name=screen_name, name=user_name),
+            timestamp=legacy.get("created_at"),
+            text=text,
+            embedded_text=embedded_text,
+            comments=self._safe_int(legacy.get("reply_count")),
+            likes=self._safe_int(legacy.get("favorite_count")),
+            retweets=self._safe_int(legacy.get("retweet_count")),
+            media=TweetMedia(image_links=media_urls, video_links=video_links),
+            tweet_url=tweet_url,
+            raw=tweet_result_raw,
+            views=self._opt_int((tweet_result.get("views") or {}).get("count")),
+            quotes=self._opt_int(legacy.get("quote_count")),
+            bookmarks=self._opt_int(legacy.get("bookmark_count")),
+            lang=legacy.get("lang") or None,
+            hashtags=hashtags,
+            mentions=mentions,
+            urls=url_list,
+            in_reply_to_tweet_id=legacy.get("in_reply_to_status_id_str") or None,
+            in_reply_to_user=legacy.get("in_reply_to_screen_name") or None,
+            is_quote=bool(legacy.get("is_quote_status", False)),
+            is_retweet=bool(legacy.get("retweeted_status_result")),
+            quoted_tweet=quoted_tweet,
+            retweeted_tweet=retweeted_tweet,
+        )
+
     def _extract_tweets_and_cursor(self, data: dict[str, Any]) -> Tuple[list[TweetRecord], Optional[str]]:
         tweets: list[TweetRecord] = []
         cursor: Optional[str] = None
@@ -2438,83 +2659,7 @@ class ApiEngine:
                 if not isinstance(tweet_result_raw, dict):
                     continue
 
-                tweet_result = tweet_result_raw
-                if "tweet" in tweet_result_raw and isinstance(tweet_result_raw.get("tweet"), dict):
-                    tweet_result = tweet_result_raw["tweet"]
-
-                legacy = tweet_result.get("legacy", {}) if isinstance(tweet_result.get("legacy"), dict) else {}
-                user_result = (
-                    tweet_result.get("core", {})
-                    .get("user_results", {})
-                    .get("result", {})
-                )
-                user_legacy = user_result.get("legacy", {}) if isinstance(user_result, dict) else {}
-                user_core = user_result.get("core", {}) if isinstance(user_result, dict) else {}
-
-                screen_name = (
-                    (user_legacy.get("screen_name") if isinstance(user_legacy, dict) else None)
-                    or (user_core.get("screen_name") if isinstance(user_core, dict) else None)
-                )
-                user_name = (
-                    (user_legacy.get("name") if isinstance(user_legacy, dict) else None)
-                    or (user_core.get("name") if isinstance(user_core, dict) else None)
-                )
-
-                tweet_id = (
-                    legacy.get("id_str")
-                    or tweet_result.get("rest_id")
-                    or entry_id.replace("tweet-", "")
-                )
-
-                note_text = (
-                    tweet_result.get("note_tweet", {})
-                    .get("note_tweet_results", {})
-                    .get("result", {})
-                    .get("text")
-                )
-                text = note_text or legacy.get("full_text") or ""
-
-                media_urls: list[str] = []
-                for media in (legacy.get("extended_entities", {}) or {}).get("media", []) or []:
-                    if not isinstance(media, dict):
-                        continue
-                    url = media.get("media_url_https")
-                    if isinstance(url, str) and url:
-                        media_urls.append(url)
-
-                tweet_url = None
-                if screen_name and tweet_id:
-                    tweet_url = f"https://x.com/{screen_name}/status/{tweet_id}"
-
-                # embedded_text: quoted tweet text or full retweet text
-                embedded_text: Optional[str] = None
-                qt = tweet_result.get("quoted_status_result") or {}
-                if isinstance(qt, dict) and qt:
-                    qt_legacy = qt.get("result", {}).get("legacy", {})
-                    if isinstance(qt_legacy, dict):
-                        embedded_text = qt_legacy.get("full_text") or None
-                if embedded_text is None:
-                    rt = legacy.get("retweeted_status_result") or {}
-                    if isinstance(rt, dict) and rt:
-                        rt_legacy = rt.get("result", {}).get("legacy", {})
-                        if isinstance(rt_legacy, dict):
-                            embedded_text = rt_legacy.get("full_text") or None
-
-                tweets.append(
-                    TweetRecord(
-                        tweet_id=str(tweet_id),
-                        user=TweetUser(screen_name=screen_name, name=user_name),
-                        timestamp=legacy.get("created_at"),
-                        text=text,
-                        embedded_text=embedded_text,
-                        comments=self._safe_int(legacy.get("reply_count")),
-                        likes=self._safe_int(legacy.get("favorite_count")),
-                        retweets=self._safe_int(legacy.get("retweet_count")),
-                        media=TweetMedia(image_links=media_urls),
-                        tweet_url=tweet_url,
-                        raw=tweet_result_raw,
-                    )
-                )
+                tweets.append(self._tweet_result_to_record(tweet_result_raw, entry_id=entry_id))
 
         return tweets, cursor
 
@@ -2555,82 +2700,7 @@ class ApiEngine:
                 if not isinstance(tweet_result_raw, dict):
                     continue
 
-                tweet_result = tweet_result_raw
-                if "tweet" in tweet_result_raw and isinstance(tweet_result_raw.get("tweet"), dict):
-                    tweet_result = tweet_result_raw["tweet"]
-
-                legacy = tweet_result.get("legacy", {}) if isinstance(tweet_result.get("legacy"), dict) else {}
-                user_result = (
-                    tweet_result.get("core", {})
-                    .get("user_results", {})
-                    .get("result", {})
-                )
-                user_legacy = user_result.get("legacy", {}) if isinstance(user_result, dict) else {}
-                user_core = user_result.get("core", {}) if isinstance(user_result, dict) else {}
-
-                screen_name = (
-                    (user_legacy.get("screen_name") if isinstance(user_legacy, dict) else None)
-                    or (user_core.get("screen_name") if isinstance(user_core, dict) else None)
-                )
-                user_name = (
-                    (user_legacy.get("name") if isinstance(user_legacy, dict) else None)
-                    or (user_core.get("name") if isinstance(user_core, dict) else None)
-                )
-
-                tweet_id = (
-                    legacy.get("id_str")
-                    or tweet_result.get("rest_id")
-                    or entry_id.replace("tweet-", "")
-                )
-
-                note_text = (
-                    tweet_result.get("note_tweet", {})
-                    .get("note_tweet_results", {})
-                    .get("result", {})
-                    .get("text")
-                )
-                text = note_text or legacy.get("full_text") or ""
-
-                media_urls: list[str] = []
-                for media in (legacy.get("extended_entities", {}) or {}).get("media", []) or []:
-                    if not isinstance(media, dict):
-                        continue
-                    url = media.get("media_url_https")
-                    if isinstance(url, str) and url:
-                        media_urls.append(url)
-
-                tweet_url = None
-                if screen_name and tweet_id:
-                    tweet_url = f"https://x.com/{screen_name}/status/{tweet_id}"
-
-                embedded_text = None
-                qt = tweet_result.get("quoted_status_result") or {}
-                if isinstance(qt, dict) and qt:
-                    qt_legacy = qt.get("result", {}).get("legacy", {})
-                    if isinstance(qt_legacy, dict):
-                        embedded_text = qt_legacy.get("full_text") or None
-                if embedded_text is None:
-                    rt = legacy.get("retweeted_status_result") or {}
-                    if isinstance(rt, dict) and rt:
-                        rt_legacy = rt.get("result", {}).get("legacy", {})
-                        if isinstance(rt_legacy, dict):
-                            embedded_text = rt_legacy.get("full_text") or None
-
-                tweets.append(
-                    TweetRecord(
-                        tweet_id=str(tweet_id),
-                        user=TweetUser(screen_name=screen_name, name=user_name),
-                        timestamp=legacy.get("created_at"),
-                        text=text,
-                        embedded_text=embedded_text,
-                        comments=self._safe_int(legacy.get("reply_count")),
-                        likes=self._safe_int(legacy.get("favorite_count")),
-                        retweets=self._safe_int(legacy.get("retweet_count")),
-                        media=TweetMedia(image_links=media_urls),
-                        tweet_url=tweet_url,
-                        raw=tweet_result_raw,
-                    )
-                )
+                tweets.append(self._tweet_result_to_record(tweet_result_raw, entry_id=entry_id))
 
         return tweets, cursor
 
