@@ -88,6 +88,7 @@ class TweetUser(BaseModel):
 
 class TweetMedia(BaseModel):
     image_links: list[str] = Field(default_factory=list)
+    video_links: list[str] = Field(default_factory=list)
 
 
 class TweetRecord(BaseModel):
@@ -103,6 +104,24 @@ class TweetRecord(BaseModel):
     media: TweetMedia = Field(default_factory=TweetMedia)
     tweet_url: Optional[str] = None
     raw: Optional[dict[str, Any]] = None
+    # The fields below arrived in 5.6.0. Every one is additive with a None or
+    # empty default, so a script that reads the fields above sees no change.
+    views: Optional[int] = None
+    quotes: Optional[int] = None
+    bookmarks: Optional[int] = None
+    lang: Optional[str] = None
+    hashtags: list[str] = Field(default_factory=list)
+    mentions: list[str] = Field(default_factory=list)
+    urls: list[str] = Field(default_factory=list)
+    in_reply_to_tweet_id: Optional[str] = None
+    in_reply_to_user: Optional[str] = None
+    is_quote: bool = False
+    is_retweet: bool = False
+    quoted_tweet: Optional["TweetRecord"] = None
+    retweeted_tweet: Optional["TweetRecord"] = None
+
+
+TweetRecord.model_rebuild()
 
 
 class RunStats(BaseModel):
