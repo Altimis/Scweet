@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## [5.6.0] - 2026-09-13
+
+Every change below is additive. A script written against 5.5.x reads the same values from the same fields.
+
+### Fixed
+
+- **A profile reported 0 followers, 0 following and 0 tweets.** X stopped sending the flat `legacy` object of a user and moved the counts into `relationship_counts`, `tweet_counts` and `action_counts`. The parser read only the old place, so `get_user_info`, `get_followers`, `get_following` and `get_verified_followers` returned a zero for every count. Captured 2026-09-13: one profile with 241,659,598 followers reported 0. The parser now reads the old place first and the new nodes after it, so an older answer of X keeps working. A real zero stays a zero.
+- A profile record now carries its banner image again, and the links inside the bio, for the same reason.
+
+### Added
+
+- **`get_verified_followers()` / `aget_verified_followers()` and the CLI command `verified-followers`.** The engine already supported the endpoint of X for the verified followers of a profile, and no public method reached it.
+- **A tweet record carries the fields that X already sends:** `views`, `quotes`, `bookmarks`, `lang`, `hashtags`, `mentions`, `urls`, `in_reply_to_tweet_id`, `in_reply_to_user`, `is_quote` and `is_retweet`. No extra request: the data was in the `raw` payload of every row.
+- **`quoted_tweet` and `retweeted_tweet`** hold the embedded tweet as a full tweet record, one level deep. `embedded_text` keeps its old value, which is the truncated text that X sends, so it can be shorter than the `text` of the nested record.
+- **`media.video_links`** holds the highest-bitrate MP4 of each video. An `m3u8` playlist is a stream index and not a file to save, so it is left out.
+- A user record carries `identity_verified`, `pinned_tweet_ids` and `description_urls`.
+
+### Changed
+
+- A count that X does not send reads `None` instead of `0`, so a caller can tell "unknown" from "zero". The counts `likes`, `retweets` and `comments` keep their old default of `0`.
+
 ## [5.5.1] - 2026-09-13
 
 ### Fixed

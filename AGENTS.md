@@ -11,7 +11,8 @@ come before a feature.
 ## Map
 
 - `Scweet/` — the importable package. Every module is flat inside it, with no sub-package.
-- `tests/` — 35 files and 348 tests. A pytest marker selects the level.
+- `tests/` — 38 files and 368 tests. A pytest marker selects the level. `tests/fixtures/` holds the
+  captured answers of X.
 - `examples/` — short scripts that a reader can run.
 - `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.12.
 

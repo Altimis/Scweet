@@ -52,7 +52,7 @@
 **What you can scrape:**
 - [**Tweets**](DOCUMENTATION.md#search-api) — by keyword, hashtag, user, date range, engagement filters, language, location
 - [**Profile timelines**](DOCUMENTATION.md#profile-tweets) — a user's full tweet history
-- [**Followers / Following**](DOCUMENTATION.md#followers--following) — full account lists at scale
+- [**Followers / Following**](DOCUMENTATION.md#followers--following) — full account lists at scale, verified followers included
 - [**User profiles**](DOCUMENTATION.md#user-info) — bio, follower count, verification status, and more
 
 ---

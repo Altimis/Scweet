@@ -361,9 +361,30 @@ Returned by `search()` and `get_profile_tweets()`.
 | `retweets` | `int` | Retweet count |
 | `comments` | `int` | Reply count |
 | `tweet_url` | `str` | Permalink, e.g. `"https://x.com/user/status/123"` |
-| `media` | `dict \| None` | `{"image_links": ["https://..."]}` — `None` if no media |
+| `media` | `dict \| None` | `{"image_links": [...], "video_links": [...]}` — `video_links` holds the highest-bitrate MP4 of each video |
 | `embedded_text` | `str \| None` | Text of the quoted or retweeted tweet — `None` for plain tweets |
 | `raw` | `dict` | Full GraphQL payload |
+| `views` | `int \| None` | View count — `None` when X sends none |
+| `quotes` | `int \| None` | Quote count |
+| `bookmarks` | `int \| None` | Bookmark count |
+| `lang` | `str \| None` | Language code X assigned, e.g. `"en"` |
+| `hashtags` | `list[str]` | Hashtags, without the `#` |
+| `mentions` | `list[str]` | Mentioned screen names |
+| `urls` | `list[str]` | Expanded links in the tweet |
+| `in_reply_to_tweet_id` | `str \| None` | The tweet this one answers |
+| `in_reply_to_user` | `str \| None` | The screen name it answers |
+| `is_quote` | `bool` | The tweet quotes another tweet |
+| `is_retweet` | `bool` | The tweet is a retweet |
+| `quoted_tweet` | `dict \| None` | The quoted tweet, as a tweet record one level deep |
+| `retweeted_tweet` | `dict \| None` | The retweeted tweet, as a tweet record one level deep |
+
+The fields from `views` down arrived in 5.6.0. Every one is additive: a script written against an
+earlier version reads the same values from the fields above them. A count is `None` and never `0`
+when X sends no value, so a real zero stays a zero.
+
+`quoted_tweet` and `retweeted_tweet` nest one level only, and their own `raw` is `None`, because the
+`raw` of the parent already holds the nested payload. `embedded_text` keeps its old value: it reads
+the truncated text of X, so it can be shorter than the `text` of the nested record.
 
 **CSV output** flattens `user` and `media`: `user_screen_name`, `user_name`, and `image_links` become their own columns (in that order). JSON output and the Python return value preserve the nested structure above.
 
@@ -391,9 +412,16 @@ Returned by `get_followers()`, `get_following()`, `get_verified_followers()`, an
 | `profile_image_url` | `str` | Profile photo URL |
 | `profile_banner_url` | `str` | Banner image URL |
 | `url` | `str \| None` | Website URL set in bio |
+| `identity_verified` | `bool` | X confirmed the identity of the person |
+| `pinned_tweet_ids` | `list[str]` | The pinned tweet of the profile |
+| `description_urls` | `list[str]` | Expanded links inside the bio |
 | `raw` | `dict` | Full GraphQL payload (only present when `raw_json=True`) |
 
-**Followers / following only:** each record also has `type` (`"followers"` or `"following"`) and `target` (info about the queried account).
+The counts above were `0` for every profile before 5.6.0. X stopped sending the flat `legacy` object
+and moved the counts into other nodes of the answer, and the parser read only the old place. Version
+5.6.0 reads both, so an older answer of X keeps working.
+
+**Followers / following only:** each record also has `type` (`"followers"`, `"following"` or `"verified_followers"`) and `target` (info about the queried account).
 
 **User info only:** each record has `input` (the queried input) instead of `type`/`target`. The `raw` field is omitted by default (not present unless the underlying engine returns it).
 

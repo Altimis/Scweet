@@ -61,6 +61,16 @@ directory.
   phrase or a code there must describe the session and never one tweet. Measured 2026-09-04: code 89 is
   "Invalid or expired token" and code 32 is "Could not authenticate you".
 - **`client.py` carries 11 constructor arguments already.** Narrow this surface. Do not add a twelfth.
+- **X empties the `legacy` object of a user.** It sends the counts in `relationship_counts`,
+  `tweet_counts` and `action_counts`, the banner in `banner`, the pinned tweet in `pinned_items`, and the
+  entities of the bio in `profile_bio`. Captured 2026-09-13: a profile with 241,659,598 followers reported
+  0, because `_extract_user_result_profile_fields` read `legacy` only. It now reads `legacy` first and the
+  new nodes after it. Use `_first_present` and never `or` for a count, because `0 or 999` gives 999 and a
+  profile with no follower is a real state.
+- **A field of `TweetRecord` that arrived in 5.6.0 is additive.** `tests/test_record_compatibility.py`
+  holds the original 12 fields in a golden file. A change to one of them breaks every user, and that test
+  fails. A count that X does not send is `None`, so a caller can tell "unknown" from "zero". A nested
+  `quoted_tweet` or `retweeted_tweet` goes one level deep and its own `raw` is `None`.
 - **There is no `py.typed` in this directory.** Every annotation in these files is invisible to mypy and to
   pyright in a consumer project.
 
