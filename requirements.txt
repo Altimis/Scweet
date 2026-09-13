@@ -2,5 +2,6 @@ python-dotenv
 sqlmodel>=0.0.22
 SQLAlchemy>=2.0
 curl_cffi
+beautifulsoup4
 XClientTransaction>=1.0.2
 pydantic>=2.0
