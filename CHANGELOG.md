@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## [5.5.1] - 2026-09-13
+
+### Fixed
+
+- `beautifulsoup4` is now a declared dependency. Two modules import `bs4`, and the package arrived only through a transitive dependency, so one dependency-resolver change could break a fresh install.
+- The license badge in the README opens the tracked license file. The old link answered 404.
+- The FAQ names the release of the last live verification instead of a fixed month.
+
+### Changed
+
+- The test dependencies are declared in `requirements-dev.txt`. Before, a contributor who installed the package and ran `pytest` saw 5 async tests fail, because `pytest-asyncio` was installed only inside CI. `pip install -e . -r requirements-dev.txt` now installs everything the suite needs.
+- The repository no longer tracks IDE settings.
+
 ## [5.5.0] - 2026-09-09
 
 A search works again. Released 5.4.0 returned HTTP 404 for every search, from every account, because X
