@@ -25,7 +25,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -e .
-          pip install pytest pytest-asyncio
+          pip install -r requirements-dev.txt
 
       - name: Run unit tests
         run: pytest tests/ -v --ignore=tests/test_integration.py --tb=short

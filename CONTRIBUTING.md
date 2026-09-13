@@ -20,7 +20,7 @@ Open an issue using the **Bug Report** template. Include:
 ## Submitting a pull request
 
 1. Fork the repo and create a branch off `master`
-2. Install in editable mode: `cd Scweet && pip install -e .`
+2. Install in editable mode, with the test dependencies: `cd Scweet && pip install -e . -r requirements-dev.txt`
 3. Run the test suite: `pytest tests/ -v --ignore=tests/test_integration.py`
 4. All tests must pass. Add tests for new behaviour.
 5. Keep the PR focused — one change per PR is easier to review and merge
