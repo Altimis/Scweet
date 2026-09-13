@@ -1,0 +1,314 @@
+{
+  "source": "search bitcoin",
+  "raw": {
+    "__typename": "Tweet",
+    "core": {
+      "user_results": {
+        "result": {
+          "__typename": "User",
+          "action_counts": {
+            "favorites_count": 41221
+          },
+          "affiliates_highlighted_label": {},
+          "avatar": {
+            "image_url": "https://pbs.twimg.com/profile_images/1885428805788995584/cC9uBOnc_normal.jpg"
+          },
+          "banner": {
+            "image_url": "https://pbs.twimg.com/profile_banners/3005014565/1738884779"
+          },
+          "core": {
+            "created_at": "Fri Jan 30 05:40:08 +0000 2015",
+            "name": "Bitcoin News",
+            "screen_name": "BitcoinNewsCom"
+          },
+          "follow_request_sent": false,
+          "has_graduated_access": true,
+          "id": "VXNlcjozMDA1MDE0NTY1",
+          "is_blue_verified": true,
+          "location": {
+            "location": "NYC"
+          },
+          "media_permissions": {
+            "can_media_tag": true
+          },
+          "notifications_settings": {
+            "notifications_enabled": false
+          },
+          "parody_commentary_fan_label": "None",
+          "pinned_items": {
+            "tweet_ids_str": [
+              "2099157497839759843"
+            ]
+          },
+          "possibly_sensitive": false,
+          "privacy": {
+            "protected": false
+          },
+          "professional": {
+            "category": [
+              {
+                "icon_name": "IconBriefcaseStroke",
+                "id": 580,
+                "name": "Media & News Company"
+              }
+            ],
+            "professional_type": "Business",
+            "rest_id": "1490955714885525504"
+          },
+          "profile_bio": {
+            "description": "Daily News on Bitcoin \n\u2022 Read Our Latest Article \ud83d\udcd6 https://t.co/6qXRYNRbT9\n\u2022 Live on X and YouTube every Wednesday @ 11 EST",
+            "entities": {
+              "description": {
+                "urls": [
+                  {
+                    "display_url": "bitcoinnews.com",
+                    "expanded_url": "https://bitcoinnews.com",
+                    "indices": [
+                      51,
+                      74
+                    ],
+                    "url": "https://t.co/6qXRYNRbT9"
+                  }
+                ]
+              },
+              "url": {
+                "urls": [
+                  {
+                    "display_url": "linktr.ee/bitcoinnewscom",
+                    "expanded_url": "https://linktr.ee/bitcoinnewscom",
+                    "indices": [
+                      0,
+                      23
+                    ],
+                    "url": "https://t.co/IWJZeNhYtO"
+                  }
+                ]
+              }
+            }
+          },
+          "profile_description_language": "en",
+          "profile_image_shape": "Square",
+          "profile_metadata": {
+            "profile_interstitial_type": ""
+          },
+          "profile_translation": {
+            "translator_type": "none"
+          },
+          "relationship_counts": {
+            "followers": 264567,
+            "following": 739
+          },
+          "relationship_perspectives": {
+            "blocked_by": false,
+            "blocking": false,
+            "followed_by": false,
+            "following": false,
+            "live_following": false,
+            "muting": false
+          },
+          "rest_id": "3005014565",
+          "super_follow_eligible": true,
+          "super_followed_by": false,
+          "super_following": false,
+          "tweet_counts": {
+            "media_tweets": 51169,
+            "tweets": 89099
+          },
+          "verification": {
+            "verified": false,
+            "verified_type": "Business"
+          },
+          "website": {
+            "url": "https://t.co/IWJZeNhYtO"
+          }
+        }
+      }
+    },
+    "edit_control": {
+      "edit_tweet_ids": [
+        "2090227083091869758"
+      ],
+      "editable_until_msecs": "1787187545000",
+      "edits_remaining": "5",
+      "is_edit_eligible": false
+    },
+    "grok_analysis_button": true,
+    "is_translatable": false,
+    "legacy": {
+      "bookmark_count": 0,
+      "bookmarked": false,
+      "conversation_id_str": "2090192826491371999",
+      "created_at": "Wed Aug 19 23:59:05 +0000 2026",
+      "display_text_range": [
+        9,
+        9
+      ],
+      "entities": {
+        "media": [
+          {
+            "display_url": "pic.x.com/SBkPJUFIbI",
+            "expanded_url": "https://x.com/BitcoinNewsCom/status/2090227083091869758/photo/1",
+            "ext_alt_text": "intense leonardo dicaprio GIF",
+            "ext_media_availability": {
+              "status": "Available"
+            },
+            "id_str": "2090227075571482624",
+            "indices": [
+              10,
+              33
+            ],
+            "media_key": "16_2090227075571482624",
+            "media_results": {
+              "result": {
+                "media_key": "16_2090227075571482624"
+              }
+            },
+            "media_url_https": "https://pbs.twimg.com/tweet_video_thumb/HQH6c2NXgAA8XbG.jpg",
+            "original_info": {
+              "focus_rects": [],
+              "height": 224,
+              "width": 286
+            },
+            "sizes": {
+              "large": {
+                "h": 224,
+                "resize": "fit",
+                "w": 286
+              },
+              "medium": {
+                "h": 224,
+                "resize": "fit",
+                "w": 286
+              },
+              "small": {
+                "h": 224,
+                "resize": "fit",
+                "w": 286
+              },
+              "thumb": {
+                "h": 150,
+                "resize": "crop",
+                "w": 150
+              }
+            },
+            "type": "animated_gif",
+            "url": "https://t.co/SBkPJUFIbI",
+            "video_info": {
+              "aspect_ratio": [
+                143,
+                112
+              ],
+              "variants": [
+                {
+                  "bitrate": 0,
+                  "content_type": "video/mp4",
+                  "url": "https://video.twimg.com/tweet_video/HQH6c2NXgAA8XbG.mp4"
+                }
+              ]
+            }
+          }
+        ],
+        "user_mentions": [
+          {
+            "id_str": "260988930",
+            "indices": [
+              0,
+              9
+            ],
+            "name": "\u271d\ufe0f\ud83c\uddf8\ud83c\uddfb\ud83c\udde8\ud83c\uddf7 BITCOIN\ud83d\udd25 Raiderrrrrrrr",
+            "screen_name": "Ozarka69"
+          }
+        ]
+      },
+      "extended_entities": {
+        "media": [
+          {
+            "display_url": "pic.x.com/SBkPJUFIbI",
+            "expanded_url": "https://x.com/BitcoinNewsCom/status/2090227083091869758/photo/1",
+            "ext_alt_text": "intense leonardo dicaprio GIF",
+            "ext_media_availability": {
+              "status": "Available"
+            },
+            "id_str": "2090227075571482624",
+            "indices": [
+              10,
+              33
+            ],
+            "media_key": "16_2090227075571482624",
+            "media_results": {
+              "result": {
+                "media_key": "16_2090227075571482624"
+              }
+            },
+            "media_url_https": "https://pbs.twimg.com/tweet_video_thumb/HQH6c2NXgAA8XbG.jpg",
+            "original_info": {
+              "focus_rects": [],
+              "height": 224,
+              "width": 286
+            },
+            "sizes": {
+              "large": {
+                "h": 224,
+                "resize": "fit",
+                "w": 286
+              },
+              "medium": {
+                "h": 224,
+                "resize": "fit",
+                "w": 286
+              },
+              "small": {
+                "h": 224,
+                "resize": "fit",
+                "w": 286
+              },
+              "thumb": {
+                "h": 150,
+                "resize": "crop",
+                "w": 150
+              }
+            },
+            "type": "animated_gif",
+            "url": "https://t.co/SBkPJUFIbI",
+            "video_info": {
+              "aspect_ratio": [
+                143,
+                112
+              ],
+              "variants": [
+                {
+                  "bitrate": 0,
+                  "content_type": "video/mp4",
+                  "url": "https://video.twimg.com/tweet_video/HQH6c2NXgAA8XbG.mp4"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "favorite_count": 0,
+      "favorited": false,
+      "full_text": "@Ozarka69 https://t.co/SBkPJUFIbI",
+      "id_str": "2090227083091869758",
+      "in_reply_to_screen_name": "Ozarka69",
+      "in_reply_to_status_id_str": "2090196102808998123",
+      "in_reply_to_user_id_str": "260988930",
+      "is_quote_status": false,
+      "lang": "qme",
+      "possibly_sensitive": false,
+      "possibly_sensitive_editable": true,
+      "quote_count": 0,
+      "reply_count": 0,
+      "retweet_count": 0,
+      "retweeted": false,
+      "user_id_str": "3005014565"
+    },
+    "rest_id": "2090227083091869758",
+    "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+    "unmention_data": {},
+    "views": {
+      "count": "211",
+      "state": "EnabledWithCount"
+    }
+  }
+}

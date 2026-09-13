@@ -1,0 +1,479 @@
+{
+  "source": "search bitcoin",
+  "raw": {
+    "__typename": "Tweet",
+    "core": {
+      "user_results": {
+        "result": {
+          "__typename": "User",
+          "action_counts": {
+            "favorites_count": 37465
+          },
+          "affiliates_highlighted_label": {},
+          "avatar": {
+            "image_url": "https://pbs.twimg.com/profile_images/2095024006059655168/8PEEMndd_normal.jpg"
+          },
+          "banner": {
+            "image_url": "https://pbs.twimg.com/profile_banners/1465309872657166349/1762168106"
+          },
+          "core": {
+            "created_at": "Mon Nov 29 13:21:40 +0000 2021",
+            "name": "bitcoin\u26a1\ufe0fvaccine\ud83d\udc89",
+            "screen_name": "bitcoinvaccine"
+          },
+          "follow_request_sent": false,
+          "has_graduated_access": true,
+          "id": "VXNlcjoxNDY1MzA5ODcyNjU3MTY2MzQ5",
+          "is_blue_verified": true,
+          "location": {
+            "location": ""
+          },
+          "media_permissions": {
+            "can_media_tag": false
+          },
+          "notifications_settings": {
+            "notifications_enabled": false
+          },
+          "parody_commentary_fan_label": "None",
+          "pinned_items": {},
+          "possibly_sensitive": false,
+          "privacy": {
+            "protected": false
+          },
+          "profile_bio": {
+            "description": "AI creates abundance. Bitcoin preserves it bitcoinvaccine@walletofsatoshi.com",
+            "entities": {
+              "description": {}
+            }
+          },
+          "profile_description_language": "en",
+          "profile_image_shape": "Circle",
+          "profile_metadata": {
+            "profile_interstitial_type": ""
+          },
+          "profile_translation": {
+            "translator_type": "none"
+          },
+          "relationship_counts": {
+            "followers": 3269,
+            "following": 1751
+          },
+          "relationship_perspectives": {
+            "blocked_by": false,
+            "blocking": false,
+            "followed_by": false,
+            "following": false,
+            "live_following": false,
+            "muting": false
+          },
+          "rest_id": "1465309872657166349",
+          "super_follow_eligible": false,
+          "super_followed_by": false,
+          "super_following": false,
+          "tweet_counts": {
+            "media_tweets": 2257,
+            "tweets": 29747
+          },
+          "verification": {
+            "verified": false
+          },
+          "website": {
+            "url": ""
+          }
+        }
+      }
+    },
+    "edit_control": {
+      "edit_tweet_ids": [
+        "2090227249551483321"
+      ],
+      "editable_until_msecs": "1787187585000",
+      "edits_remaining": "5",
+      "is_edit_eligible": true
+    },
+    "grok_analysis_button": true,
+    "is_translatable": true,
+    "legacy": {
+      "bookmark_count": 1,
+      "bookmarked": false,
+      "conversation_id_str": "2090227249551483321",
+      "created_at": "Wed Aug 19 23:59:45 +0000 2026",
+      "display_text_range": [
+        0,
+        42
+      ],
+      "entities": {
+        "media": [
+          {
+            "allow_download_status": {
+              "allow_download": true
+            },
+            "display_url": "pic.x.com/tTtnZeuTlR",
+            "expanded_url": "https://x.com/bitcoinvaccine/status/2090227249551483321/photo/1",
+            "ext_media_availability": {
+              "status": "Available"
+            },
+            "features": {
+              "large": {
+                "faces": [
+                  {
+                    "h": 100,
+                    "w": 100,
+                    "x": 74,
+                    "y": 529
+                  },
+                  {
+                    "h": 101,
+                    "w": 101,
+                    "x": 664,
+                    "y": 438
+                  },
+                  {
+                    "h": 135,
+                    "w": 135,
+                    "x": 1201,
+                    "y": 565
+                  }
+                ]
+              },
+              "medium": {
+                "faces": [
+                  {
+                    "h": 73,
+                    "w": 73,
+                    "x": 54,
+                    "y": 389
+                  },
+                  {
+                    "h": 74,
+                    "w": 74,
+                    "x": 489,
+                    "y": 322
+                  },
+                  {
+                    "h": 99,
+                    "w": 99,
+                    "x": 885,
+                    "y": 416
+                  }
+                ]
+              },
+              "orig": {
+                "faces": [
+                  {
+                    "h": 100,
+                    "w": 100,
+                    "x": 74,
+                    "y": 529
+                  },
+                  {
+                    "h": 101,
+                    "w": 101,
+                    "x": 664,
+                    "y": 438
+                  },
+                  {
+                    "h": 135,
+                    "w": 135,
+                    "x": 1201,
+                    "y": 565
+                  }
+                ]
+              },
+              "small": {
+                "faces": [
+                  {
+                    "h": 41,
+                    "w": 41,
+                    "x": 30,
+                    "y": 220
+                  },
+                  {
+                    "h": 42,
+                    "w": 42,
+                    "x": 277,
+                    "y": 182
+                  },
+                  {
+                    "h": 56,
+                    "w": 56,
+                    "x": 501,
+                    "y": 235
+                  }
+                ]
+              }
+            },
+            "id_str": "2090226973994004480",
+            "indices": [
+              43,
+              66
+            ],
+            "media_key": "3_2090226973994004480",
+            "media_results": {
+              "result": {
+                "media_key": "3_2090226973994004480"
+              }
+            },
+            "media_url_https": "https://pbs.twimg.com/media/HQH6W7zaMAAurOm.jpg",
+            "original_info": {
+              "focus_rects": [
+                {
+                  "h": 906,
+                  "w": 1618,
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "h": 906,
+                  "w": 906,
+                  "x": 238,
+                  "y": 0
+                },
+                {
+                  "h": 906,
+                  "w": 795,
+                  "x": 294,
+                  "y": 0
+                },
+                {
+                  "h": 906,
+                  "w": 453,
+                  "x": 465,
+                  "y": 0
+                },
+                {
+                  "h": 906,
+                  "w": 1628,
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "height": 906,
+              "width": 1628
+            },
+            "sizes": {
+              "large": {
+                "h": 906,
+                "resize": "fit",
+                "w": 1628
+              },
+              "medium": {
+                "h": 668,
+                "resize": "fit",
+                "w": 1200
+              },
+              "small": {
+                "h": 378,
+                "resize": "fit",
+                "w": 680
+              },
+              "thumb": {
+                "h": 150,
+                "resize": "crop",
+                "w": 150
+              }
+            },
+            "type": "photo",
+            "url": "https://t.co/tTtnZeuTlR"
+          }
+        ]
+      },
+      "extended_entities": {
+        "media": [
+          {
+            "allow_download_status": {
+              "allow_download": true
+            },
+            "display_url": "pic.x.com/tTtnZeuTlR",
+            "expanded_url": "https://x.com/bitcoinvaccine/status/2090227249551483321/photo/1",
+            "ext_media_availability": {
+              "status": "Available"
+            },
+            "features": {
+              "large": {
+                "faces": [
+                  {
+                    "h": 100,
+                    "w": 100,
+                    "x": 74,
+                    "y": 529
+                  },
+                  {
+                    "h": 101,
+                    "w": 101,
+                    "x": 664,
+                    "y": 438
+                  },
+                  {
+                    "h": 135,
+                    "w": 135,
+                    "x": 1201,
+                    "y": 565
+                  }
+                ]
+              },
+              "medium": {
+                "faces": [
+                  {
+                    "h": 73,
+                    "w": 73,
+                    "x": 54,
+                    "y": 389
+                  },
+                  {
+                    "h": 74,
+                    "w": 74,
+                    "x": 489,
+                    "y": 322
+                  },
+                  {
+                    "h": 99,
+                    "w": 99,
+                    "x": 885,
+                    "y": 416
+                  }
+                ]
+              },
+              "orig": {
+                "faces": [
+                  {
+                    "h": 100,
+                    "w": 100,
+                    "x": 74,
+                    "y": 529
+                  },
+                  {
+                    "h": 101,
+                    "w": 101,
+                    "x": 664,
+                    "y": 438
+                  },
+                  {
+                    "h": 135,
+                    "w": 135,
+                    "x": 1201,
+                    "y": 565
+                  }
+                ]
+              },
+              "small": {
+                "faces": [
+                  {
+                    "h": 41,
+                    "w": 41,
+                    "x": 30,
+                    "y": 220
+                  },
+                  {
+                    "h": 42,
+                    "w": 42,
+                    "x": 277,
+                    "y": 182
+                  },
+                  {
+                    "h": 56,
+                    "w": 56,
+                    "x": 501,
+                    "y": 235
+                  }
+                ]
+              }
+            },
+            "id_str": "2090226973994004480",
+            "indices": [
+              43,
+              66
+            ],
+            "media_key": "3_2090226973994004480",
+            "media_results": {
+              "result": {
+                "media_key": "3_2090226973994004480"
+              }
+            },
+            "media_url_https": "https://pbs.twimg.com/media/HQH6W7zaMAAurOm.jpg",
+            "original_info": {
+              "focus_rects": [
+                {
+                  "h": 906,
+                  "w": 1618,
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "h": 906,
+                  "w": 906,
+                  "x": 238,
+                  "y": 0
+                },
+                {
+                  "h": 906,
+                  "w": 795,
+                  "x": 294,
+                  "y": 0
+                },
+                {
+                  "h": 906,
+                  "w": 453,
+                  "x": 465,
+                  "y": 0
+                },
+                {
+                  "h": 906,
+                  "w": 1628,
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "height": 906,
+              "width": 1628
+            },
+            "sizes": {
+              "large": {
+                "h": 906,
+                "resize": "fit",
+                "w": 1628
+              },
+              "medium": {
+                "h": 668,
+                "resize": "fit",
+                "w": 1200
+              },
+              "small": {
+                "h": 378,
+                "resize": "fit",
+                "w": 680
+              },
+              "thumb": {
+                "h": 150,
+                "resize": "crop",
+                "w": 150
+              }
+            },
+            "type": "photo",
+            "url": "https://t.co/tTtnZeuTlR"
+          }
+        ]
+      },
+      "favorite_count": 11,
+      "favorited": false,
+      "full_text": "\uc88b\uc740 \ud0c4\uc218\ud654\ubb3c\uc774\ub77c\ub294\uac8c \ubb50\uc5d0\uc694??\n\n\uace0\uae30 \uba39\uc73c\ub77c\ub294 \uc774\uc57c\uae30\ub294 \ud55c \uac1c\ub3c4 \uc5c6\ub124 \u3160\u3160 https://t.co/tTtnZeuTlR",
+      "id_str": "2090227249551483321",
+      "is_quote_status": false,
+      "lang": "ko",
+      "possibly_sensitive": false,
+      "possibly_sensitive_editable": true,
+      "quote_count": 0,
+      "reply_count": 3,
+      "retweet_count": 0,
+      "retweeted": false,
+      "user_id_str": "1465309872657166349"
+    },
+    "rest_id": "2090227249551483321",
+    "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+    "unmention_data": {},
+    "views": {
+      "count": "355",
+      "state": "EnabledWithCount"
+    }
+  }
+}

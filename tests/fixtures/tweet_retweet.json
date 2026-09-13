@@ -1,0 +1,854 @@
+{
+  "source": "profile elonmusk",
+  "raw": {
+    "__typename": "Tweet",
+    "core": {
+      "user_results": {
+        "result": {
+          "__typename": "User",
+          "action_counts": {
+            "favorites_count": 247851
+          },
+          "affiliates_highlighted_label": {
+            "label": {
+              "badge": {
+                "url": "https://pbs.twimg.com/profile_images/1955359038532653056/OSHY3ewP_bigger.jpg"
+              },
+              "description": "X",
+              "url": {
+                "url": "https://twitter.com/X",
+                "urlType": "DeepLink"
+              },
+              "userLabelDisplayType": "Badge",
+              "userLabelType": "BusinessLabel"
+            }
+          },
+          "avatar": {
+            "image_url": "https://pbs.twimg.com/profile_images/2053244804520427520/m8mdWZCG_normal.jpg"
+          },
+          "banner": {
+            "image_url": "https://pbs.twimg.com/profile_banners/44196397/1774145451"
+          },
+          "core": {
+            "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+            "name": "Elon Musk",
+            "screen_name": "elonmusk"
+          },
+          "follow_request_sent": false,
+          "has_graduated_access": true,
+          "id": "VXNlcjo0NDE5NjM5Nw==",
+          "is_blue_verified": true,
+          "location": {
+            "location": ""
+          },
+          "media_permissions": {
+            "can_media_tag": false
+          },
+          "notifications_settings": {
+            "notifications_enabled": false
+          },
+          "parody_commentary_fan_label": "None",
+          "pinned_items": {
+            "tweet_ids_str": [
+              "2098932438055469451"
+            ]
+          },
+          "possibly_sensitive": false,
+          "privacy": {
+            "protected": false
+          },
+          "professional": {
+            "category": [],
+            "professional_type": "Creator",
+            "rest_id": "1679729435447275522"
+          },
+          "profile_bio": {
+            "description": "https://t.co/ZdBx5WABYx",
+            "entities": {
+              "description": {
+                "urls": [
+                  {
+                    "display_url": "Terafab.AI",
+                    "expanded_url": "http://Terafab.AI",
+                    "indices": [
+                      0,
+                      23
+                    ],
+                    "url": "https://t.co/ZdBx5WABYx"
+                  }
+                ]
+              }
+            }
+          },
+          "profile_image_shape": "Circle",
+          "profile_metadata": {
+            "profile_interstitial_type": ""
+          },
+          "profile_translation": {
+            "translator_type": "none"
+          },
+          "relationship_counts": {
+            "followers": 241659318,
+            "following": 1406
+          },
+          "relationship_perspectives": {
+            "blocked_by": false,
+            "blocking": false,
+            "followed_by": false,
+            "following": false,
+            "live_following": false,
+            "muting": false
+          },
+          "rest_id": "44196397",
+          "super_follow_eligible": true,
+          "super_followed_by": false,
+          "super_following": false,
+          "tweet_counts": {
+            "media_tweets": 4717,
+            "tweets": 108482
+          },
+          "verification": {
+            "verified": false
+          },
+          "website": {
+            "url": ""
+          }
+        }
+      }
+    },
+    "edit_control": {
+      "edit_tweet_ids": [
+        "2099056788805218448"
+      ],
+      "editable_until_msecs": "1789292711697",
+      "edits_remaining": "5",
+      "is_edit_eligible": false
+    },
+    "grok_analysis_button": true,
+    "is_translatable": false,
+    "legacy": {
+      "bookmark_count": 0,
+      "bookmarked": false,
+      "conversation_id_str": "2099056788805218448",
+      "created_at": "Sun Sep 13 08:45:11 +0000 2026",
+      "display_text_range": [
+        0,
+        30
+      ],
+      "entities": {
+        "user_mentions": [
+          {
+            "id_str": "10926202",
+            "indices": [
+              3,
+              15
+            ],
+            "name": "Adam Carolla",
+            "screen_name": "adamcarolla"
+          }
+        ]
+      },
+      "favorite_count": 0,
+      "favorited": false,
+      "full_text": "RT @adamcarolla: Race hustlers",
+      "id_str": "2099056788805218448",
+      "is_quote_status": true,
+      "lang": "en",
+      "quote_count": 0,
+      "quoted_status_id_str": "2098981575702528236",
+      "quoted_status_permalink": {
+        "display": "x.com/dschlopesisbac\u2026",
+        "expanded": "https://twitter.com/dschlopesisback/status/2098981575702528236",
+        "url": "https://t.co/wIqSztDSVm"
+      },
+      "reply_count": 0,
+      "retweet_count": 1107,
+      "retweeted": false,
+      "retweeted_status_result": {
+        "result": {
+          "__typename": "Tweet",
+          "core": {
+            "user_results": {
+              "result": {
+                "__typename": "User",
+                "action_counts": {
+                  "favorites_count": 11174
+                },
+                "affiliates_highlighted_label": {},
+                "avatar": {
+                  "image_url": "https://pbs.twimg.com/profile_images/1486913589751402499/JTn7MRT4_normal.jpg"
+                },
+                "banner": {
+                  "image_url": "https://pbs.twimg.com/profile_banners/10926202/1736460126"
+                },
+                "core": {
+                  "created_at": "Fri Dec 07 04:14:37 +0000 2007",
+                  "name": "Adam Carolla",
+                  "screen_name": "adamcarolla"
+                },
+                "follow_request_sent": false,
+                "has_graduated_access": true,
+                "id": "VXNlcjoxMDkyNjIwMg==",
+                "is_blue_verified": true,
+                "location": {
+                  "location": "Los Angeles, CA"
+                },
+                "media_permissions": {
+                  "can_media_tag": false
+                },
+                "notifications_settings": {
+                  "notifications_enabled": false
+                },
+                "parody_commentary_fan_label": "None",
+                "pinned_items": {},
+                "possibly_sensitive": false,
+                "privacy": {
+                  "protected": false
+                },
+                "profile_bio": {
+                  "description": "Host of the @AdamCarollaShow on @PodcastOne. Three time @NYTimes best selling author.",
+                  "entities": {
+                    "description": {},
+                    "url": {
+                      "urls": [
+                        {
+                          "display_url": "linktr.ee/AdamCarolla",
+                          "expanded_url": "https://linktr.ee/AdamCarolla",
+                          "indices": [
+                            0,
+                            23
+                          ],
+                          "url": "https://t.co/tN5I9dd5sN"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "profile_description_language": "en",
+                "profile_image_shape": "Circle",
+                "profile_metadata": {
+                  "profile_interstitial_type": ""
+                },
+                "profile_translation": {
+                  "translator_type": "none"
+                },
+                "relationship_counts": {
+                  "followers": 1032194,
+                  "following": 461
+                },
+                "relationship_perspectives": {
+                  "blocked_by": false,
+                  "blocking": false,
+                  "followed_by": false,
+                  "following": false,
+                  "live_following": false,
+                  "muting": false
+                },
+                "rest_id": "10926202",
+                "super_follow_eligible": false,
+                "super_followed_by": false,
+                "super_following": false,
+                "tweet_counts": {
+                  "media_tweets": 1748,
+                  "tweets": 52336
+                },
+                "verification": {
+                  "verified": false
+                },
+                "website": {
+                  "url": "https://t.co/tN5I9dd5sN"
+                }
+              }
+            }
+          },
+          "edit_control": {
+            "edit_tweet_ids": [
+              "2099045366197109039"
+            ],
+            "editable_until_msecs": "1789289988000",
+            "edits_remaining": "5",
+            "is_edit_eligible": true
+          },
+          "grok_analysis_button": true,
+          "is_translatable": false,
+          "legacy": {
+            "bookmark_count": 136,
+            "bookmarked": false,
+            "conversation_id_str": "2099045366197109039",
+            "created_at": "Sun Sep 13 07:59:48 +0000 2026",
+            "display_text_range": [
+              0,
+              13
+            ],
+            "entities": {},
+            "favorite_count": 8388,
+            "favorited": false,
+            "full_text": "Race hustlers",
+            "id_str": "2099045366197109039",
+            "is_quote_status": true,
+            "lang": "en",
+            "quote_count": 21,
+            "quoted_status_id_str": "2098981575702528236",
+            "quoted_status_permalink": {
+              "display": "x.com/dschlopesisbac\u2026",
+              "expanded": "https://twitter.com/dschlopesisback/status/2098981575702528236",
+              "url": "https://t.co/wIqSztDSVm"
+            },
+            "reply_count": 279,
+            "retweet_count": 1107,
+            "retweeted": false,
+            "user_id_str": "10926202"
+          },
+          "quoted_status_result": {
+            "result": {
+              "__typename": "Tweet",
+              "core": {
+                "user_results": {
+                  "result": {
+                    "__typename": "User",
+                    "action_counts": {
+                      "favorites_count": 67354
+                    },
+                    "affiliates_highlighted_label": {},
+                    "avatar": {
+                      "image_url": "https://pbs.twimg.com/profile_images/2094348712197693440/f3zpVUVA_normal.jpg"
+                    },
+                    "banner": {
+                      "image_url": "https://pbs.twimg.com/profile_banners/1329883229189525505/1605905163"
+                    },
+                    "core": {
+                      "created_at": "Fri Nov 20 20:24:12 +0000 2020",
+                      "name": "Gain of Fauci",
+                      "screen_name": "DschlopesIsBack"
+                    },
+                    "follow_request_sent": false,
+                    "has_graduated_access": true,
+                    "id": "VXNlcjoxMzI5ODgzMjI5MTg5NTI1NTA1",
+                    "is_blue_verified": true,
+                    "location": {
+                      "location": ""
+                    },
+                    "media_permissions": {
+                      "can_media_tag": false
+                    },
+                    "notifications_settings": {
+                      "notifications_enabled": false
+                    },
+                    "parody_commentary_fan_label": "None",
+                    "pinned_items": {
+                      "tweet_ids_str": [
+                        "2082165027268657219"
+                      ]
+                    },
+                    "possibly_sensitive": false,
+                    "privacy": {
+                      "protected": false
+                    },
+                    "profile_bio": {
+                      "description": "Choose uncomfortable truths over comfortable lies. Sometimes satire, sometimes serious.",
+                      "entities": {
+                        "description": {}
+                      }
+                    },
+                    "profile_description_language": "en",
+                    "profile_image_shape": "Circle",
+                    "profile_metadata": {
+                      "profile_interstitial_type": ""
+                    },
+                    "profile_translation": {
+                      "translator_type": "none"
+                    },
+                    "relationship_counts": {
+                      "followers": 331034,
+                      "following": 1342
+                    },
+                    "relationship_perspectives": {
+                      "blocked_by": false,
+                      "blocking": false,
+                      "followed_by": false,
+                      "following": false,
+                      "live_following": false,
+                      "muting": false
+                    },
+                    "rest_id": "1329883229189525505",
+                    "super_follow_eligible": false,
+                    "super_followed_by": false,
+                    "super_following": false,
+                    "tweet_counts": {
+                      "media_tweets": 28971,
+                      "tweets": 78141
+                    },
+                    "verification": {
+                      "verified": false
+                    },
+                    "website": {
+                      "url": ""
+                    }
+                  }
+                }
+              },
+              "edit_control": {
+                "edit_tweet_ids": [
+                  "2098981575702528236"
+                ],
+                "editable_until_msecs": "1789274779000",
+                "edits_remaining": "5",
+                "is_edit_eligible": true
+              },
+              "grok_analysis_button": true,
+              "is_translatable": false,
+              "legacy": {
+                "bookmark_count": 166,
+                "bookmarked": false,
+                "conversation_id_str": "2098981575702528236",
+                "created_at": "Sun Sep 13 03:46:19 +0000 2026",
+                "display_text_range": [
+                  0,
+                  278
+                ],
+                "entities": {
+                  "media": [
+                    {
+                      "allow_download_status": {
+                        "allow_download": true
+                      },
+                      "display_url": "pic.x.com/wPxgoksisE",
+                      "expanded_url": "https://x.com/DschlopesIsBack/status/2098981575702528236/photo/1",
+                      "ext_media_availability": {
+                        "status": "Available"
+                      },
+                      "features": {
+                        "large": {
+                          "faces": [
+                            {
+                              "h": 103,
+                              "w": 103,
+                              "x": 166,
+                              "y": 178
+                            },
+                            {
+                              "h": 105,
+                              "w": 105,
+                              "x": 781,
+                              "y": 143
+                            },
+                            {
+                              "h": 94,
+                              "w": 94,
+                              "x": 326,
+                              "y": 153
+                            },
+                            {
+                              "h": 110,
+                              "w": 110,
+                              "x": 561,
+                              "y": 108
+                            }
+                          ]
+                        },
+                        "medium": {
+                          "faces": [
+                            {
+                              "h": 103,
+                              "w": 103,
+                              "x": 166,
+                              "y": 178
+                            },
+                            {
+                              "h": 105,
+                              "w": 105,
+                              "x": 781,
+                              "y": 143
+                            },
+                            {
+                              "h": 94,
+                              "w": 94,
+                              "x": 326,
+                              "y": 153
+                            },
+                            {
+                              "h": 110,
+                              "w": 110,
+                              "x": 561,
+                              "y": 108
+                            }
+                          ]
+                        },
+                        "orig": {
+                          "faces": [
+                            {
+                              "h": 103,
+                              "w": 103,
+                              "x": 166,
+                              "y": 178
+                            },
+                            {
+                              "h": 105,
+                              "w": 105,
+                              "x": 781,
+                              "y": 143
+                            },
+                            {
+                              "h": 94,
+                              "w": 94,
+                              "x": 326,
+                              "y": 153
+                            },
+                            {
+                              "h": 110,
+                              "w": 110,
+                              "x": 561,
+                              "y": 108
+                            }
+                          ]
+                        },
+                        "small": {
+                          "faces": [
+                            {
+                              "h": 65,
+                              "w": 65,
+                              "x": 106,
+                              "y": 113
+                            },
+                            {
+                              "h": 67,
+                              "w": 67,
+                              "x": 499,
+                              "y": 91
+                            },
+                            {
+                              "h": 60,
+                              "w": 60,
+                              "x": 208,
+                              "y": 97
+                            },
+                            {
+                              "h": 70,
+                              "w": 70,
+                              "x": 358,
+                              "y": 69
+                            }
+                          ]
+                        }
+                      },
+                      "id_str": "2098981570346356738",
+                      "indices": [
+                        279,
+                        302
+                      ],
+                      "media_key": "3_2098981570346356738",
+                      "media_results": {
+                        "result": {
+                          "media_key": "3_2098981570346356738"
+                        }
+                      },
+                      "media_url_https": "https://pbs.twimg.com/media/HSEUngqWEAIS0UR.jpg",
+                      "original_info": {
+                        "focus_rects": [
+                          {
+                            "h": 596,
+                            "w": 1064,
+                            "x": 0,
+                            "y": 0
+                          },
+                          {
+                            "h": 806,
+                            "w": 806,
+                            "x": 258,
+                            "y": 0
+                          },
+                          {
+                            "h": 806,
+                            "w": 707,
+                            "x": 357,
+                            "y": 0
+                          },
+                          {
+                            "h": 806,
+                            "w": 403,
+                            "x": 623,
+                            "y": 0
+                          },
+                          {
+                            "h": 806,
+                            "w": 1064,
+                            "x": 0,
+                            "y": 0
+                          }
+                        ],
+                        "height": 806,
+                        "width": 1064
+                      },
+                      "sizes": {
+                        "large": {
+                          "h": 806,
+                          "resize": "fit",
+                          "w": 1064
+                        },
+                        "medium": {
+                          "h": 806,
+                          "resize": "fit",
+                          "w": 1064
+                        },
+                        "small": {
+                          "h": 515,
+                          "resize": "fit",
+                          "w": 680
+                        },
+                        "thumb": {
+                          "h": 150,
+                          "resize": "crop",
+                          "w": 150
+                        }
+                      },
+                      "type": "photo",
+                      "url": "https://t.co/wPxgoksisE"
+                    }
+                  ]
+                },
+                "extended_entities": {
+                  "media": [
+                    {
+                      "allow_download_status": {
+                        "allow_download": true
+                      },
+                      "display_url": "pic.x.com/wPxgoksisE",
+                      "expanded_url": "https://x.com/DschlopesIsBack/status/2098981575702528236/photo/1",
+                      "ext_media_availability": {
+                        "status": "Available"
+                      },
+                      "features": {
+                        "large": {
+                          "faces": [
+                            {
+                              "h": 103,
+                              "w": 103,
+                              "x": 166,
+                              "y": 178
+                            },
+                            {
+                              "h": 105,
+                              "w": 105,
+                              "x": 781,
+                              "y": 143
+                            },
+                            {
+                              "h": 94,
+                              "w": 94,
+                              "x": 326,
+                              "y": 153
+                            },
+                            {
+                              "h": 110,
+                              "w": 110,
+                              "x": 561,
+                              "y": 108
+                            }
+                          ]
+                        },
+                        "medium": {
+                          "faces": [
+                            {
+                              "h": 103,
+                              "w": 103,
+                              "x": 166,
+                              "y": 178
+                            },
+                            {
+                              "h": 105,
+                              "w": 105,
+                              "x": 781,
+                              "y": 143
+                            },
+                            {
+                              "h": 94,
+                              "w": 94,
+                              "x": 326,
+                              "y": 153
+                            },
+                            {
+                              "h": 110,
+                              "w": 110,
+                              "x": 561,
+                              "y": 108
+                            }
+                          ]
+                        },
+                        "orig": {
+                          "faces": [
+                            {
+                              "h": 103,
+                              "w": 103,
+                              "x": 166,
+                              "y": 178
+                            },
+                            {
+                              "h": 105,
+                              "w": 105,
+                              "x": 781,
+                              "y": 143
+                            },
+                            {
+                              "h": 94,
+                              "w": 94,
+                              "x": 326,
+                              "y": 153
+                            },
+                            {
+                              "h": 110,
+                              "w": 110,
+                              "x": 561,
+                              "y": 108
+                            }
+                          ]
+                        },
+                        "small": {
+                          "faces": [
+                            {
+                              "h": 65,
+                              "w": 65,
+                              "x": 106,
+                              "y": 113
+                            },
+                            {
+                              "h": 67,
+                              "w": 67,
+                              "x": 499,
+                              "y": 91
+                            },
+                            {
+                              "h": 60,
+                              "w": 60,
+                              "x": 208,
+                              "y": 97
+                            },
+                            {
+                              "h": 70,
+                              "w": 70,
+                              "x": 358,
+                              "y": 69
+                            }
+                          ]
+                        }
+                      },
+                      "id_str": "2098981570346356738",
+                      "indices": [
+                        279,
+                        302
+                      ],
+                      "media_key": "3_2098981570346356738",
+                      "media_results": {
+                        "result": {
+                          "media_key": "3_2098981570346356738"
+                        }
+                      },
+                      "media_url_https": "https://pbs.twimg.com/media/HSEUngqWEAIS0UR.jpg",
+                      "original_info": {
+                        "focus_rects": [
+                          {
+                            "h": 596,
+                            "w": 1064,
+                            "x": 0,
+                            "y": 0
+                          },
+                          {
+                            "h": 806,
+                            "w": 806,
+                            "x": 258,
+                            "y": 0
+                          },
+                          {
+                            "h": 806,
+                            "w": 707,
+                            "x": 357,
+                            "y": 0
+                          },
+                          {
+                            "h": 806,
+                            "w": 403,
+                            "x": 623,
+                            "y": 0
+                          },
+                          {
+                            "h": 806,
+                            "w": 1064,
+                            "x": 0,
+                            "y": 0
+                          }
+                        ],
+                        "height": 806,
+                        "width": 1064
+                      },
+                      "sizes": {
+                        "large": {
+                          "h": 806,
+                          "resize": "fit",
+                          "w": 1064
+                        },
+                        "medium": {
+                          "h": 806,
+                          "resize": "fit",
+                          "w": 1064
+                        },
+                        "small": {
+                          "h": 515,
+                          "resize": "fit",
+                          "w": 680
+                        },
+                        "thumb": {
+                          "h": 150,
+                          "resize": "crop",
+                          "w": 150
+                        }
+                      },
+                      "type": "photo",
+                      "url": "https://t.co/wPxgoksisE"
+                    }
+                  ]
+                },
+                "favorite_count": 6996,
+                "favorited": false,
+                "full_text": "Never forget that tons of leftists actually believed Jussie Smollett walked to Subway to get food at 2:00am during a polar vortex in Chicago and got attacked with bleach and a noose by some roving gang of conservative white supremacists who shouted \u201cTHIS IS MAGA COUNTRY!!\u201d \ud83e\udd26\u200d\u2642\ufe0f https://t.co/wPxgoksisE",
+                "id_str": "2098981575702528236",
+                "is_quote_status": false,
+                "lang": "en",
+                "possibly_sensitive": false,
+                "possibly_sensitive_editable": true,
+                "quote_count": 54,
+                "reply_count": 214,
+                "retweet_count": 985,
+                "retweeted": false,
+                "user_id_str": "1329883229189525505"
+              },
+              "rest_id": "2098981575702528236",
+              "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+              "unmention_data": {},
+              "views": {
+                "count": "955170",
+                "state": "EnabledWithCount"
+              }
+            }
+          },
+          "rest_id": "2099045366197109039",
+          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+          "unmention_data": {},
+          "views": {
+            "count": "778202",
+            "state": "EnabledWithCount"
+          }
+        }
+      },
+      "user_id_str": "44196397"
+    },
+    "quick_promote_eligibility": {
+      "eligibility": "IneligibleNotVerified"
+    },
+    "rest_id": "2099056788805218448",
+    "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+    "unmention_data": {},
+    "views": {
+      "count": "619581",
+      "state": "EnabledWithCount"
+    }
+  }
+}
