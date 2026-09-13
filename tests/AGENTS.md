@@ -1,4 +1,5 @@
-The tests for the package. 35 files and 346 tests. They pass in about 130 seconds.
+The tests for the package. 35 files and 348 tests. They pass in about 130 seconds. The test
+dependencies are in `requirements-dev.txt`; the async tests fail without `pytest-asyncio`.
 
 > This document uses ASD-STE100 Simplified Technical English.
 

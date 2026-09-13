@@ -11,9 +11,8 @@ come before a feature.
 ## Map
 
 - `Scweet/` — the importable package. Every module is flat inside it, with no sub-package.
-- `tests/` — 35 files and 346 tests. A pytest marker selects the level.
+- `tests/` — 35 files and 348 tests. A pytest marker selects the level.
 - `examples/` — short scripts that a reader can run.
-- `docs/` — the engineering documents. Read `docs/AGENTS.md`.
 - `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.12.
 
 ## The shape of a request
@@ -83,7 +82,7 @@ Scweet.search()            the public method, in client.py
 ## Commands
 
 ```bash
-pip install -e .
+pip install -e . -r requirements-dev.txt
 pytest tests/ -q                              # every test
 pytest tests/ -q --ignore=tests/test_integration.py    # what CI runs
 pytest tests/test_runner.py -q                # one file

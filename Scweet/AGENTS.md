@@ -45,8 +45,7 @@ directory.
 - **A 401 or 403 from a page never gives the 30-day block on its own.** The worker confirms with
   `ApiEngine.probe_account_alive`, a self-lookup of the account's own handle. `compute_cooldown` gives the long
   block only when `proven_dead` is true, which means the self-lookup also failed. An unconfirmed 401 gives a
-  short cooldown (`auth_unconfirmed`). A session that cannot be built is proven dead. See B1 in
-  `docs/plans/2026-09-04-the-path-to-a-production-ready-library.md`.
+  short cooldown (`auth_unconfirmed`). A session that cannot be built is proven dead.
 - **The limiter paces to the window of X, not to the gap between requests.** `TokenBucketLimiter` holds
   `window_request_limit` (50) tokens and refills over `rate_limit_window_s` (900s), and it starts full. A short
   run bursts and waits nothing; a long run slows to the refill rate. `min_delay_s` (1.0) is only a floor between
