@@ -11,7 +11,7 @@ come before a feature.
 ## Map
 
 - `Scweet/` — the importable package. Every module is flat inside it, with no sub-package.
-- `tests/` — 41 files and 435 tests. A pytest marker selects the level. `tests/fixtures/` holds the
+- `tests/` — 42 files and 439 tests. A pytest marker selects the level. `tests/fixtures/` holds the
   captured answers of X.
 - `examples/` — short scripts that a reader can run.
 - `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.12.
@@ -98,6 +98,9 @@ python -m Scweet --help                       # the CLI
   this surface and not to grow it.
 - **A public method returns data. It does not print and it does not exit.** A caller decides what to do with an
   error.
+- **A new public method of the client arrives with its CLI subcommand, in the same commit.** A new keyword of a
+  method arrives with its flag. `tests/test_cli_parity.py` compares the two surfaces and fails otherwise. A
+  method or a keyword that belongs to the library only goes in the map of that file with its reason.
 - **An error message names a cause and an action.** "No eligible accounts" tells a user nothing they can act
   on. "Every account is on a cooldown for N seconds. Add an account, or wait." does.
 - **Never write a secret to a log or to an output file.** An `auth_token`, a cookie, a password, and a 2FA
