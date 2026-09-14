@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [5.7.0] - 2026-09-13
+
+The read surface grows from 6 operations to 13, and the query-id refresh now covers every one of them. Every change is additive.
+
+### Added
+
+- **`get_tweet_info(tweet_ids)`** — full tweet records for ids you already hold, up to 50 ids in one request. A deleted id gives no row and no error.
+- **`get_tweet_replies(tweet_id, limit=...)`** — the replies under one tweet, as full tweet records, without the focal tweet itself.
+- **`get_reposters(tweet_id, limit=...)`** — the accounts that reposted one tweet, as user records.
+- **`get_user_info(user_ids=[...])`** — profile lookup by numeric id, up to 100 ids in one request; combines with lookup by username. When X refuses the id endpoint for a connection (it answers HTTP 403 there at times), the call raises an error that names the refusal and the username alternative, instead of returning an empty list.
+- **`search_users(query, limit=...)`** — the "People" tab of a search, as user records.
+- **`get_trending()`** — the trends of the explore page: the name, the context line with the post count, and the raw item.
+- **`get_profile_media(users, limit=...)`** — only the tweets of a profile that carry an image or a video.
+- **`get_profile_tweets(..., include_replies=True)`** — the timeline with the replies of the profile included.
+- **`refresh_manifest()`** and the CLI command **`scweet refresh-manifest`** — read fresh GraphQL query ids from the live bundles of X at any moment, and report each id that rotated. A stale id answers 404 for every request, so call this when requests start to fail.
+- Every new method has an async twin and a CLI subcommand: `tweet-info`, `tweet-replies`, `reposters`, `search-users`, `trending`, `profile-media`, `profile-tweets --include-replies`, `user-info --ids`.
+
+### Changed
+
+- **The query-id scrape now reaches the operations that `main.js` does not carry.** Some operations live in lazy chunk files. The scrape reads the chunk maps that the page of X embeds, sweeps the likely chunks first, and stops at the find — measured: the missing id was found within 9 small fetches. Before, an id outside `main.js` could never heal.
+- The bundled default ids were refreshed from the live bundle on 2026-09-13, and each new endpoint ships with its measured request allowance.
+
 ## [5.6.0] - 2026-09-13
 
 Every change below is additive. A script written against 5.5.x reads the same values from the same fields.

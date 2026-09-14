@@ -52,6 +52,17 @@ directory.
   two requests of one account, so a burst does not arrive at wire speed. Do not pace evenly across the window: X
   counts the total in a window, and an even delay made a run of 400 tweets take 373 seconds instead of 41.
   `requests_per_min` is deprecated and the limiter ignores it.
+- **Each endpoint holds its own window.** Measured 2026-09-13 from `x-rate-limit-limit`: TweetDetail 150,
+  UsersByRestIds 100, a People search shares the 50 of a search, and the other read endpoints of 5.7.0
+  allow 500 (TweetResultsByRestIds, Retweeters, UserByRestId, ExplorePage, UserMedia,
+  UserTweetsAndReplies).
+- **An operation outside `main.js` heals through the chunk maps of the page.** Retweeters lives in a lazy
+  chunk. The scrape reads the name and hash maps that the page of X embeds, sweeps the likely chunk
+  names first, and stops at the find (measured 2026-09-13: 9 fetches). Without the sweep, an id outside
+  `main.js` can never heal after X rotates it.
+- **X refuses the lookup by numeric id for a whole connection at times.** It answers HTTP 403 with an
+  HTML page. The client raises an error that names the refusal and the username alternative, because a
+  silent empty list reads as "these users do not exist".
 - **A run waits for a cooldown before it fails.** `Runner._acquire_leases_with_wait` waits up to
   `pool_wait_max_s` and retries every `pool_wait_poll_s`. A cooldown expires, so a run with a small pool
   finishes instead of failing.

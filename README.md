@@ -51,9 +51,11 @@
 
 **What you can scrape:**
 - [**Tweets**](DOCUMENTATION.md#search-api) — by keyword, hashtag, user, date range, engagement filters, language, location
-- [**Profile timelines**](DOCUMENTATION.md#profile-tweets) — a user's full tweet history
+- [**Profile timelines**](DOCUMENTATION.md#profile-tweets) — a user's full tweet history, with replies and media tabs
+- [**Tweets by id**](DOCUMENTATION.md#tweet-lookup--replies) — full data for known tweet ids, their replies, and who reposted them
 - [**Followers / Following**](DOCUMENTATION.md#followers--following) — full account lists at scale, verified followers included
-- [**User profiles**](DOCUMENTATION.md#user-info) — bio, follower count, verification status, and more
+- [**User profiles**](DOCUMENTATION.md#user-info) — bio, follower count, verification status, by handle or by id
+- [**People search & trends**](DOCUMENTATION.md#search-users) — find accounts by keyword, read what is trending now
 
 ---
 
@@ -164,6 +166,24 @@ verified  = s.get_verified_followers(["elonmusk"], limit=1000)
 
 ```python
 profiles = s.get_user_info(["githubstatus", "elonmusk"])
+profiles = s.get_user_info(user_ids=["44196397"])   # numeric ids work too
+```
+
+### Tweets by id, replies, reposters
+
+```python
+tweets    = s.get_tweet_info(["1866123456789", "1866123456790"])  # up to 50 per request
+replies   = s.get_tweet_replies("1866123456789", limit=100)
+reposters = s.get_reposters("1866123456789", limit=100)
+```
+
+### People search, trends, media
+
+```python
+people = s.search_users("python developer", limit=50)
+trends = s.get_trending()
+media  = s.get_profile_media(["nasa"], limit=100)
+tweets = s.get_profile_tweets(["nasa"], limit=100, include_replies=True)
 ```
 
 For the full list of supported search operators, see [twitter-advanced-search](https://github.com/igorbrigadir/twitter-advanced-search).
@@ -230,9 +250,10 @@ s = Scweet(cookies_file="cookies.json")  # proxies are read from the file, one p
 ## Limitations
 
 - Only publicly visible content is accessible — private/protected accounts are not supported
-- Relies on undocumented X web endpoints; breakage is always possible after platform changes. Scweet can self-heal by scraping fresh query IDs and feature flags from X's `main.js` bundle at startup — pass `manifest_scrape_on_init=True` to enable:
+- Relies on undocumented X web endpoints; breakage is always possible after platform changes. Scweet self-heals by scraping fresh query IDs and feature flags from X's own bundles — at startup with `manifest_scrape_on_init=True`, or on demand at any time:
   ```python
   s = Scweet(auth_token="...", manifest_scrape_on_init=True)
+  changes = s.refresh_manifest()   # or: scweet refresh-manifest
   ```
 - Cookies can expire and may need periodic refreshing
 - A single account typically handles hundreds to a few thousand tweets per day before hitting rate limits; multi-account pooling scales proportionally
@@ -248,8 +269,11 @@ Full API reference, config options, structured search filters, async patterns, r
 - [Account setup](DOCUMENTATION.md#account-setup)
 - [Search API](DOCUMENTATION.md#search-api)
 - [Profile tweets](DOCUMENTATION.md#profile-tweets)
+- [Tweet lookup & replies](DOCUMENTATION.md#tweet-lookup--replies)
 - [Followers / Following](DOCUMENTATION.md#followers--following)
 - [User info](DOCUMENTATION.md#user-info)
+- [Search users & trends](DOCUMENTATION.md#search-users)
+- [Manifest refresh](DOCUMENTATION.md#manifest-refresh)
 - [Saving results](DOCUMENTATION.md#saving-results)
 - [Resume interrupted searches](DOCUMENTATION.md#resume-interrupted-searches)
 - [Controlling limits](DOCUMENTATION.md#controlling-limits)

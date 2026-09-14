@@ -111,7 +111,7 @@ s = Scweet(db_path="scweet_state.db", provision=False)
 
 ## Controlling Limits
 
-Every method that paginates (`search`, `get_profile_tweets`, `get_followers`, `get_following`, `get_verified_followers`) accepts a **`limit`** parameter — the maximum number of items to collect in that call. If omitted (`None`), scraping continues until results are exhausted or account daily caps are hit.
+Every method that paginates (`search`, `search_users`, `get_profile_tweets`, `get_profile_media`, `get_tweet_replies`, `get_reposters`, `get_followers`, `get_following`, `get_verified_followers`) accepts a **`limit`** parameter — the maximum number of items to collect in that call. If omitted (`None`), scraping continues until results are exhausted or account daily caps are hit.
 
 **Always set a `limit`** to avoid burning through your account quota unexpectedly:
 
@@ -259,7 +259,40 @@ tweets = s.get_profile_tweets(
 | `save_format` | `str` | config value | `"csv"`, `"json"`, or `"both"` |
 | `save_name` | `str` | auto-generated | Base filename for saved output (without extension) |
 
-Async: `await s.aget_profile_tweets(["elonmusk"], limit=100)`
+Two variants of the timeline:
+
+```python
+# The tweets AND the replies of the profile
+tweets = s.get_profile_tweets(["elonmusk"], limit=100, include_replies=True)
+
+# Only the tweets that carry an image or a video
+media = s.get_profile_media(["nasa"], limit=100)
+```
+
+Async: `await s.aget_profile_tweets(["elonmusk"], limit=100)` / `await s.aget_profile_media(["nasa"], limit=100)`
+
+---
+
+## Tweet Lookup & Replies
+
+Read full data for tweet ids you already hold — from an earlier scrape, a dataset, or a URL:
+
+```python
+# Up to 50 ids in one request
+tweets = s.get_tweet_info(["1866123456789", "1866123456790"])
+
+# The replies under one tweet
+replies = s.get_tweet_replies("1866123456789", limit=200)
+
+# The accounts that reposted one tweet
+reposters = s.get_reposters("1866123456789", limit=500)
+```
+
+- `get_tweet_info` returns the same tweet record as `search()`. A deleted or missing id gives no row and no error.
+- `get_tweet_replies` returns tweet records; the focal tweet itself is not in the list.
+- `get_reposters` returns user records with `type: "reposters"`.
+
+Each method takes `raw_json`, `save`, `save_format` and `save_name`; the paginating two also take `limit` and `max_empty_pages`. Async: `aget_tweet_info`, `aget_tweet_replies`, `aget_reposters`.
 
 ---
 
@@ -311,16 +344,72 @@ Fetch profile information for one or more users:
 ```python
 profiles = s.get_user_info(["elonmusk", "OpenAI"])
 # Returns list of dicts with profile fields
+
+# By numeric id, up to 100 in one request; both inputs combine
+profiles = s.get_user_info(user_ids=["44196397", "783214"])
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `users` | `list[str]` | *required* | Usernames or profile URLs |
+| `users` | `list[str]` | `None` | Usernames or profile URLs |
+| `user_ids` | `list[str]` | `None` | Numeric rest ids; combines with `users` |
 | `save` | `bool` | `False` | Save results to disk |
 | `save_format` | `str` | config value | `"csv"`, `"json"`, or `"both"` |
 | `save_name` | `str` | auto-generated | Base filename for saved output (without extension) |
 
 Async: `await s.aget_user_info(["elonmusk"])`
+
+> X sometimes refuses the id lookup for a whole connection (HTTP 403). The call then raises an
+> error that names the refusal instead of returning an empty list. Retry later, or look the same
+> profiles up by username.
+
+---
+
+## Search Users
+
+Find accounts by keyword — the "People" tab of a search:
+
+```python
+people = s.search_users("python developer", limit=50)
+# User records, with type: "search_users"
+```
+
+Takes `limit`, `max_empty_pages`, `raw_json` and the save parameters. Async: `asearch_users`.
+
+---
+
+## Trending
+
+The trends of the explore page, one request:
+
+```python
+trends = s.get_trending()
+# [{"name": "...", "context": "1 day ago · Sports · 12K posts", "trend_id": "...", "raw": {...}}]
+```
+
+Async: `aget_trending`.
+
+---
+
+## Manifest Refresh
+
+X rotates its GraphQL query ids without notice, and a stale id answers 404 for every request from
+every account. Scweet reads fresh ids from X's own bundles — including the operations that live in
+lazy chunks, which a plain `main.js` scrape misses:
+
+```python
+s = Scweet(auth_token="...", manifest_scrape_on_init=True)   # refresh at startup
+
+changes = s.refresh_manifest()   # refresh at any moment
+# {"search_timeline": {"old": "KPSo2_UW...", "new": "aB3xY9..."}} — empty when current
+```
+
+```bash
+scweet refresh-manifest
+```
+
+When every search suddenly answers 404 while the accounts look healthy, refresh the manifest first:
+that 404 describes the request, not the credentials.
 
 ---
 
@@ -882,9 +971,33 @@ scweet --auth-token TOKEN following USER [USER ...] [options]
 
 ```bash
 scweet --auth-token TOKEN user-info USER [USER ...]
+scweet --auth-token TOKEN user-info --ids ID [ID ...]
 ```
 
-No pagination — one API call per user.
+No pagination — one API call per user, or one call per 100 ids.
+
+#### `tweet-info` / `tweet-replies` / `reposters`
+
+```bash
+scweet --auth-token TOKEN tweet-info ID [ID ...]           # up to 50 ids per request
+scweet --auth-token TOKEN tweet-replies ID --limit 200
+scweet --auth-token TOKEN reposters ID --limit 500
+```
+
+#### `search-users` / `trending` / `profile-media`
+
+```bash
+scweet --auth-token TOKEN search-users "python developer" --limit 50
+scweet --auth-token TOKEN trending --pretty
+scweet --auth-token TOKEN profile-media nasa --limit 100
+```
+
+#### `refresh-manifest`
+
+```bash
+scweet refresh-manifest
+# reposters: ROjiuYUeo... -> iH7h2J19n...   (or: "Every query id is current.")
+```
 
 ### Examples
 

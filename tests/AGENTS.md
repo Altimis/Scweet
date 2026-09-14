@@ -1,4 +1,4 @@
-The tests for the package. 38 files and 368 tests. They pass in about 130 seconds. The test
+The tests for the package. 41 files and 435 tests. They pass in about 130 seconds. The test
 dependencies are in `requirements-dev.txt`; the async tests fail without `pytest-asyncio`.
 
 > This document uses ASD-STE100 Simplified Technical English.
@@ -49,11 +49,14 @@ These are measured facts about this suite, not opinions.
    2,000 returned 2,340. The user owns the data, so the overshoot stays, and
    `test_runner_treats_limit_as_stop_signal_and_keeps_overshoot_from_last_page` pins that behaviour.
 4. **`tests/fixtures/` holds the captured answers of X.** Each file is a real capture, scrubbed of every
-   cookie and token: a plain tweet, a quote, a reply, a retweet, an animated image, a native video, a
-   profile, and one row of a follower list. `golden_records.json` holds the original fields of
-   `TweetRecord` as the parser produced them, and `test_record_compatibility.py` fails when one of those
-   fields changes. A small answer also lives inline in the test that reads it, for example `LOCKED_ERROR`
-   in `tests/test_locked_account.py`. Copy a real answer, never an invented shape.
+   cookie and token: the tweet shapes (plain, quote, reply, retweet, animated image, native video), a
+   profile, a follower row, one page per M4 operation (tweet lookup, conversation, reposters, user
+   batch, people search, explore page, media and with-replies timelines), the chunk-map region of the
+   page of X, and the chunk that holds the Retweeters operation. `golden_records.json` holds the
+   original fields of `TweetRecord` as the parser produced them, and `test_record_compatibility.py`
+   fails when one of those fields changes. A small answer also lives inline in the test that reads it,
+   for example `LOCKED_ERROR` in `tests/test_locked_account.py`. Copy a real answer, never an invented
+   shape.
 5. **`tests/test_integration.py` never runs in CI.** The workflow passes
    `--ignore=tests/test_integration.py`. So the only tests that touch a real account run when a person
    remembers. State in a pull request whether you ran them.
