@@ -422,9 +422,12 @@ def test_parser_user_info_multiple():
     assert args.users == ["elonmusk", "naval", "sama"]
 
 
-def test_parser_user_info_requires_users():
-    with pytest.raises(SystemExit):
-        parse("user-info")
+def test_parser_user_info_accepts_ids_only():
+    """The parser accepts a call with --ids and no handle. The command itself
+    still exits when both lists are empty (see test_m4_client_routing)."""
+    args = parse("user-info", "--ids", "44196397")
+    assert args.users == []
+    assert args.ids == ["44196397"]
 
 
 # ── Parser: subcommand required ───────────────────────────────────────────

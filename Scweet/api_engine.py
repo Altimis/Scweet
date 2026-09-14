@@ -4,6 +4,7 @@ import asyncio
 import inspect
 import json
 import logging
+import re
 import threading
 import uuid
 from typing import Any, Optional, Tuple
@@ -17,7 +18,22 @@ from .cooldown import (
     parse_rate_limit_reset,
 )
 from .limiter import TokenBucketLimiter
-from .models import FollowsRequest, ProfileRequest, ProfileTimelineRequest, RunStats, SearchRequest, SearchResult, TweetMedia, TweetRecord, TweetUser
+from .models import (
+    FollowsRequest,
+    ProfileRequest,
+    ProfileTimelineRequest,
+    RepostersRequest,
+    RunStats,
+    SearchRequest,
+    SearchResult,
+    SearchUsersRequest,
+    TweetLookupRequest,
+    TweetMedia,
+    TweetRecord,
+    TweetRepliesRequest,
+    TweetUser,
+    UserIdsRequest,
+)
 from .query import build_effective_search_query, normalize_search_input
 
 JSON_DECODE_STATUS = 598
@@ -63,11 +79,61 @@ DEFAULT_FOLLOWING_QUERY_ID = "ntIPnH1WMBKW--4Tn1q71A"
 DEFAULT_FOLLOWING_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/Following"
 DEFAULT_VERIFIED_FOLLOWERS_QUERY_ID = "4zBtcnE_c0v8wn1Zx0yF5Q"
 DEFAULT_VERIFIED_FOLLOWERS_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/BlueVerifiedFollowers"
+DEFAULT_TWEET_LOOKUP_QUERY_ID = "VwY22EyG-lO-eT6Myg_F0A"
+DEFAULT_TWEET_LOOKUP_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/TweetResultsByRestIds"
+DEFAULT_TWEET_DETAIL_QUERY_ID = "FyR-GrebyjdkRoW1z6uCgQ"
+DEFAULT_TWEET_DETAIL_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/TweetDetail"
+DEFAULT_REPOSTERS_QUERY_ID = "iH7h2J19n7Xd1swL4cNTNg"
+DEFAULT_REPOSTERS_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/Retweeters"
+DEFAULT_USER_LOOKUP_REST_ID_QUERY_ID = "IdmRdjYxIGI39Hdwkwo5cQ"
+DEFAULT_USER_LOOKUP_REST_ID_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/UserByRestId"
+DEFAULT_USER_LOOKUP_BATCH_QUERY_ID = "BuQFwM7wpHl00cfHL-r0rA"
+DEFAULT_USER_LOOKUP_BATCH_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/UsersByRestIds"
+DEFAULT_EXPLORE_PAGE_QUERY_ID = "UgdDQQHSWlNm3LEht3PnLg"
+DEFAULT_EXPLORE_PAGE_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/ExplorePage"
+DEFAULT_PROFILE_MEDIA_QUERY_ID = "atLYUUmER14HCLFnNUKJgA"
+DEFAULT_PROFILE_MEDIA_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/UserMedia"
+DEFAULT_PROFILE_TIMELINE_WITH_REPLIES_QUERY_ID = "-4Ujf5pYzDdr_qY8qxgF9A"
+DEFAULT_PROFILE_TIMELINE_WITH_REPLIES_ENDPOINT = "https://x.com/i/api/graphql/{query_id}/UserTweetsAndReplies"
 USER_LOOKUP_OPERATION = "user_lookup_screen_name"
 PROFILE_TIMELINE_OPERATION = "profile_timeline"
 FOLLOWERS_OPERATION = "followers"
 FOLLOWING_OPERATION = "following"
 VERIFIED_FOLLOWERS_OPERATION = "verified_followers"
+TWEET_LOOKUP_OPERATION = "tweet_lookup"
+TWEET_DETAIL_OPERATION = "tweet_detail"
+REPOSTERS_OPERATION = "reposters"
+USER_LOOKUP_REST_ID_OPERATION = "user_lookup_rest_id"
+USER_LOOKUP_BATCH_OPERATION = "user_lookup_batch"
+EXPLORE_PAGE_OPERATION = "explore_page"
+PROFILE_MEDIA_OPERATION = "profile_media"
+PROFILE_TIMELINE_WITH_REPLIES_OPERATION = "profile_timeline_with_replies"
+
+# The bundled query id and endpoint for each operation that arrived in 5.7.0. A manifest
+# that predates these keys still resolves a working URL through this table.
+_OPERATION_DEFAULTS: dict[str, tuple[str, str]] = {
+    TWEET_LOOKUP_OPERATION: (DEFAULT_TWEET_LOOKUP_QUERY_ID, DEFAULT_TWEET_LOOKUP_ENDPOINT),
+    TWEET_DETAIL_OPERATION: (DEFAULT_TWEET_DETAIL_QUERY_ID, DEFAULT_TWEET_DETAIL_ENDPOINT),
+    REPOSTERS_OPERATION: (DEFAULT_REPOSTERS_QUERY_ID, DEFAULT_REPOSTERS_ENDPOINT),
+    USER_LOOKUP_REST_ID_OPERATION: (
+        DEFAULT_USER_LOOKUP_REST_ID_QUERY_ID,
+        DEFAULT_USER_LOOKUP_REST_ID_ENDPOINT,
+    ),
+    USER_LOOKUP_BATCH_OPERATION: (
+        DEFAULT_USER_LOOKUP_BATCH_QUERY_ID,
+        DEFAULT_USER_LOOKUP_BATCH_ENDPOINT,
+    ),
+    EXPLORE_PAGE_OPERATION: (DEFAULT_EXPLORE_PAGE_QUERY_ID, DEFAULT_EXPLORE_PAGE_ENDPOINT),
+    PROFILE_MEDIA_OPERATION: (DEFAULT_PROFILE_MEDIA_QUERY_ID, DEFAULT_PROFILE_MEDIA_ENDPOINT),
+    PROFILE_TIMELINE_WITH_REPLIES_OPERATION: (
+        DEFAULT_PROFILE_TIMELINE_WITH_REPLIES_QUERY_ID,
+        DEFAULT_PROFILE_TIMELINE_WITH_REPLIES_ENDPOINT,
+    ),
+}
+
+# A node with one of these type names holds a tweet. A tombstone or an unavailable
+# tweet holds none, so it gives no record and no error.
+_TWEET_RESULT_TYPENAMES = frozenset({"", "Tweet", "TweetWithVisibilityResults"})
 
 # Followers/following endpoints are strict about feature keys and can reject
 # requests when expected booleans are omitted.
@@ -405,8 +471,12 @@ class ApiEngine:
         limit_reached = False
         exhausted_accounts = False
 
+        timeline_operation = (
+            str(getattr(timeline_request, "timeline_operation", "") or "").strip()
+            or PROFILE_TIMELINE_OPERATION
+        )
         user_lookup_url = self._resolve_user_lookup_url(manifest)
-        timeline_url = self._resolve_profile_timeline_url(manifest)
+        timeline_url = self._resolve_profile_timeline_url(manifest, operation=timeline_operation)
         timeout_s = int(getattr(manifest, "timeout_s", 20) or 20)
 
         logger.info(
@@ -547,11 +617,17 @@ class ApiEngine:
                             break
                         user_id = resolved_user_id
 
+                    # The keyword goes only to a non-default operation, so a caller
+                    # that replaces the builder with the old signature keeps working.
+                    builder_kwargs: dict[str, Any] = {}
+                    if timeline_operation != PROFILE_TIMELINE_OPERATION:
+                        builder_kwargs["operation"] = timeline_operation
                     timeline_params = self._build_profile_timeline_params(
                         user_id=user_id,
                         cursor=cursor,
                         manifest=manifest,
                         runtime_hints=None,
+                        **builder_kwargs,
                     )
                     data, status_code, _headers, _snippet = await self._graphql_get(
                         url=timeline_url,
@@ -1214,6 +1290,466 @@ class ApiEngine:
             "limit_reached": limit_reached,
         }
 
+    async def get_tweet_info(self, request):
+        lookup_request = self._coerce_tweet_lookup_request(request)
+        tweet_ids = [str(t).strip() for t in (lookup_request.tweet_ids or []) if str(t).strip()]
+        if not tweet_ids:
+            return {
+                "items": [],
+                "status_code": 400,
+                "detail": "No tweet ids provided",
+                "meta": {"requested": 0, "resolved": 0},
+            }
+
+        manifest = await self.manifest_provider.get_manifest()
+        url = self._resolve_operation_url(manifest, TWEET_LOOKUP_OPERATION)
+        batch_size = self._coerce_positive_int(_cfg(self.config, "tweet_lookup_batch_size", 50)) or 50
+        # X caps one TweetResultsByRestIds request at 50 ids.
+        batch_size = min(batch_size, 50)
+
+        active_session, leased_account, lease_id, builder = await self._acquire_profile_session()
+        if active_session is None and self.accounts_repo is not None:
+            logger.warning("Tweet lookup request failed: no eligible account could be leased")
+            return {
+                "items": [],
+                "status_code": 503,
+                "detail": "No eligible account available",
+                "meta": {"requested": len(tweet_ids), "resolved": 0},
+            }
+
+        items: list[dict[str, Any]] = []
+        last_error_status: Optional[int] = None
+        pages = 0
+        try:
+            for start in range(0, len(tweet_ids), batch_size):
+                batch = tweet_ids[start : start + batch_size]
+                params = self._build_tweet_lookup_params(batch, manifest)
+                data, status_code, _headers, _snippet = await self._graphql_get(
+                    url=url,
+                    params=params,
+                    timeout_s=manifest.timeout_s,
+                    session=active_session,
+                    account_context=leased_account,
+                )
+                pages += 1
+                if self.accounts_repo is not None and lease_id and hasattr(self.accounts_repo, "record_usage"):
+                    await self._maybe_await(self.accounts_repo.record_usage(lease_id, pages=1, tweets=0))
+                if status_code != 200 or data is None:
+                    last_error_status = int(status_code)
+                    continue
+                for node in self._extract_tweet_lookup_results(data):
+                    if lookup_request.raw_json:
+                        items.append(node)
+                    else:
+                        items.append(self._tweet_result_to_record(node).model_dump())
+            if items or last_error_status is None:
+                status_code = 200
+            else:
+                status_code = int(last_error_status)
+            return {
+                "items": items,
+                "status_code": status_code,
+                "meta": {"requested": len(tweet_ids), "resolved": len(items)},
+            }
+        finally:
+            await self._close_profile_timeline_session(
+                session=active_session,
+                builder=builder,
+                lease_id=lease_id,
+                status_code=int(last_error_status or 200),
+            )
+
+    async def get_users_by_ids(self, request):
+        ids_request = self._coerce_user_ids_request(request)
+        user_ids = [str(u).strip() for u in (ids_request.user_ids or []) if str(u).strip()]
+        if not user_ids:
+            return {
+                "items": [],
+                "status_code": 400,
+                "detail": "No user ids provided",
+                "meta": {"requested": 0, "resolved": 0},
+            }
+
+        manifest = await self.manifest_provider.get_manifest()
+        url = self._resolve_operation_url(manifest, USER_LOOKUP_BATCH_OPERATION)
+        batch_size = self._coerce_positive_int(_cfg(self.config, "user_lookup_batch_size", 100)) or 100
+        # X caps one UsersByRestIds request at 100 ids.
+        batch_size = min(batch_size, 100)
+
+        active_session, leased_account, lease_id, builder = await self._acquire_profile_session()
+        if active_session is None and self.accounts_repo is not None:
+            logger.warning("User batch lookup failed: no eligible account could be leased")
+            return {
+                "items": [],
+                "status_code": 503,
+                "detail": "No eligible account available",
+                "meta": {"requested": len(user_ids), "resolved": 0},
+            }
+
+        items: list[dict[str, Any]] = []
+        last_error_status: Optional[int] = None
+        try:
+            for start in range(0, len(user_ids), batch_size):
+                batch = user_ids[start : start + batch_size]
+                params = self._build_user_batch_params(batch, manifest)
+                data, status_code, _headers, _snippet = await self._graphql_get(
+                    url=url,
+                    params=params,
+                    timeout_s=manifest.timeout_s,
+                    session=active_session,
+                    account_context=leased_account,
+                )
+                if self.accounts_repo is not None and lease_id and hasattr(self.accounts_repo, "record_usage"):
+                    await self._maybe_await(self.accounts_repo.record_usage(lease_id, pages=1, tweets=0))
+                if status_code != 200 or data is None:
+                    last_error_status = int(status_code)
+                    continue
+                by_id: dict[str, dict[str, Any]] = {}
+                extra_rows: list[dict[str, Any]] = []
+                for node in self._extract_user_batch_results(data):
+                    rest_id = str(node.get("rest_id") or "").strip()
+                    record = self._map_user_result_to_profile_record(
+                        node,
+                        target={"raw": rest_id or None, "source": "user_ids"},
+                        username="",
+                    )
+                    if rest_id and rest_id not in by_id:
+                        by_id[rest_id] = record
+                    else:
+                        extra_rows.append(record)
+                # The answer of X can reorder the rows; the input order wins.
+                for user_id in batch:
+                    record = by_id.pop(user_id, None)
+                    if record is not None:
+                        items.append(record)
+                items.extend(by_id.values())
+                items.extend(extra_rows)
+            if items or last_error_status is None:
+                status_code = 200
+            else:
+                status_code = int(last_error_status)
+            return {
+                "items": items,
+                "status_code": status_code,
+                "meta": {"requested": len(user_ids), "resolved": len(items)},
+            }
+        finally:
+            await self._close_profile_timeline_session(
+                session=active_session,
+                builder=builder,
+                lease_id=lease_id,
+                status_code=int(last_error_status or 200),
+            )
+
+    async def get_trending(self):
+        manifest = await self.manifest_provider.get_manifest()
+        url = self._resolve_operation_url(manifest, EXPLORE_PAGE_OPERATION)
+
+        active_session, leased_account, lease_id, builder = await self._acquire_profile_session()
+        if active_session is None and self.accounts_repo is not None:
+            logger.warning("Trending request failed: no eligible account could be leased")
+            return {"items": [], "status_code": 503, "detail": "No eligible account available"}
+
+        last_status = 200
+        try:
+            params = self._build_explore_params(manifest)
+            data, status_code, _headers, _snippet = await self._graphql_get(
+                url=url,
+                params=params,
+                timeout_s=manifest.timeout_s,
+                session=active_session,
+                account_context=leased_account,
+            )
+            last_status = int(status_code)
+            if self.accounts_repo is not None and lease_id and hasattr(self.accounts_repo, "record_usage"):
+                await self._maybe_await(self.accounts_repo.record_usage(lease_id, pages=1, tweets=0))
+            if status_code != 200 or data is None:
+                return {"items": [], "status_code": int(status_code)}
+            items = self._extract_trend_items(data)
+            return {"items": items, "status_code": 200}
+        finally:
+            await self._close_profile_timeline_session(
+                session=active_session,
+                builder=builder,
+                lease_id=lease_id,
+                status_code=last_status,
+            )
+
+    async def get_tweet_replies(self, request):
+        replies_request = self._coerce_tweet_replies_request(request)
+        tweet_id = str(replies_request.tweet_id or "").strip()
+        if not tweet_id:
+            return {"items": [], "status_code": 400, "detail": "No tweet id provided"}
+
+        manifest = await self.manifest_provider.get_manifest()
+        url = self._resolve_operation_url(manifest, TWEET_DETAIL_OPERATION)
+        seen_ids: set[str] = set()
+
+        def handle_record(record: TweetRecord) -> Optional[dict[str, Any]]:
+            record_id = str(record.tweet_id or "")
+            if record_id and record_id in seen_ids:
+                return None
+            if record_id:
+                seen_ids.add(record_id)
+            if replies_request.raw_json:
+                return record.raw
+            return record.model_dump()
+
+        return await self._run_leased_page_loop(
+            url=url,
+            build_params=lambda cursor: self._build_tweet_detail_params(tweet_id, cursor, manifest),
+            parse_page=lambda data: self._extract_conversation_tweets_and_cursor(
+                data, focal_tweet_id=tweet_id
+            ),
+            handle_node=handle_record,
+            limit=self._coerce_positive_int(replies_request.limit),
+            max_empty_pages=self._resolve_max_empty_pages(replies_request.max_empty_pages),
+            window_limit=self._search_window_limit(),
+            timeout_s=int(getattr(manifest, "timeout_s", 20) or 20),
+            log_label="Tweet replies",
+        )
+
+    async def get_reposters(self, request):
+        reposters_request = self._coerce_reposters_request(request)
+        tweet_id = str(reposters_request.tweet_id or "").strip()
+        if not tweet_id:
+            return {"items": [], "status_code": 400, "detail": "No tweet id provided"}
+
+        manifest = await self.manifest_provider.get_manifest()
+        url = self._resolve_operation_url(manifest, REPOSTERS_OPERATION)
+        seen_keys: set[str] = set()
+
+        def handle_user(user_result: dict[str, Any]) -> Optional[dict[str, Any]]:
+            dedupe_key = self._user_result_dedupe_key(user_result)
+            if not dedupe_key or dedupe_key in seen_keys:
+                return None
+            seen_keys.add(dedupe_key)
+            if reposters_request.raw_json:
+                return user_result
+            return self._map_user_result_to_reposter_record(user_result, tweet_id=tweet_id)
+
+        return await self._run_leased_page_loop(
+            url=url,
+            build_params=lambda cursor: self._build_reposters_params(tweet_id, cursor, manifest),
+            parse_page=self._extract_reposters_users_and_cursor,
+            handle_node=handle_user,
+            limit=self._coerce_positive_int(reposters_request.limit),
+            max_empty_pages=self._resolve_max_empty_pages(reposters_request.max_empty_pages),
+            window_limit=self._relationship_window_limit(),
+            timeout_s=int(getattr(manifest, "timeout_s", 20) or 20),
+            log_label="Reposters",
+        )
+
+    async def search_users(self, request):
+        search_request = self._coerce_search_users_request(request)
+        query = str(search_request.query or "").strip()
+        if not query:
+            return {"items": [], "status_code": 400, "detail": "No query provided"}
+
+        manifest = await self.manifest_provider.get_manifest()
+        url = self._resolve_search_url(manifest)
+        seen_keys: set[str] = set()
+
+        def handle_user(user_result: dict[str, Any]) -> Optional[dict[str, Any]]:
+            dedupe_key = self._user_result_dedupe_key(user_result)
+            if not dedupe_key or dedupe_key in seen_keys:
+                return None
+            seen_keys.add(dedupe_key)
+            if search_request.raw_json:
+                return user_result
+            return self._map_user_result_to_search_user_record(user_result, query=query)
+
+        return await self._run_leased_page_loop(
+            url=url,
+            build_params=lambda cursor: self._build_search_users_params(query, cursor, manifest),
+            parse_page=self._extract_search_users_and_cursor,
+            handle_node=handle_user,
+            limit=self._coerce_positive_int(search_request.limit),
+            max_empty_pages=self._resolve_max_empty_pages(search_request.max_empty_pages),
+            window_limit=self._search_window_limit(),
+            timeout_s=int(getattr(manifest, "timeout_s", 20) or 20),
+            log_label="Search users",
+        )
+
+    async def _run_leased_page_loop(
+        self,
+        *,
+        url: str,
+        build_params,
+        parse_page,
+        handle_node,
+        limit: Optional[int],
+        max_empty_pages: int,
+        window_limit: int,
+        timeout_s: int,
+        log_label: str,
+    ) -> dict[str, Any]:
+        try:
+            window_s = max(1.0, float(_cfg(self.config, "rate_limit_window_s", 900.0)))
+        except Exception:
+            window_s = 900.0
+        try:
+            min_delay_s = max(0.0, float(_cfg(self.config, "min_delay_s", 0.0)))
+        except Exception:
+            min_delay_s = 0.0
+
+        active_session, leased_account, lease_id, builder = await self._acquire_profile_session()
+        if active_session is None and self.accounts_repo is not None:
+            logger.warning("%s request failed: no eligible account could be leased", log_label)
+            return {"items": [], "status_code": 503, "detail": "No eligible account available"}
+
+        limiter = TokenBucketLimiter(
+            capacity=window_limit,
+            refill_window_s=window_s,
+            min_delay_s=min_delay_s,
+        )
+        heartbeat_stop, heartbeat_task = await self._start_lease_heartbeat(
+            lease_id=lease_id,
+            account_context=leased_account,
+        )
+
+        items: list[dict[str, Any]] = []
+        cursor: Optional[str] = None
+        empty_pages = 0
+        pages = 0
+        limit_reached = False
+        last_status = 200
+        last_effective_status = 200
+        last_headers: dict[str, Any] = {}
+
+        try:
+            while True:
+                params = build_params(cursor)
+                await limiter.acquire()
+                data, status_code, headers, _snippet = await self._graphql_get(
+                    url=url,
+                    params=params,
+                    timeout_s=timeout_s,
+                    session=active_session,
+                    account_context=leased_account,
+                )
+                last_headers = headers or last_headers
+                last_status = int(status_code)
+                last_effective_status = int(
+                    effective_status_with_rate_limit_headers(status_code, headers)
+                )
+                pages += 1
+                if status_code != 200 or data is None:
+                    if self.accounts_repo is not None and lease_id and hasattr(self.accounts_repo, "record_usage"):
+                        await self._maybe_await(
+                            self.accounts_repo.record_usage(lease_id, pages=1, tweets=0)
+                        )
+                    break
+
+                nodes, next_cursor = parse_page(data)
+                added = 0
+                for node in nodes:
+                    row = handle_node(node)
+                    if row is None:
+                        continue
+                    items.append(row)
+                    added += 1
+                    if limit is not None and len(items) >= limit:
+                        limit_reached = True
+                        break
+
+                if nodes:
+                    empty_pages = 0
+                else:
+                    empty_pages += 1
+                if self.accounts_repo is not None and lease_id and hasattr(self.accounts_repo, "record_usage"):
+                    await self._maybe_await(
+                        self.accounts_repo.record_usage(lease_id, pages=1, tweets=added)
+                    )
+                logger.info(
+                    "%s page processed status=200 results=%s unique_results=%s empty_pages=%s/%s next_cursor=%s",
+                    log_label,
+                    len(nodes),
+                    added,
+                    empty_pages,
+                    max_empty_pages,
+                    bool(next_cursor),
+                )
+
+                cursor = next_cursor
+                if limit_reached:
+                    break
+                # A preemptive 429 stops the loop before X refuses the next page.
+                if last_effective_status == 429:
+                    break
+                if empty_pages >= max_empty_pages:
+                    break
+                if not cursor:
+                    break
+        finally:
+            await self._stop_lease_heartbeat(
+                lease_id=lease_id,
+                account_context=leased_account,
+                stop_event=heartbeat_stop,
+                task=heartbeat_task,
+            )
+            await self._close_profile_timeline_session(
+                session=active_session,
+                builder=builder,
+                lease_id=lease_id,
+                status_code=last_effective_status,
+                headers=last_headers,
+                use_cooldown=True,
+                effective_status_code=last_effective_status,
+            )
+
+        if items:
+            status_code = 200
+        elif last_effective_status != 200:
+            status_code = last_effective_status
+        else:
+            status_code = 404
+        completed = bool(last_status == 200 and not limit_reached and not cursor)
+        return {
+            "items": items,
+            "status_code": status_code,
+            "completed": completed,
+            "limit_reached": limit_reached,
+            "meta": {"pages": pages},
+        }
+
+    def _resolve_max_empty_pages(self, value: Any) -> int:
+        resolved = self._coerce_positive_int(value)
+        if resolved is None:
+            resolved = self._coerce_positive_int(_cfg(self.config, "max_empty_pages", 1)) or 1
+        return resolved
+
+    def _search_window_limit(self) -> int:
+        try:
+            return max(1, int(_cfg(self.config, "window_request_limit", 50)))
+        except Exception:
+            return 50
+
+    def _coerce_tweet_lookup_request(self, request: Any) -> TweetLookupRequest:
+        if isinstance(request, TweetLookupRequest):
+            return request
+        return TweetLookupRequest.model_validate(request)
+
+    def _coerce_tweet_replies_request(self, request: Any) -> TweetRepliesRequest:
+        if isinstance(request, TweetRepliesRequest):
+            return request
+        return TweetRepliesRequest.model_validate(request)
+
+    def _coerce_reposters_request(self, request: Any) -> RepostersRequest:
+        if isinstance(request, RepostersRequest):
+            return request
+        return RepostersRequest.model_validate(request)
+
+    def _coerce_user_ids_request(self, request: Any) -> UserIdsRequest:
+        if isinstance(request, UserIdsRequest):
+            return request
+        return UserIdsRequest.model_validate(request)
+
+    def _coerce_search_users_request(self, request: Any) -> SearchUsersRequest:
+        if isinstance(request, SearchUsersRequest):
+            return request
+        return SearchUsersRequest.model_validate(request)
+
     def _coerce_profile_request(self, request: Any) -> ProfileRequest:
         if isinstance(request, ProfileRequest):
             return request
@@ -1243,6 +1779,7 @@ class ApiEngine:
                 "max_account_switches": request.get("max_account_switches"),
                 "allow_anonymous": bool(request.get("allow_anonymous", False)),
                 "max_empty_pages": request.get("max_empty_pages"),
+                "timeline_operation": request.get("timeline_operation") or PROFILE_TIMELINE_OPERATION,
             }
             return ProfileTimelineRequest.model_validate(payload)
         return ProfileTimelineRequest.model_validate(request)
@@ -1612,7 +2149,18 @@ class ApiEngine:
             return True
         return None
 
-    def _resolve_profile_timeline_url(self, manifest) -> str:
+    def _resolve_operation_url(self, manifest, operation: str) -> str:
+        default_query_id, default_endpoint = _OPERATION_DEFAULTS[operation]
+        query_id = (manifest.query_ids or {}).get(operation) or default_query_id
+        endpoint = (manifest.endpoints or {}).get(operation) or default_endpoint
+        if "{query_id}" in endpoint:
+            return endpoint.format(query_id=query_id)
+        return endpoint
+
+    def _resolve_profile_timeline_url(self, manifest, operation: Optional[str] = None) -> str:
+        op = str(operation or PROFILE_TIMELINE_OPERATION)
+        if op != PROFILE_TIMELINE_OPERATION:
+            return self._resolve_operation_url(manifest, op)
         query_id = (manifest.query_ids or {}).get(PROFILE_TIMELINE_OPERATION) or DEFAULT_PROFILE_TIMELINE_QUERY_ID
         endpoint = (manifest.endpoints or {}).get(PROFILE_TIMELINE_OPERATION) or DEFAULT_PROFILE_TIMELINE_ENDPOINT
         if "{query_id}" in endpoint:
@@ -1676,7 +2224,9 @@ class ApiEngine:
         cursor: Optional[str],
         manifest,
         runtime_hints: Optional[dict[str, Optional[int]]] = None,
+        operation: Optional[str] = None,
     ) -> dict[str, str]:
+        op = str(operation or PROFILE_TIMELINE_OPERATION)
         count = self._resolve_page_size(runtime_hints=runtime_hints)
         variables: dict[str, Any] = {
             "userId": str(user_id),
@@ -1689,7 +2239,7 @@ class ApiEngine:
             variables["cursor"] = cursor
 
         features_payload = (
-            manifest.features_for(PROFILE_TIMELINE_OPERATION)
+            manifest.features_for(op)
             if hasattr(manifest, "features_for")
             else (manifest.features or {})
         )
@@ -1698,7 +2248,7 @@ class ApiEngine:
             "features": json.dumps(features_payload or {}, separators=(",", ":")),
         }
         field_toggles_payload = (
-            manifest.field_toggles_for(PROFILE_TIMELINE_OPERATION)
+            manifest.field_toggles_for(op)
             if hasattr(manifest, "field_toggles_for")
             else None
         )
@@ -1746,6 +2296,125 @@ class ApiEngine:
         if field_toggles_payload:
             params["fieldToggles"] = json.dumps(field_toggles_payload, separators=(",", ":"))
         return params
+
+    def _build_operation_params(
+        self,
+        *,
+        variables: dict[str, Any],
+        manifest,
+        operation: str,
+    ) -> dict[str, str]:
+        features_payload = (
+            manifest.features_for(operation)
+            if hasattr(manifest, "features_for")
+            else (manifest.features or {})
+        )
+        params: dict[str, str] = {
+            "variables": json.dumps(variables, separators=(",", ":")),
+            "features": json.dumps(features_payload or {}, separators=(",", ":")),
+        }
+        field_toggles_payload = (
+            manifest.field_toggles_for(operation)
+            if hasattr(manifest, "field_toggles_for")
+            else None
+        )
+        if field_toggles_payload:
+            params["fieldToggles"] = json.dumps(field_toggles_payload, separators=(",", ":"))
+        return params
+
+    def _build_tweet_lookup_params(self, tweet_ids: list[str], manifest) -> dict[str, str]:
+        variables: dict[str, Any] = {
+            "tweetIds": [str(t) for t in tweet_ids],
+            "includePromotedContent": True,
+            "withBirdwatchNotes": True,
+            "withVoice": True,
+            "withCommunity": True,
+        }
+        return self._build_operation_params(
+            variables=variables, manifest=manifest, operation=TWEET_LOOKUP_OPERATION
+        )
+
+    def _build_tweet_detail_params(
+        self, tweet_id: str, cursor: Optional[str], manifest
+    ) -> dict[str, str]:
+        variables: dict[str, Any] = {
+            "focalTweetId": str(tweet_id),
+            "with_rux_injections": True,
+            "includePromotedContent": True,
+            "withCommunity": True,
+            "withQuickPromoteEligibilityTweetFields": True,
+            "withBirdwatchNotes": True,
+            "withVoice": True,
+            "withV2Timeline": True,
+        }
+        if cursor:
+            variables["cursor"] = cursor
+        return self._build_operation_params(
+            variables=variables, manifest=manifest, operation=TWEET_DETAIL_OPERATION
+        )
+
+    def _build_reposters_params(
+        self,
+        tweet_id: str,
+        cursor: Optional[str],
+        manifest,
+        *,
+        runtime_hints: Optional[dict[str, Optional[int]]] = None,
+    ) -> dict[str, str]:
+        variables: dict[str, Any] = {
+            "tweetId": str(tweet_id),
+            "count": self._resolve_page_size(runtime_hints=runtime_hints),
+            "includePromotedContent": True,
+        }
+        if cursor:
+            variables["cursor"] = cursor
+        return self._build_operation_params(
+            variables=variables, manifest=manifest, operation=REPOSTERS_OPERATION
+        )
+
+    def _build_user_batch_params(self, user_ids: list[str], manifest) -> dict[str, str]:
+        variables: dict[str, Any] = {"userIds": [str(u) for u in user_ids]}
+        return self._build_operation_params(
+            variables=variables, manifest=manifest, operation=USER_LOOKUP_BATCH_OPERATION
+        )
+
+    def _build_user_lookup_by_id_params(self, user_id: str, manifest) -> dict[str, str]:
+        variables: dict[str, Any] = {"userId": str(user_id), "withGrokTranslatedBio": False}
+        return self._build_operation_params(
+            variables=variables, manifest=manifest, operation=USER_LOOKUP_REST_ID_OPERATION
+        )
+
+    def _build_explore_params(self, manifest) -> dict[str, str]:
+        try:
+            count = max(1, int(_cfg(self.config, "trending_count", 20)))
+        except Exception:
+            count = 20
+        return self._build_operation_params(
+            variables={"count": count}, manifest=manifest, operation=EXPLORE_PAGE_OPERATION
+        )
+
+    def _build_search_users_params(
+        self,
+        query: str,
+        cursor: Optional[str],
+        manifest,
+        *,
+        runtime_hints: Optional[dict[str, Optional[int]]] = None,
+    ) -> dict[str, str]:
+        # The People product reads the search operation, so the manifest key stays
+        # search_timeline.
+        variables: dict[str, Any] = {
+            "rawQuery": str(query),
+            "count": self._resolve_page_size(runtime_hints=runtime_hints),
+            "querySource": "typed_query",
+            "product": "People",
+            "withGrokTranslatedBio": False,
+        }
+        if cursor:
+            variables["cursor"] = cursor
+        return self._build_operation_params(
+            variables=variables, manifest=manifest, operation="search_timeline"
+        )
 
     @staticmethod
     def _extract_user_result(payload: Any) -> Optional[dict[str, Any]]:
@@ -2689,6 +3358,13 @@ class ApiEngine:
                     elif cursor is None and (entry_id.startswith("cursor-") or cursor_type):
                         cursor = cursor_value
 
+                # A media grid and a conversation module hold their tweets in
+                # `items`, not in `itemContent`.
+                for module_entry_id, module_result in self._iter_module_tweet_results(content):
+                    tweets.append(
+                        self._tweet_result_to_record(module_result, entry_id=module_entry_id)
+                    )
+
                 if not entry_id.startswith("tweet-"):
                     continue
 
@@ -2704,10 +3380,37 @@ class ApiEngine:
 
         return tweets, cursor
 
+    @staticmethod
+    def _iter_module_tweet_results(content: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
+        out: list[tuple[str, dict[str, Any]]] = []
+        items = content.get("items")
+        if not isinstance(items, list):
+            return out
+        for node in items:
+            if not isinstance(node, dict):
+                continue
+            item_obj = node.get("item") if isinstance(node.get("item"), dict) else node
+            item_content = (
+                item_obj.get("itemContent") if isinstance(item_obj.get("itemContent"), dict) else {}
+            )
+            tweet_result = (item_content.get("tweet_results") or {}).get("result")
+            if not isinstance(tweet_result, dict) or not tweet_result:
+                continue
+            if str(tweet_result.get("__typename") or "") not in _TWEET_RESULT_TYPENAMES:
+                continue
+            out.append((str(node.get("entryId") or ""), tweet_result))
+        return out
+
     def _extract_follows_users_and_cursor(self, data: dict[str, Any]) -> Tuple[list[dict[str, Any]], Optional[str]]:
+        return self._extract_users_and_cursor_from_instructions(
+            self._extract_profile_timeline_instructions(data)
+        )
+
+    def _extract_users_and_cursor_from_instructions(
+        self, instructions: list[dict[str, Any]]
+    ) -> Tuple[list[dict[str, Any]], Optional[str]]:
         users: list[dict[str, Any]] = []
         cursor: Optional[str] = None
-        instructions = self._extract_profile_timeline_instructions(data)
 
         for instruction in instructions:
             entries: list[dict[str, Any]] = []
@@ -2783,6 +3486,231 @@ class ApiEngine:
         if isinstance(instructions, list):
             return instructions
         return []
+
+    @staticmethod
+    def _extract_reposters_instructions(data: dict[str, Any]) -> list[dict[str, Any]]:
+        instructions = (
+            data.get("data", {})
+            .get("retweeters_timeline", {})
+            .get("timeline", {})
+            .get("instructions", [])
+        )
+        if isinstance(instructions, list):
+            return instructions
+        return []
+
+    @staticmethod
+    def _extract_search_timeline_instructions(data: dict[str, Any]) -> list[dict[str, Any]]:
+        instructions = (
+            data.get("data", {})
+            .get("search_by_raw_query", {})
+            .get("search_timeline", {})
+            .get("timeline", {})
+            .get("instructions", [])
+        )
+        if isinstance(instructions, list):
+            return instructions
+        return []
+
+    @staticmethod
+    def _extract_explore_instructions(data: dict[str, Any]) -> list[dict[str, Any]]:
+        instructions = (
+            data.get("data", {})
+            .get("explore_page", {})
+            .get("body", {})
+            .get("initialTimeline", {})
+            .get("timeline", {})
+            .get("timeline", {})
+            .get("instructions", [])
+        )
+        if isinstance(instructions, list):
+            return instructions
+        return []
+
+    def _extract_reposters_users_and_cursor(
+        self, data: dict[str, Any]
+    ) -> Tuple[list[dict[str, Any]], Optional[str]]:
+        return self._extract_users_and_cursor_from_instructions(
+            self._extract_reposters_instructions(data)
+        )
+
+    def _extract_search_users_and_cursor(
+        self, data: dict[str, Any]
+    ) -> Tuple[list[dict[str, Any]], Optional[str]]:
+        return self._extract_users_and_cursor_from_instructions(
+            self._extract_search_timeline_instructions(data)
+        )
+
+    @staticmethod
+    def _extract_tweet_lookup_results(payload: Any) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        if not isinstance(payload, dict):
+            return out
+        rows = (payload.get("data") or {}).get("tweetResult")
+        if not isinstance(rows, list):
+            return out
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            # A deleted tweet answers a row without a tweet node: no record, no error.
+            result = row.get("result")
+            if not isinstance(result, dict) or not result:
+                continue
+            if str(result.get("__typename") or "") not in _TWEET_RESULT_TYPENAMES:
+                continue
+            out.append(result)
+        return out
+
+    @staticmethod
+    def _extract_user_batch_results(payload: Any) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        if not isinstance(payload, dict):
+            return out
+        rows = (payload.get("data") or {}).get("users")
+        if not isinstance(rows, list):
+            return out
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            result = row.get("result")
+            if isinstance(result, dict) and result:
+                out.append(result)
+        return out
+
+    def _extract_conversation_tweets_and_cursor(
+        self, data: dict[str, Any], *, focal_tweet_id: str
+    ) -> Tuple[list[TweetRecord], Optional[str]]:
+        records: list[TweetRecord] = []
+        cursor: Optional[str] = None
+        focal = str(focal_tweet_id or "").strip()
+        instructions = (
+            data.get("data", {})
+            .get("threaded_conversation_with_injections_v2", {})
+            .get("instructions", [])
+        )
+        if not isinstance(instructions, list):
+            instructions = []
+
+        for instruction in instructions:
+            entries: list[dict[str, Any]] = []
+            if isinstance(instruction, dict):
+                instruction_entries = instruction.get("entries")
+                if isinstance(instruction_entries, list):
+                    entries.extend(item for item in instruction_entries if isinstance(item, dict))
+                instruction_entry = instruction.get("entry")
+                if isinstance(instruction_entry, dict):
+                    entries.append(instruction_entry)
+
+            for entry in entries:
+                entry_id = str(entry.get("entryId") or "")
+                content = entry.get("content", {}) if isinstance(entry.get("content"), dict) else {}
+                item_content = (
+                    content.get("itemContent", {})
+                    if isinstance(content.get("itemContent"), dict)
+                    else {}
+                )
+
+                # X sends the continuation as a Bottom or a ShowMoreThreads cursor.
+                for cursor_node in (content, item_content):
+                    cursor_value = cursor_node.get("value")
+                    cursor_type = str(cursor_node.get("cursorType") or "").strip().lower()
+                    if (
+                        isinstance(cursor_value, str)
+                        and cursor_value
+                        and cursor_type in {"bottom", "showmorethreads"}
+                    ):
+                        cursor = cursor_value
+
+                candidates: list[tuple[str, dict[str, Any]]] = []
+                top_result = (item_content.get("tweet_results") or {}).get("result")
+                if (
+                    isinstance(top_result, dict)
+                    and top_result
+                    and str(top_result.get("__typename") or "") in _TWEET_RESULT_TYPENAMES
+                ):
+                    candidates.append((entry_id, top_result))
+                candidates.extend(self._iter_module_tweet_results(content))
+
+                for candidate_entry_id, candidate in candidates:
+                    record = self._tweet_result_to_record(candidate, entry_id=candidate_entry_id)
+                    # The focal tweet is the input of the caller, not a reply.
+                    if focal and str(record.tweet_id) == focal:
+                        continue
+                    records.append(record)
+
+        return records, cursor
+
+    def _extract_trend_items(self, data: dict[str, Any]) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for instruction in self._extract_explore_instructions(data):
+            entries: list[dict[str, Any]] = []
+            if isinstance(instruction, dict):
+                instruction_entries = instruction.get("entries")
+                if isinstance(instruction_entries, list):
+                    entries.extend(item for item in instruction_entries if isinstance(item, dict))
+                instruction_entry = instruction.get("entry")
+                if isinstance(instruction_entry, dict):
+                    entries.append(instruction_entry)
+
+            for entry in entries:
+                content = entry.get("content", {}) if isinstance(entry.get("content"), dict) else {}
+                candidates: list[dict[str, Any]] = []
+                item_content = (
+                    content.get("itemContent", {})
+                    if isinstance(content.get("itemContent"), dict)
+                    else {}
+                )
+                if item_content:
+                    candidates.append(item_content)
+                items = content.get("items")
+                if isinstance(items, list):
+                    for node in items:
+                        if not isinstance(node, dict):
+                            continue
+                        item_obj = node.get("item") if isinstance(node.get("item"), dict) else node
+                        node_content = item_obj.get("itemContent")
+                        if isinstance(node_content, dict):
+                            candidates.append(node_content)
+
+                for candidate in candidates:
+                    if str(candidate.get("itemType") or "") != "TimelineTrend":
+                        continue
+                    rows.append(self._map_trend_item_to_record(candidate))
+        return rows
+
+    @staticmethod
+    def _map_trend_item_to_record(item: dict[str, Any]) -> dict[str, Any]:
+        social_context = (
+            item.get("social_context") if isinstance(item.get("social_context"), dict) else {}
+        )
+        trend_url_node = item.get("trend_url") if isinstance(item.get("trend_url"), dict) else {}
+        trend_url = str(trend_url_node.get("url") or "")
+        match = re.search(r"trending/(\d+)", trend_url)
+        return {
+            "name": item.get("name"),
+            "context": social_context.get("text"),
+            "trend_id": match.group(1) if match else None,
+            "raw": item,
+        }
+
+    def _map_user_result_to_reposter_record(
+        self, user_result: dict[str, Any], *, tweet_id: str
+    ) -> dict[str, Any]:
+        return self._map_user_result_to_follow_record(
+            user_result=user_result,
+            target={"raw": str(tweet_id), "source": "tweet_id"},
+            follow_type=REPOSTERS_OPERATION,
+        )
+
+    def _map_user_result_to_search_user_record(
+        self, user_result: dict[str, Any], *, query: str
+    ) -> dict[str, Any]:
+        record = self._map_user_result_to_profile_record(
+            user_result,
+            target={"raw": str(query), "source": "search_users"},
+            username="",
+        )
+        return {"type": "search_users", **record}
 
     @staticmethod
     def _tweet_record_id(tweet: Any) -> Optional[str]:

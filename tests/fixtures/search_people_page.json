@@ -1,0 +1,2268 @@
+{
+ "data": {
+  "search_by_raw_query": {
+   "search_timeline": {
+    "timeline": {
+     "instructions": [
+      {
+       "type": "TimelineClearCache"
+      },
+      {
+       "entries": [
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 4065
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/2064643629629747200/w65_Zj6x_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/743780794997547008/1489669161"
+             },
+             "core": {
+              "created_at": "Fri Jun 17 12:22:15 +0000 2016",
+              "name": "Python Developer",
+              "screen_name": "PythonDvz"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjo3NDM3ODA3OTQ5OTc1NDcwMDg=",
+             "is_blue_verified": true,
+             "location": {
+              "location": "United States"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "2098999614158618687"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Python developer sharing daily tips, tutorials, memes & quizzes. Level up your coding skills! \ud83d\udc0d Hit follow \ud83d\ude80 #Python #DevLife #100DaysOfCode",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "amzn.to/4cDpAXy",
+                  "expanded_url": "https://amzn.to/4cDpAXy",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/fUekiLbno4"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 185833,
+              "following": 1106
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "743780794997547008",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 12136,
+              "tweets": 15869
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/fUekiLbno4"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-743780794997547008",
+         "sortIndex": "2099481809279516672"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 306286
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1165280090948636672/tlcEvQCD_normal.jpg"
+             },
+             "banner": {
+              "image_url": ""
+             },
+             "core": {
+              "created_at": "Fri Jun 07 15:34:46 +0000 2019",
+              "name": "Python Developer",
+              "screen_name": "PythonDevelope4"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxMTM3MDIwMDc3NjE2NzA5NjM0",
+             "is_blue_verified": false,
+             "location": {
+              "location": "Bharat"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Python Developer, Comic book lover, free lancer, Option Trader, interested in politics",
+              "entities": {
+               "description": {}
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 623,
+              "following": 563
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1137020077616709634",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 89,
+              "tweets": 7397
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": ""
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1137020077616709634",
+         "sortIndex": "2099481809279516662"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 1
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1111892734598672384/Y9zbuqDe_normal.png"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/844827763785707520/1522915886"
+             },
+             "core": {
+              "created_at": "Thu Mar 23 08:26:49 +0000 2017",
+              "name": "Python Developer",
+              "screen_name": "PythonDev4U"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjo4NDQ4Mjc3NjM3ODU3MDc1MjA=",
+             "is_blue_verified": false,
+             "location": {
+              "location": "United States"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "1229248681284493312"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Python is an interpreted, high-level, general-purpose programming language....",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "morioh.com",
+                  "expanded_url": "https://morioh.com",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/rql092J7Tz"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 599,
+              "following": 237
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "844827763785707520",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 2149,
+              "tweets": 3365
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/rql092J7Tz"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-844827763785707520",
+         "sortIndex": "2099481809279516652"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 363
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1309019757937647616/2AqLNoBY_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1309018089867091973/1600929960"
+             },
+             "core": {
+              "created_at": "Thu Sep 24 06:33:40 +0000 2020",
+              "name": "Python Programmers",
+              "screen_name": "python_develope"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxMzA5MDE4MDg5ODY3MDkxOTcz",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Python Programmers",
+              "entities": {
+               "description": {}
+              }
+             },
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 1555,
+              "following": 4258
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1309018089867091973",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 12,
+              "tweets": 572
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": ""
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1309018089867091973",
+         "sortIndex": "2099481809279516642"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 415
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1684639482094706694/6Ko0VlQh_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1684636083588681728/1690655865"
+             },
+             "core": {
+              "created_at": "Thu Jul 27 18:45:34 +0000 2023",
+              "name": "Python Developer",
+              "screen_name": "__nep__tune__"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxNjg0NjM2MDgzNTg4NjgxNzI4",
+             "is_blue_verified": false,
+             "location": {
+              "location": "Bangalore"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "1785645957364986355"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "\ud83d\udc0d Python Developer \ud83d\ude80 | Enthusiastic Problem Solver and Lifelong Learner | #Python #WebDevelopment #DataScience",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "neptuneworld.in",
+                  "expanded_url": "https://neptuneworld.in",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/YGnR68eX1N"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 177,
+              "following": 295
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1684636083588681728",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 1,
+              "tweets": 692
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/YGnR68eX1N"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1684636083588681728",
+         "sortIndex": "2099481809279516632"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 494
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1053012746814574593/BooE0UPr_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1053011875007483905/1539892804"
+             },
+             "core": {
+              "created_at": "Thu Oct 18 19:56:09 +0000 2018",
+              "name": "Peter Python",
+              "screen_name": "Pythondevelopm2"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxMDUzMDExODc1MDA3NDgzOTA1",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "1059884786225999872"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "I will tweet/retweet about interesting topics regarding python development.\n\nLet keep it Pythonic!",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "github.com/pythondream",
+                  "expanded_url": "http://github.com/pythondream",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/E8xPs1Mb6z"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 393,
+              "following": 37
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1053011875007483905",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 0,
+              "tweets": 20780
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/E8xPs1Mb6z"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1053011875007483905",
+         "sortIndex": "2099481809279516622"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 0
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1406199311520604162/PHt06qLR_normal.jpg"
+             },
+             "banner": {
+              "image_url": ""
+             },
+             "core": {
+              "created_at": "Sat Jun 19 10:17:48 +0000 2021",
+              "name": "Python Developer Jobs",
+              "screen_name": "PythonJobs4all"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxNDA2MTkzOTc2NDc5MDgwNDQ4",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Stay tuned for Python Developer Jobs.",
+              "entities": {
+               "description": {}
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 114,
+              "following": 0
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1406193976479080448",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 3,
+              "tweets": 3
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": ""
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1406193976479080448",
+         "sortIndex": "2099481809279516612"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 217
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1780862172073267200/INjFM2jI_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1655136264105107457/1704295255"
+             },
+             "core": {
+              "created_at": "Sun May 07 09:03:45 +0000 2023",
+              "name": "Varun Agarwal || Backend Developer || Python",
+              "screen_name": "1010varun_"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxNjU1MTM2MjY0MTA1MTA3NDU3",
+             "is_blue_verified": false,
+             "location": {
+              "location": "Ghaziabad, India"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "professional": {
+              "category": [
+               {
+                "icon_name": "IconBriefcaseStroke",
+                "id": 1055,
+                "name": "Software developer/Programmer/Software engineer"
+               }
+              ],
+              "professional_type": "Business",
+              "rest_id": "1655673848036233216"
+             },
+             "profile_bio": {
+              "description": "Potterhead \u2022 Developer \u2022 Open-source \u2022 Devops \u2022 Python",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "1010varun.netlify.app",
+                  "expanded_url": "https://1010varun.netlify.app",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/sKARMfNbnp"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 115,
+              "following": 213
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1655136264105107457",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 1,
+              "tweets": 65
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/sKARMfNbnp"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1655136264105107457",
+         "sortIndex": "2099481809279516602"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 4243
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1687060080108478466/c-xl2GE0_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1543893255519375361/1691061441"
+             },
+             "core": {
+              "created_at": "Mon Jul 04 09:43:41 +0000 2022",
+              "name": "TitanTCodes \u2695\ufe0f Python Developer",
+              "screen_name": "TitanTCodes"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxNTQzODkzMjU1NTE5Mzc1MzYx",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "professional": {
+              "category": [
+               {
+                "icon_name": "IconBriefcaseStroke",
+                "id": 1055,
+                "name": "Software developer/Programmer/Software engineer"
+               }
+              ],
+              "professional_type": "Creator",
+              "rest_id": "1691484076073529578"
+             },
+             "profile_bio": {
+              "description": "Programmer \ud83e\uddd1\u200d\ud83d\udcbb Building With #Python \ud83d\udc0d Sharing Insights \ud83d\udcb2Doing #100DaysOfCode Challange \ud83d\udd25Join Me On My Journey \ud83d\ude80",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "getairchat.com/titantcodes",
+                  "expanded_url": "http://getairchat.com/titantcodes",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/fIdIQalsPv"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 94,
+              "following": 3
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1543893255519375361",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 119,
+              "tweets": 1571
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/fIdIQalsPv"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1543893255519375361",
+         "sortIndex": "2099481809279516592"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 282
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1781093157184188416/YCZMJ4tb_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1659578887179997189/1713480680"
+             },
+             "core": {
+              "created_at": "Fri May 19 15:17:03 +0000 2023",
+              "name": "MaxSelf | Python Developers | PROTON Ecosystem 3.0",
+              "screen_name": "maxselfru"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxNjU5NTc4ODg3MTc5OTk3MTg5",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "1780380983163760957"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "I'm the lead python developer at PROTON JETTON.",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "protonjetton.com",
+                  "expanded_url": "https://protonjetton.com",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/9DHWywPu7m"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 164,
+              "following": 384
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1659578887179997189",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 153,
+              "tweets": 258
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/9DHWywPu7m"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1659578887179997189",
+         "sortIndex": "2099481809279516582"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 39
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1336240672253202433/QoBO4Ry8_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1218908550/1562302181"
+             },
+             "core": {
+              "created_at": "Mon Feb 25 15:01:07 +0000 2013",
+              "name": "Arnab Biswas | Tech Bro | Python Developer",
+              "screen_name": "arnab00725"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxMjE4OTA4NTUw",
+             "is_blue_verified": false,
+             "location": {
+              "location": "Behrampore,west bengal"
+             },
+             "media_permissions": {
+              "can_media_tag": false
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Face the hardship now and you will make the competition more interesting :p",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "facebook.com/khanp4397",
+                  "expanded_url": "https://facebook.com/khanp4397",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/yGuJDNhgXY"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 75,
+              "following": 928
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1218908550",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 68,
+              "tweets": 206
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/yGuJDNhgXY"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1218908550",
+         "sortIndex": "2099481809279516572"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 0
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/2332300086/k2s90wd0vx5s2cj6cbqe_normal.png"
+             },
+             "banner": {
+              "image_url": ""
+             },
+             "core": {
+              "created_at": "Wed Jun 06 20:12:28 +0000 2012",
+              "name": "Python Developers",
+              "screen_name": "PyDevs"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjo2MDEyNTk2NDc=",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Comunidad dedicada al aprendizaje de las distintas tecnologias sobre Python",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "pydevs.net",
+                  "expanded_url": "http://www.pydevs.net/",
+                  "indices": [
+                   0,
+                   22
+                  ],
+                  "url": "http://t.co/csHzKcaNJQ"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "es",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 62,
+              "following": 0
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "601259647",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 0,
+              "tweets": 1
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "http://t.co/csHzKcaNJQ"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-601259647",
+         "sortIndex": "2099481809279516562"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 234
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/2046126384733675520/N4WpzglX_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/900231625715453952/1777269929"
+             },
+             "core": {
+              "created_at": "Wed Aug 23 05:41:59 +0000 2017",
+              "name": "Nick Gubbins ~ Developer | C++, C#, Python",
+              "screen_name": "nickgubbins_dev"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjo5MDAyMzE2MjU3MTU0NTM5NTI=",
+             "is_blue_verified": false,
+             "location": {
+              "location": "QLD"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "2048617166317228497"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "I like puzzles, pretty patterns, and programming",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "linktr.ee/nickgubbins",
+                  "expanded_url": "https://linktr.ee/nickgubbins",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/oIr8oN9sEr"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 59,
+              "following": 187
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "900231625715453952",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 39,
+              "tweets": 133
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/oIr8oN9sEr"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-900231625715453952",
+         "sortIndex": "2099481809279516552"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 135
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1647685893011152898/VsueRatz_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1590549647516655616/1681673852"
+             },
+             "core": {
+              "created_at": "Thu Nov 10 03:39:33 +0000 2022",
+              "name": "Python Trader & Freelance Algo Developer.",
+              "screen_name": "Su_3099"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxNTkwNTQ5NjQ3NTE2NjU1NjE2",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Freelance Algo (Python) Developer & Option writer. \nDM me for Algo software development.\n\nTrading strictly Coin Toss Strategy.",
+              "entities": {
+               "description": {}
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 54,
+              "following": 12
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1590549647516655616",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 5,
+              "tweets": 72
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": ""
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1590549647516655616",
+         "sortIndex": "2099481809279516542"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 1328
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/2087180848240230400/yuWe1xE2_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1818329131060469760/1786457472"
+             },
+             "core": {
+              "created_at": "Tue Jul 30 16:54:24 +0000 2024",
+              "name": "\ud83d\udcbb Computer Science | \ud83d\udc0d Python Developer.\ud83d\udcd6\ud83d\udcd8\ud83c\uddfa\ud83c\uddf8",
+              "screen_name": "CodingPython_"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxODE4MzI5MTMxMDYwNDY5NzYw",
+             "is_blue_verified": false,
+             "location": {
+              "location": "United States \ud83c\uddfa\ud83c\uddf8"
+             },
+             "media_permissions": {
+              "can_media_tag": false
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "2087562884331028528"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "professional": {
+              "category": [
+               {
+                "icon_name": "IconBriefcaseStroke",
+                "id": 144,
+                "name": "Education"
+               }
+              ],
+              "professional_type": "Business",
+              "rest_id": "1959524129213911140"
+             },
+             "profile_bio": {
+              "description": "Helping students with Computer Science, Python, Programming, Data Structures & Algorithms \ud83d\udcbb Projects | Assignments ,Exam | Coding, Online Classes, Report;\ud83c\udf0d",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "wa.me/+14155317905",
+                  "expanded_url": "https://wa.me/+14155317905",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/aXpuPCZ8mQ"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 50,
+              "following": 329
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1818329131060469760",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 451,
+              "tweets": 770
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/aXpuPCZ8mQ"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1818329131060469760",
+         "sortIndex": "2099481809279516532"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 567
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1802720083099418625/wy52LGLi_normal.jpg"
+             },
+             "banner": {
+              "image_url": ""
+             },
+             "core": {
+              "created_at": "Sat Dec 23 08:49:51 +0000 2023",
+              "name": "Python Developer",
+              "screen_name": "devpythonn"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxNzM4NDgxODkwNDg5NzE2NzM2",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "MEME ON sql, \nPython, Typescript, Java, NodeJS, Machine Learning, dataScience...\nyt: https://t.co/hi77wJAsgY (20+ )\nowner of SoftwareWithMemes on Reddit: (10k+)",
+              "entities": {
+               "description": {
+                "urls": [
+                 {
+                  "display_url": "youtube.com/@devpythonn",
+                  "expanded_url": "http://youtube.com/@devpythonn",
+                  "indices": [
+                   85,
+                   108
+                  ],
+                  "url": "https://t.co/hi77wJAsgY"
+                 }
+                ]
+               },
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "reddit.com/r/softwareWith\u2026",
+                  "expanded_url": "https://www.reddit.com/r/softwareWithMemes/",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/MYhpuL4ULf"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 43,
+              "following": 6
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1738481890489716736",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 241,
+              "tweets": 298
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/MYhpuL4ULf"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1738481890489716736",
+         "sortIndex": "2099481809279516522"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 220
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1976993315674284032/7azgE6-U_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1906453671103049728/1743369398"
+             },
+             "core": {
+              "created_at": "Sun Mar 30 21:09:27 +0000 2025",
+              "name": "CYBERTYRANT ll WEB DEVELOPER ll PYTHON DEV",
+              "screen_name": "_cybertyrant"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxOTA2NDUzNjcxMTAzMDQ5NzI4",
+             "is_blue_verified": false,
+             "location": {
+              "location": "Abuja, Nigeria"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "1971129974771024321"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "professional": {
+              "category": [
+               {
+                "icon_name": "IconBriefcaseStroke",
+                "id": 714,
+                "name": "Technology Company"
+               }
+              ],
+              "professional_type": "Creator",
+              "rest_id": "1969338778553893159"
+             },
+             "profile_bio": {
+              "description": "Front-End Developer | HTML, CSS, JavaScript, React | Building clean, fast, and user-friendly interfaces. \ud83e\udde0 Let\u2019s make your ideas reality",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "cybertyrant.netlify.app",
+                  "expanded_url": "https://cybertyrant.netlify.app/",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/kTnvg1xfBp"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 44,
+              "following": 43
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1906453671103049728",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 40,
+              "tweets": 212
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/kTnvg1xfBp"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1906453671103049728",
+         "sortIndex": "2099481809279516512"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 551
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/2094933045341978625/jPI5z9xJ_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/1877158621513175040/1788305934"
+             },
+             "core": {
+              "created_at": "Thu Jan 09 01:01:33 +0000 2025",
+              "name": "Ositex || Web & Python Developer",
+              "screen_name": "OsiriMang"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxODc3MTU4NjIxNTEzMTc1MDQw",
+             "is_blue_verified": false,
+             "location": {
+              "location": "Abia State, Nigeria"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "professional": {
+              "category": [
+               {
+                "icon_name": "IconBriefcaseStroke",
+                "id": 934,
+                "name": "Social Media Influencer"
+               }
+              ],
+              "professional_type": "Creator",
+              "rest_id": "1968446425643278578"
+             },
+             "profile_bio": {
+              "description": "DIGITAL MARKETING MANAGER || GOOGLE ADS EXPERT || FULLSTACK & PYTHON DEVELOPER || SENIOR GRAPHIC DESIGNER\udb86\udc8f",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "ositexcreativehub.netlify.app",
+                  "expanded_url": "http://ositexcreativehub.netlify.app",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/bdE69lkO7c"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 43,
+              "following": 35
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1877158621513175040",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 60,
+              "tweets": 164
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/bdE69lkO7c"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1877158621513175040",
+         "sortIndex": "2099481809279516502"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 6
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/1057003481985359872/i505sdKB_normal.jpg"
+             },
+             "banner": {
+              "image_url": ""
+             },
+             "core": {
+              "created_at": "Mon Oct 29 20:14:55 +0000 2018",
+              "name": "Python Developer",
+              "screen_name": "DeveloperPython"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjoxMDU3MDAyODYzNjEwNzg1Nzk4",
+             "is_blue_verified": false,
+             "location": {
+              "location": ""
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {
+              "tweet_ids_str": [
+               "1057004903959281665"
+              ]
+             },
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "Hi Everyone,\nI'm Python Developer currently working on A.I.\nPlease contact me for your projects.\nhttps://t.co/UoECHMjJdH",
+              "entities": {
+               "description": {
+                "urls": [
+                 {
+                  "display_url": "fiverr.com/ashfaquemarfani",
+                  "expanded_url": "http://fiverr.com/ashfaquemarfani",
+                  "indices": [
+                   97,
+                   120
+                  ],
+                  "url": "https://t.co/UoECHMjJdH"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "en",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 38,
+              "following": 0
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "1057002863610785798",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 0,
+              "tweets": 47
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": ""
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-1057002863610785798",
+         "sortIndex": "2099481809279516492"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineItem",
+          "clientEventInfo": {
+           "component": "result",
+           "element": "user"
+          },
+          "entryType": "TimelineTimelineItem",
+          "itemContent": {
+           "__typename": "TimelineUser",
+           "itemType": "TimelineUser",
+           "userDisplayType": "User",
+           "user_results": {
+            "result": {
+             "__typename": "User",
+             "action_counts": {
+              "favorites_count": 862
+             },
+             "affiliates_highlighted_label": {},
+             "avatar": {
+              "image_url": "https://pbs.twimg.com/profile_images/840087594180403204/9i6-iNre_normal.jpg"
+             },
+             "banner": {
+              "image_url": "https://pbs.twimg.com/profile_banners/743094752208289793/1489127479"
+             },
+             "core": {
+              "created_at": "Wed Jun 15 14:56:09 +0000 2016",
+              "name": "Python Developers",
+              "screen_name": "Python_Dev102"
+             },
+             "follow_request_sent": false,
+             "has_graduated_access": true,
+             "id": "VXNlcjo3NDMwOTQ3NTIyMDgyODk3OTM=",
+             "is_blue_verified": false,
+             "location": {
+              "location": "United States"
+             },
+             "media_permissions": {
+              "can_media_tag": true
+             },
+             "notifications_settings": {
+              "notifications_enabled": false
+             },
+             "parody_commentary_fan_label": "None",
+             "pinned_items": {},
+             "possibly_sensitive": false,
+             "privacy": {
+              "protected": false
+             },
+             "profile_bio": {
+              "description": "",
+              "entities": {
+               "description": {},
+               "url": {
+                "urls": [
+                 {
+                  "display_url": "learn4startup.com",
+                  "expanded_url": "https://learn4startup.com/",
+                  "indices": [
+                   0,
+                   23
+                  ],
+                  "url": "https://t.co/CK0WloEaDO"
+                 }
+                ]
+               }
+              }
+             },
+             "profile_description_language": "und",
+             "profile_image_shape": "Circle",
+             "profile_metadata": {
+              "profile_interstitial_type": ""
+             },
+             "profile_translation": {
+              "translator_type": "none"
+             },
+             "relationship_counts": {
+              "followers": 37,
+              "following": 0
+             },
+             "relationship_perspectives": {
+              "blocked_by": false,
+              "blocking": false,
+              "followed_by": false,
+              "following": false,
+              "live_following": false,
+              "muting": false
+             },
+             "rest_id": "743094752208289793",
+             "super_follow_eligible": false,
+             "super_followed_by": false,
+             "super_following": false,
+             "tweet_counts": {
+              "media_tweets": 153,
+              "tweets": 153
+             },
+             "verification": {
+              "verified": false
+             },
+             "website": {
+              "url": "https://t.co/CK0WloEaDO"
+             }
+            }
+           }
+          }
+         },
+         "entryId": "user-743094752208289793",
+         "sortIndex": "2099481809279516482"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineCursor",
+          "cursorType": "Top",
+          "entryType": "TimelineTimelineCursor",
+          "value": "DAAJAAA"
+         },
+         "entryId": "cursor-top-2099481809279516673",
+         "sortIndex": "2099481809279516673"
+        },
+        {
+         "content": {
+          "__typename": "TimelineTimelineCursor",
+          "cursorType": "Bottom",
+          "entryType": "TimelineTimelineCursor",
+          "value": "DAAFCgABHSLblP5__z8LAAIAAADwRW1QQzZ3QUFBZlEvZ0dKTjB2R3AvQUFBQUJRWFlRZVhxaHZRQUJiNE9hbTAyaUFCQzdsdVlBVFZzQUFhRFFIU0ZsclFBQUFBQUFBajFuNS9HblVWZzFiV01BQUtVbkN4UEpZZ0FCZ2dWQkdMRnRBQUZXMEN2R3Bha0FFQUFBQUFTS2NSaGhJcWtRUnJGcUFGRmhMRWVqSGFZQUFLVUFDOWM5VUFBUms4QUxYMW1xQUFESDVENU5wWGtBQVRnODM0cFZSZ0FCY0lBalIvR2hBRkQ4ZUJ2SVRVd0FJT3F6cUJGQmR3Qmc2ZERMaWlGdEFCCAADAAAAAgAA"
+         },
+         "entryId": "cursor-bottom-2099481809279516481",
+         "sortIndex": "2099481809279516481"
+        }
+       ],
+       "type": "TimelineAddEntries"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

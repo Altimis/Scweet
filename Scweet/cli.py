@@ -123,12 +123,103 @@ def cmd_profile_tweets(args: argparse.Namespace) -> None:
         limit=args.limit,
         max_empty_pages=args.max_empty_pages,
         resume=args.resume,
+        include_replies=args.include_replies,
         save=args.save,
         save_format=args.save_format,
         save_name=args.save_name,
     )
     if args.pretty:
         _print_results(results)
+
+
+def cmd_profile_media(args: argparse.Namespace) -> None:
+    client = _make_client(args)
+    results = client.get_profile_media(
+        args.users,
+        limit=args.limit,
+        max_empty_pages=args.max_empty_pages,
+        resume=args.resume,
+        save=args.save,
+        save_format=args.save_format,
+        save_name=args.save_name,
+    )
+    if args.pretty:
+        _print_results(results)
+
+
+def cmd_tweet_info(args: argparse.Namespace) -> None:
+    client = _make_client(args)
+    results = client.get_tweet_info(
+        args.tweet_ids,
+        raw_json=args.raw_json,
+        save=args.save,
+        save_format=args.save_format,
+        save_name=args.save_name,
+    )
+    if args.pretty:
+        _print_results(results)
+
+
+def cmd_tweet_replies(args: argparse.Namespace) -> None:
+    client = _make_client(args)
+    results = client.get_tweet_replies(
+        args.tweet_id,
+        limit=args.limit,
+        max_empty_pages=args.max_empty_pages,
+        raw_json=args.raw_json,
+        save=args.save,
+        save_format=args.save_format,
+        save_name=args.save_name,
+    )
+    if args.pretty:
+        _print_results(results)
+
+
+def cmd_reposters(args: argparse.Namespace) -> None:
+    client = _make_client(args)
+    results = client.get_reposters(
+        args.tweet_id,
+        limit=args.limit,
+        max_empty_pages=args.max_empty_pages,
+        raw_json=args.raw_json,
+        save=args.save,
+        save_format=args.save_format,
+        save_name=args.save_name,
+    )
+    if args.pretty:
+        _print_results(results)
+
+
+def cmd_search_users(args: argparse.Namespace) -> None:
+    client = _make_client(args)
+    results = client.search_users(
+        _sanitize_query(args.query),
+        limit=args.limit,
+        max_empty_pages=args.max_empty_pages,
+        raw_json=args.raw_json,
+        save=args.save,
+        save_format=args.save_format,
+        save_name=args.save_name,
+    )
+    if args.pretty:
+        _print_results(results)
+
+
+def cmd_trending(args: argparse.Namespace) -> None:
+    client = _make_client(args)
+    results = client.get_trending()
+    if args.pretty:
+        _print_results(results)
+
+
+def cmd_refresh_manifest(args: argparse.Namespace) -> None:
+    client = _make_client(args)
+    changes = client.refresh_manifest()
+    if not changes:
+        print("Every query id is current.")
+        return
+    for key, change in sorted(changes.items()):
+        print(f"{key}: {change['old'] or '(none)'} -> {change['new']}")
 
 
 def cmd_followers(args: argparse.Namespace) -> None:
@@ -180,9 +271,14 @@ def cmd_verified_followers(args: argparse.Namespace) -> None:
 
 
 def cmd_user_info(args: argparse.Namespace) -> None:
+    ids = getattr(args, "ids", None) or []
+    if not args.users and not ids:
+        print("error: give at least one USER or --ids", file=sys.stderr)
+        sys.exit(2)
     client = _make_client(args)
     results = client.get_user_info(
-        args.users,
+        args.users or None,
+        user_ids=ids or None,
         save=args.save,
         save_format=args.save_format,
         save_name=args.save_name,
@@ -277,8 +373,77 @@ def build_parser() -> argparse.ArgumentParser:
     p_pt.add_argument("--limit", type=int, metavar="N", help="max tweets to return")
     p_pt.add_argument("--max-empty-pages", type=int, metavar="N")
     p_pt.add_argument("--resume", action="store_true")
+    p_pt.add_argument("--include-replies", action="store_true",
+                      help="also collect the replies of each user")
     _add_output_args(p_pt)
     p_pt.set_defaults(func=cmd_profile_tweets)
+
+    # ── profile-media ───────────────────────────────────────────────────
+    p_pm = sub.add_parser("profile-media", help="get media tweets from user timelines",
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_pm.add_argument("users", nargs="+", metavar="USER",
+                      help="one or more @handles")
+    p_pm.add_argument("--limit", type=int, metavar="N", help="max tweets to return")
+    p_pm.add_argument("--max-empty-pages", type=int, metavar="N")
+    p_pm.add_argument("--resume", action="store_true")
+    _add_output_args(p_pm)
+    p_pm.set_defaults(func=cmd_profile_media)
+
+    # ── tweet-info ──────────────────────────────────────────────────────
+    p_ti = sub.add_parser("tweet-info", help="get tweets by id",
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_ti.add_argument("tweet_ids", nargs="+", metavar="ID",
+                      help="one or more tweet ids")
+    p_ti.add_argument("--raw-json", action="store_true",
+                      help="return raw API JSON instead of normalized dicts")
+    _add_output_args(p_ti)
+    p_ti.set_defaults(func=cmd_tweet_info)
+
+    # ── tweet-replies ───────────────────────────────────────────────────
+    p_tr = sub.add_parser("tweet-replies", help="get the replies of a tweet",
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_tr.add_argument("tweet_id", metavar="ID", help="the tweet id")
+    p_tr.add_argument("--limit", type=int, metavar="N")
+    p_tr.add_argument("--max-empty-pages", type=int, metavar="N")
+    p_tr.add_argument("--raw-json", action="store_true",
+                      help="return raw API JSON instead of normalized dicts")
+    _add_output_args(p_tr)
+    p_tr.set_defaults(func=cmd_tweet_replies)
+
+    # ── reposters ───────────────────────────────────────────────────────
+    p_rp = sub.add_parser("reposters", help="get the users that reposted a tweet",
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_rp.add_argument("tweet_id", metavar="ID", help="the tweet id")
+    p_rp.add_argument("--limit", type=int, metavar="N")
+    p_rp.add_argument("--max-empty-pages", type=int, metavar="N")
+    p_rp.add_argument("--raw-json", action="store_true",
+                      help="return raw API JSON instead of normalized dicts")
+    _add_output_args(p_rp)
+    p_rp.set_defaults(func=cmd_reposters)
+
+    # ── search-users ────────────────────────────────────────────────────
+    p_su = sub.add_parser("search-users", help="search users",
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_su.add_argument("query", metavar="QUERY", help="the user search query")
+    p_su.add_argument("--limit", type=int, metavar="N")
+    p_su.add_argument("--max-empty-pages", type=int, metavar="N")
+    p_su.add_argument("--raw-json", action="store_true",
+                      help="return raw API JSON instead of normalized dicts")
+    _add_output_args(p_su)
+    p_su.set_defaults(func=cmd_search_users)
+
+    # ── trending ────────────────────────────────────────────────────────
+    p_td = sub.add_parser("trending", help="get the current trends",
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_td.add_argument("--pretty", action="store_true",
+                      help="print results as indented JSON to stdout")
+    p_td.set_defaults(func=cmd_trending)
+
+    # ── refresh-manifest ────────────────────────────────────────────────
+    p_rm = sub.add_parser("refresh-manifest",
+                          help="read fresh GraphQL query ids from the live bundle of X",
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_rm.set_defaults(func=cmd_refresh_manifest)
 
     # ── followers ───────────────────────────────────────────────────────
     p_fol = sub.add_parser("followers", help="get followers of users",
@@ -322,8 +487,10 @@ def build_parser() -> argparse.ArgumentParser:
     # ── user-info ───────────────────────────────────────────────────────
     p_ui = sub.add_parser("user-info", help="get user profile info",
                           formatter_class=argparse.RawDescriptionHelpFormatter)
-    p_ui.add_argument("users", nargs="+", metavar="USER",
-                      help="one or more @handles")
+    p_ui.add_argument("users", nargs="*", default=[], metavar="USER",
+                      help="zero or more @handles")
+    p_ui.add_argument("--ids", nargs="+", default=[], metavar="ID",
+                      help="numeric user ids to look up")
     _add_output_args(p_ui)
     p_ui.set_defaults(func=cmd_user_info)
 

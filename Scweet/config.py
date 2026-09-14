@@ -82,6 +82,13 @@ class ScweetConfig(BaseModel):
     proxy_check_timeout_s: float = Field(default=10.0, ge=0.0)
     profile_timeline_allow_anonymous: bool = False
 
+    # X accepts at most 50 tweet ids in one TweetResultsByRestIds request (verified live 2026-09-13).
+    tweet_lookup_batch_size: int = Field(default=50, ge=1, le=50)
+    # X accepts at most 100 user ids in one UsersByRestIds request (verified live 2026-09-13).
+    user_lookup_batch_size: int = Field(default=100, ge=1, le=100)
+    # The count of trend rows that one ExplorePage request asks for.
+    trending_count: int = Field(default=20, ge=1)
+
     # Manifest
     manifest_url: Optional[str] = None
     manifest_ttl_s: int = Field(default=3600, ge=1)

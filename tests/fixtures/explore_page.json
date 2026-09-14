@@ -1,0 +1,1104 @@
+{
+ "data": {
+  "explore_page": {
+   "body": {
+    "__typename": "SegmentedTimelines",
+    "initialTimeline": {
+     "id": "for_you",
+     "labelText": "Explore",
+     "refreshIntervalSec": 1200,
+     "scribeConfig": {
+      "page": "explore",
+      "section": "for_you"
+     },
+     "timeline": {
+      "timeline": {
+       "instructions": [
+        {
+         "type": "TimelineClearCache"
+        },
+        {
+         "entries": [
+          {
+           "content": {
+            "__typename": "TimelineTimelineModule",
+            "clientEventInfo": {
+             "component": "stories"
+            },
+            "displayType": "Vertical",
+            "entryType": "TimelineTimelineModule",
+            "header": {
+             "displayType": "Classic",
+             "sticky": false,
+             "text": "Today's News"
+            },
+            "items": [
+             {
+              "entryId": "stories-2099482088754380800-trend-2098822744158740700",
+              "item": {
+               "clientEventInfo": {
+                "component": "stories",
+                "element": "ai_trend"
+               },
+               "itemContent": {
+                "__typename": "TimelineTrend",
+                "is_ai_trend": true,
+                "itemType": "TimelineTrend",
+                "name": "Oasis Fans Await 2027 Tour Details Announcement Today",
+                "social_context": {
+                 "contextImageUrls": [
+                  "https://pbs.twimg.com/profile_images/1828329548225581057/_bU9P-Zy_normal.jpg",
+                  "https://pbs.twimg.com/profile_images/2055735435876532224/8vxuZ9NN_normal.jpg",
+                  "https://pbs.twimg.com/profile_images/2095764859292139520/lFhKFzfg_normal.jpg"
+                 ],
+                 "contextType": "Facepile",
+                 "text": "1 day ago \u00b7 Other \u00b7 12K posts",
+                 "type": "TimelineGeneralContext"
+                },
+                "trend_metadata": {
+                 "url": {
+                  "url": "twitter://trending/2098822744158740700",
+                  "urlType": "DeepLink"
+                 }
+                },
+                "trend_url": {
+                 "url": "twitter://trending/2098822744158740700",
+                 "urlType": "DeepLink"
+                }
+               }
+              }
+             },
+             {
+              "entryId": "stories-2099482088754380800-trend-2099167851177287924",
+              "item": {
+               "clientEventInfo": {
+                "component": "stories",
+                "element": "ai_trend"
+               },
+               "itemContent": {
+                "__typename": "TimelineTrend",
+                "is_ai_trend": true,
+                "itemType": "TimelineTrend",
+                "name": "Ten-Man City Edge United 1-0 in Dramatic Derby Thriller",
+                "social_context": {
+                 "contextImageUrls": [
+                  "https://pbs.twimg.com/profile_images/2091463524752957440/Dej77kph_normal.jpg",
+                  "https://pbs.twimg.com/profile_images/1741753635158024192/j0m8Ucvv_normal.jpg",
+                  "https://pbs.twimg.com/profile_images/2086898960304660481/6eypzlnZ_normal.jpg"
+                 ],
+                 "contextType": "Facepile",
+                 "text": "20 hours ago \u00b7 Sports \u00b7 878K posts",
+                 "type": "TimelineGeneralContext"
+                },
+                "trend_metadata": {
+                 "url": {
+                  "url": "twitter://trending/2099167851177287924",
+                  "urlType": "DeepLink"
+                 }
+                },
+                "trend_url": {
+                 "url": "twitter://trending/2099167851177287924",
+                 "urlType": "DeepLink"
+                }
+               }
+              }
+             },
+             {
+              "entryId": "stories-2099482088754380800-trend-2098751007731937519",
+              "item": {
+               "clientEventInfo": {
+                "component": "stories",
+                "element": "ai_trend"
+               },
+               "itemContent": {
+                "__typename": "TimelineTrend",
+                "is_ai_trend": true,
+                "itemType": "TimelineTrend",
+                "name": "Scottish, Welsh and Northern Irish Leaders Sign Joint Independence Declaration in Cardiff",
+                "social_context": {
+                 "contextImageUrls": [
+                  "https://pbs.twimg.com/profile_images/1605188195574026240/XDJv944l_normal.png",
+                  "https://pbs.twimg.com/profile_images/2095571552372764674/SURyAw4e_normal.jpg",
+                  "https://pbs.twimg.com/profile_images/1364488316184371200/-RXz6jU5_normal.jpg"
+                 ],
+                 "contextType": "Facepile",
+                 "text": "2 days ago \u00b7 Other \u00b7 380K posts",
+                 "type": "TimelineGeneralContext"
+                },
+                "trend_metadata": {
+                 "url": {
+                  "url": "twitter://trending/2098751007731937519",
+                  "urlType": "DeepLink"
+                 }
+                },
+                "trend_url": {
+                 "url": "twitter://trending/2098751007731937519",
+                 "urlType": "DeepLink"
+                }
+               }
+              }
+             }
+            ]
+           },
+           "entryId": "stories-2099482088754380800",
+           "sortIndex": "2099482088754380800"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineItem",
+            "clientEventInfo": {
+             "component": "unified_events",
+             "details": {
+              "timelinesDetails": {
+               "controllerData": "DAACDAAQDAABCgAB2DgMfVc1V9IKAAIAAAGgn/xbxgAAAAA="
+              }
+             },
+             "element": "trend"
+            },
+            "entryType": "TimelineTimelineItem",
+            "feedbackInfo": {
+             "clientEventInfo": {
+              "action": "click",
+              "component": "trends",
+              "element": "feedback"
+             },
+             "feedbackKeys": [
+              "-1336659320",
+              "1628041751",
+              "15718569",
+              "-619311538",
+              "-1457103155",
+              "2103484841"
+             ],
+             "feedbackMetadata": "DwABCwAAAAEAAAAHTWFycXVlegoAA8eZ4tOnn4EOBgAEAAEIAAYAAAACAA=="
+            },
+            "itemContent": {
+             "__typename": "TimelineTrend",
+             "itemType": "TimelineTrend",
+             "name": "Marquez",
+             "trend_metadata": {
+              "domain_context": "Trending in Italy",
+              "url": {
+               "url": "twitter://search/?query=Marquez&src=trend_click&pc=true&vertical=trends",
+               "urlType": "DeepLink",
+               "urtEndpointOptions": {
+                "requestParams": [
+                 {
+                  "key": "cd",
+                  "value": "HBgHTWFycXVlegAA"
+                 }
+                ]
+               }
+              }
+             },
+             "trend_url": {
+              "url": "twitter://search/?query=Marquez&src=trend_click&pc=true&vertical=trends",
+              "urlType": "DeepLink",
+              "urtEndpointOptions": {
+               "requestParams": [
+                {
+                 "key": "cd",
+                 "value": "HBgHTWFycXVlegAA"
+                }
+               ]
+              }
+             }
+            }
+           },
+           "entryId": "trend-Marquez",
+           "sortIndex": "2099482088754380799"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineItem",
+            "clientEventInfo": {
+             "component": "unified_events",
+             "details": {
+              "timelinesDetails": {
+               "controllerData": "DAACDAAQDAABCgAB2DgMfVc1V9IKAAIAAAGgn/xbxgAAAAA="
+              }
+             },
+             "element": "trend"
+            },
+            "entryType": "TimelineTimelineItem",
+            "feedbackInfo": {
+             "clientEventInfo": {
+              "action": "click",
+              "component": "trends",
+              "element": "feedback"
+             },
+             "feedbackKeys": [
+              "-1336659320",
+              "1628041751",
+              "15718569",
+              "-619311538",
+              "-1457103155",
+              "2103484841"
+             ],
+             "feedbackMetadata": "DwABCwAAAAEAAAAFSWxhcnkKAAPHmeLTp5+BDgYABAACCAAGAAAAAgA="
+            },
+            "itemContent": {
+             "__typename": "TimelineTrend",
+             "itemType": "TimelineTrend",
+             "name": "Ilary",
+             "trend_metadata": {
+              "domain_context": "Trending in Italy",
+              "url": {
+               "url": "twitter://search/?query=Ilary&src=trend_click&pc=true&vertical=trends",
+               "urlType": "DeepLink",
+               "urtEndpointOptions": {
+                "requestParams": [
+                 {
+                  "key": "cd",
+                  "value": "HBgFSWxhcnkAAA=="
+                 }
+                ]
+               }
+              }
+             },
+             "trend_url": {
+              "url": "twitter://search/?query=Ilary&src=trend_click&pc=true&vertical=trends",
+              "urlType": "DeepLink",
+              "urtEndpointOptions": {
+               "requestParams": [
+                {
+                 "key": "cd",
+                 "value": "HBgFSWxhcnkAAA=="
+                }
+               ]
+              }
+             }
+            }
+           },
+           "entryId": "trend-Ilary",
+           "sortIndex": "2099482088754380798"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineItem",
+            "clientEventInfo": {
+             "component": "unified_events",
+             "details": {
+              "timelinesDetails": {
+               "controllerData": "DAACDAAQDAABCgAB2DgMfVc1V9IKAAIAAAGgn/xbxgAAAAA="
+              }
+             },
+             "element": "trend"
+            },
+            "entryType": "TimelineTimelineItem",
+            "feedbackInfo": {
+             "clientEventInfo": {
+              "action": "click",
+              "component": "trends",
+              "element": "feedback"
+             },
+             "feedbackKeys": [
+              "-1336659320",
+              "1628041751",
+              "15718569",
+              "-619311538",
+              "-1457103155",
+              "2103484841"
+             ],
+             "feedbackMetadata": "DwABCwAAAAEAAAAGU3ZlemlhCgADx5ni06efgQ4GAAQAAwgABgAAAAIA"
+            },
+            "itemContent": {
+             "__typename": "TimelineTrend",
+             "itemType": "TimelineTrend",
+             "name": "Svezia",
+             "trend_metadata": {
+              "domain_context": "Trending in Italy",
+              "url": {
+               "url": "twitter://search/?query=Svezia&src=trend_click&pc=true&vertical=trends",
+               "urlType": "DeepLink",
+               "urtEndpointOptions": {
+                "requestParams": [
+                 {
+                  "key": "cd",
+                  "value": "HBgGU3ZlemlhAAA="
+                 }
+                ]
+               }
+              }
+             },
+             "trend_url": {
+              "url": "twitter://search/?query=Svezia&src=trend_click&pc=true&vertical=trends",
+              "urlType": "DeepLink",
+              "urtEndpointOptions": {
+               "requestParams": [
+                {
+                 "key": "cd",
+                 "value": "HBgGU3ZlemlhAAA="
+                }
+               ]
+              }
+             }
+            }
+           },
+           "entryId": "trend-Svezia",
+           "sortIndex": "2099482088754380797"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineItem",
+            "clientEventInfo": {
+             "component": "unified_events",
+             "details": {
+              "timelinesDetails": {
+               "controllerData": "DAACDAAQDAABCgAB2DgMfVc1V9IKAAIAAAGgn/xbxgAAAAA="
+              }
+             },
+             "element": "trend"
+            },
+            "entryType": "TimelineTimelineItem",
+            "feedbackInfo": {
+             "clientEventInfo": {
+              "action": "click",
+              "component": "trends",
+              "element": "feedback"
+             },
+             "feedbackKeys": [
+              "-1336659320",
+              "1628041751",
+              "15718569",
+              "-619311538",
+              "-1457103155",
+              "2103484841"
+             ],
+             "feedbackMetadata": "DwABCwAAAAEAAAAJU3BhbGxldHRpCgADx5ni06efgQ4GAAQABAgABgAAAAIA"
+            },
+            "itemContent": {
+             "__typename": "TimelineTrend",
+             "itemType": "TimelineTrend",
+             "name": "Spalletti",
+             "trend_metadata": {
+              "domain_context": "Sports \u00b7 Trending",
+              "url": {
+               "url": "twitter://search/?query=Spalletti&src=trend_click&pc=true&vertical=trends",
+               "urlType": "DeepLink",
+               "urtEndpointOptions": {
+                "requestParams": [
+                 {
+                  "key": "cd",
+                  "value": "HBgJU3BhbGxldHRpAAA="
+                 }
+                ]
+               }
+              }
+             },
+             "trend_url": {
+              "url": "twitter://search/?query=Spalletti&src=trend_click&pc=true&vertical=trends",
+              "urlType": "DeepLink",
+              "urtEndpointOptions": {
+               "requestParams": [
+                {
+                 "key": "cd",
+                 "value": "HBgJU3BhbGxldHRpAAA="
+                }
+               ]
+              }
+             }
+            }
+           },
+           "entryId": "trend-Spalletti",
+           "sortIndex": "2099482088754380796"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineItem",
+            "clientEventInfo": {
+             "component": "unified_events",
+             "details": {
+              "timelinesDetails": {
+               "controllerData": "DAACDAAQDAABCgAB2DgMfVc1V9IKAAIAAAGgn/xbxgAAAAA="
+              }
+             },
+             "element": "trend"
+            },
+            "entryType": "TimelineTimelineItem",
+            "feedbackInfo": {
+             "clientEventInfo": {
+              "action": "click",
+              "component": "trends",
+              "element": "feedback"
+             },
+             "feedbackKeys": [
+              "-1336659320",
+              "1628041751",
+              "15718569",
+              "-619311538",
+              "-1457103155",
+              "2103484841"
+             ],
+             "feedbackMetadata": "DwABCwAAAAEAAAAMTmVvbGliZXJpc21vCgADx5ni06efgQ4GAAQABQgABgAAAAIA"
+            },
+            "itemContent": {
+             "__typename": "TimelineTrend",
+             "itemType": "TimelineTrend",
+             "name": "Neoliberismo",
+             "trend_metadata": {
+              "domain_context": "Trending in Italy",
+              "url": {
+               "url": "twitter://search/?query=Neoliberismo&src=trend_click&pc=true&vertical=trends",
+               "urlType": "DeepLink",
+               "urtEndpointOptions": {
+                "requestParams": [
+                 {
+                  "key": "cd",
+                  "value": "HBgMTmVvbGliZXJpc21vAAA="
+                 }
+                ]
+               }
+              }
+             },
+             "trend_url": {
+              "url": "twitter://search/?query=Neoliberismo&src=trend_click&pc=true&vertical=trends",
+              "urlType": "DeepLink",
+              "urtEndpointOptions": {
+               "requestParams": [
+                {
+                 "key": "cd",
+                 "value": "HBgMTmVvbGliZXJpc21vAAA="
+                }
+               ]
+              }
+             }
+            }
+           },
+           "entryId": "trend-Neoliberismo",
+           "sortIndex": "2099482088754380795"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineItem",
+            "clientEventInfo": {
+             "component": "unified_events",
+             "details": {
+              "timelinesDetails": {
+               "controllerData": "DAACDAAQDAABCgAB2DgMfVc1V9IKAAIAAAGgn/xbxgAAAAA="
+              }
+             },
+             "element": "trend"
+            },
+            "entryType": "TimelineTimelineItem",
+            "feedbackInfo": {
+             "clientEventInfo": {
+              "action": "click",
+              "component": "trends",
+              "element": "feedback"
+             },
+             "feedbackKeys": [
+              "-1336659320",
+              "1628041751",
+              "15718569",
+              "-619311538",
+              "-1457103155",
+              "2103484841"
+             ],
+             "feedbackMetadata": "DwABCwAAAAEAAAAFRmF6em8KAAPHmeLTp5+BDgYABAAGCAAGAAAAAgA="
+            },
+            "itemContent": {
+             "__typename": "TimelineTrend",
+             "itemType": "TimelineTrend",
+             "name": "Fazzo",
+             "trend_metadata": {
+              "domain_context": "Trending in Italy",
+              "url": {
+               "url": "twitter://search/?query=Fazzo&src=trend_click&pc=true&vertical=trends",
+               "urlType": "DeepLink",
+               "urtEndpointOptions": {
+                "requestParams": [
+                 {
+                  "key": "cd",
+                  "value": "HBgFRmF6em8AAA=="
+                 }
+                ]
+               }
+              }
+             },
+             "trend_url": {
+              "url": "twitter://search/?query=Fazzo&src=trend_click&pc=true&vertical=trends",
+              "urlType": "DeepLink",
+              "urtEndpointOptions": {
+               "requestParams": [
+                {
+                 "key": "cd",
+                 "value": "HBgFRmF6em8AAA=="
+                }
+               ]
+              }
+             }
+            }
+           },
+           "entryId": "trend-Fazzo",
+           "sortIndex": "2099482088754380794"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineModule",
+            "clientEventInfo": {
+             "component": "suggest_who_to_follow",
+             "details": {
+              "timelinesDetails": {
+               "controllerData": "DAACDAACDAABCgABAAAAAAAAAIAAAAAA",
+               "injectionType": "WhoToFollow",
+               "sourceData": "DAABCgAB2DgMfVc1V9IKAAIAAAAAAAAAAAAIAAIAAAC1CAADAAAAJwwABQwAAgwAAgwAAQoAAQAAAAAAAACAAAAAAAA="
+              }
+             }
+            },
+            "displayType": "Vertical",
+            "entryType": "TimelineTimelineModule",
+            "footer": {
+             "displayType": "Classic",
+             "landingUrl": {
+              "url": "twitter://connect_people",
+              "urlType": "DeepLink"
+             },
+             "text": "Show more"
+            },
+            "header": {
+             "displayType": "Classic",
+             "sticky": false,
+             "text": "Who to follow"
+            },
+            "items": [
+             {
+              "entryId": "who-to-follow-2099482088754380807-user-221902171",
+              "item": {
+               "clientEventInfo": {
+                "component": "suggest_who_to_follow",
+                "details": {
+                 "timelinesDetails": {
+                  "controllerData": "DAACDAACDAABCgABAAAAAAAAAIAAAAAA",
+                  "injectionType": "WhoToFollow",
+                  "sourceData": "DAABCgAB2DgMfVc1V9IKAAIAAAAAAAAAAAAIAAIAAAC1CAADAAAAJwwABQwAAgwAAgwAAQoAAQAAAAAAAACAAAAAAAA="
+                 }
+                },
+                "element": "user"
+               },
+               "itemContent": {
+                "__typename": "TimelineUser",
+                "itemType": "TimelineUser",
+                "userDisplayType": "User",
+                "user_results": {
+                 "result": {
+                  "__typename": "User",
+                  "action_counts": {
+                   "favorites_count": 25576
+                  },
+                  "affiliates_highlighted_label": {},
+                  "avatar": {
+                   "image_url": "https://pbs.twimg.com/profile_images/1578256946884493313/_jmZNJ8U_normal.jpg"
+                  },
+                  "banner": {
+                   "image_url": "https://pbs.twimg.com/profile_banners/221902171/1665242515"
+                  },
+                  "core": {
+                   "created_at": "Wed Dec 01 22:57:54 +0000 2010",
+                   "name": "Laura Boldrini",
+                   "screen_name": "lauraboldrini"
+                  },
+                  "follow_request_sent": false,
+                  "has_graduated_access": true,
+                  "id": "VXNlcjoyMjE5MDIxNzE=",
+                  "is_blue_verified": true,
+                  "location": {
+                   "location": ""
+                  },
+                  "media_permissions": {
+                   "can_media_tag": true
+                  },
+                  "notifications_settings": {
+                   "notifications_enabled": false
+                  },
+                  "parody_commentary_fan_label": "None",
+                  "pinned_items": {},
+                  "possibly_sensitive": false,
+                  "privacy": {
+                   "protected": false
+                  },
+                  "profile_bio": {
+                   "description": "Deputata. \u201cFemminista dalla nascita\u201d. Isabel Allende",
+                   "entities": {
+                    "description": {},
+                    "url": {
+                     "urls": [
+                      {
+                       "display_url": "t.me/lauraboldrini_\u2026",
+                       "expanded_url": "https://t.me/lauraboldrini_official",
+                       "indices": [
+                        0,
+                        23
+                       ],
+                       "url": "https://t.co/ZnxN4BO6Ah"
+                      }
+                     ]
+                    }
+                   }
+                  },
+                  "profile_description_language": "it",
+                  "profile_image_shape": "Circle",
+                  "profile_metadata": {
+                   "profile_interstitial_type": ""
+                  },
+                  "profile_translation": {
+                   "translator_type": "none"
+                  },
+                  "relationship_counts": {
+                   "followers": 864623,
+                   "following": 10657
+                  },
+                  "relationship_perspectives": {
+                   "blocked_by": false,
+                   "blocking": false,
+                   "followed_by": false,
+                   "following": false,
+                   "live_following": false,
+                   "muting": false
+                  },
+                  "rest_id": "221902171",
+                  "super_follow_eligible": false,
+                  "super_followed_by": false,
+                  "super_following": false,
+                  "tweet_counts": {
+                   "media_tweets": 3315,
+                   "tweets": 15591
+                  },
+                  "verification": {
+                   "verified": false
+                  },
+                  "website": {
+                   "url": "https://t.co/ZnxN4BO6Ah"
+                  }
+                 }
+                }
+               }
+              }
+             },
+             {
+              "entryId": "who-to-follow-2099482088754380807-user-2416067982",
+              "item": {
+               "clientEventInfo": {
+                "component": "suggest_who_to_follow",
+                "details": {
+                 "timelinesDetails": {
+                  "controllerData": "DAACDAACDAABCgABAAAAAAAAAIAAAAAA",
+                  "injectionType": "WhoToFollow",
+                  "sourceData": "DAABCgAB2DgMfVc1V9IKAAIAAAAAAAAAAAAIAAIAAAC1CAADAAAAJwwABQwAAgwAAgwAAQoAAQAAAAAAAACAAAAAAAA="
+                 }
+                },
+                "element": "user"
+               },
+               "itemContent": {
+                "__typename": "TimelineUser",
+                "itemType": "TimelineUser",
+                "userDisplayType": "User",
+                "user_results": {
+                 "result": {
+                  "__typename": "User",
+                  "action_counts": {
+                   "favorites_count": 1476
+                  },
+                  "affiliates_highlighted_label": {},
+                  "avatar": {
+                   "image_url": "https://pbs.twimg.com/profile_images/2039753052358598656/4SJVN1Cy_normal.jpg"
+                  },
+                  "banner": {
+                   "image_url": "https://pbs.twimg.com/profile_banners/2416067982/1779441171"
+                  },
+                  "core": {
+                   "created_at": "Fri Mar 28 15:27:38 +0000 2014",
+                   "name": "Carlo Calenda",
+                   "screen_name": "CarloCalenda"
+                  },
+                  "follow_request_sent": false,
+                  "has_graduated_access": true,
+                  "id": "VXNlcjoyNDE2MDY3OTgy",
+                  "is_blue_verified": true,
+                  "location": {
+                   "location": "Roma"
+                  },
+                  "media_permissions": {
+                   "can_media_tag": true
+                  },
+                  "notifications_settings": {
+                   "notifications_enabled": false
+                  },
+                  "parody_commentary_fan_label": "None",
+                  "pinned_items": {
+                   "tweet_ids_str": [
+                    "2098663791084904808"
+                   ]
+                  },
+                  "possibly_sensitive": false,
+                  "privacy": {
+                   "protected": false
+                  },
+                  "professional": {
+                   "category": [],
+                   "professional_type": "Creator",
+                   "rest_id": "1452167452595478531"
+                  },
+                  "profile_bio": {
+                   "description": "Segretario di Azione. Senatore della Repubblica. \u201cDifendere la libert\u00e0\u201d - https://t.co/ELT9kSvH3A",
+                   "entities": {
+                    "description": {
+                     "urls": [
+                      {
+                       "display_url": "amzn.eu/d/0hDCxS2F",
+                       "expanded_url": "https://amzn.eu/d/0hDCxS2F",
+                       "indices": [
+                        74,
+                        97
+                       ],
+                       "url": "https://t.co/ELT9kSvH3A"
+                      }
+                     ]
+                    },
+                    "url": {
+                     "urls": [
+                      {
+                       "display_url": "azione.it",
+                       "expanded_url": "http://www.azione.it",
+                       "indices": [
+                        0,
+                        23
+                       ],
+                       "url": "https://t.co/jtEJqONaIZ"
+                      }
+                     ]
+                    }
+                   }
+                  },
+                  "profile_description_language": "it",
+                  "profile_image_shape": "Circle",
+                  "profile_metadata": {
+                   "profile_interstitial_type": ""
+                  },
+                  "profile_translation": {
+                   "translator_type": "none"
+                  },
+                  "relationship_counts": {
+                   "followers": 497605,
+                   "following": 377
+                  },
+                  "relationship_perspectives": {
+                   "blocked_by": false,
+                   "blocking": false,
+                   "followed_by": false,
+                   "following": false,
+                   "live_following": false,
+                   "muting": false
+                  },
+                  "rest_id": "2416067982",
+                  "super_follow_eligible": false,
+                  "super_followed_by": false,
+                  "super_following": false,
+                  "tweet_counts": {
+                   "media_tweets": 8613,
+                   "tweets": 49508
+                  },
+                  "verification": {
+                   "verified": false
+                  },
+                  "website": {
+                   "url": "https://t.co/jtEJqONaIZ"
+                  }
+                 }
+                }
+               }
+              }
+             },
+             {
+              "entryId": "who-to-follow-2099482088754380807-user-29416653",
+              "item": {
+               "clientEventInfo": {
+                "component": "suggest_who_to_follow",
+                "details": {
+                 "timelinesDetails": {
+                  "controllerData": "DAACDAACDAABCgABAAAAAAAAAIAAAAAA",
+                  "injectionType": "WhoToFollow",
+                  "sourceData": "DAABCgAB2DgMfVc1V9IKAAIAAAAAAAAAAAAIAAIAAAC1CAADAAAAJwwABQwAAgwAAgwAAQoAAQAAAAAAAACAAAAAAAA="
+                 }
+                },
+                "element": "user"
+               },
+               "itemContent": {
+                "__typename": "TimelineUser",
+                "itemType": "TimelineUser",
+                "userDisplayType": "User",
+                "user_results": {
+                 "result": {
+                  "__typename": "User",
+                  "action_counts": {
+                   "favorites_count": 2221
+                  },
+                  "affiliates_highlighted_label": {},
+                  "avatar": {
+                   "image_url": "https://pbs.twimg.com/profile_images/1673284520550834176/R7U9kCE4_normal.jpg"
+                  },
+                  "banner": {
+                   "image_url": "https://pbs.twimg.com/profile_banners/29416653/1776096816"
+                  },
+                  "core": {
+                   "created_at": "Tue Apr 07 09:31:23 +0000 2009",
+                   "name": "La Stampa",
+                   "screen_name": "LaStampa"
+                  },
+                  "follow_request_sent": false,
+                  "has_graduated_access": true,
+                  "id": "VXNlcjoyOTQxNjY1Mw==",
+                  "is_blue_verified": true,
+                  "location": {
+                   "location": "Torino, Piemonte"
+                  },
+                  "media_permissions": {
+                   "can_media_tag": true
+                  },
+                  "notifications_settings": {
+                   "notifications_enabled": false
+                  },
+                  "parody_commentary_fan_label": "None",
+                  "pinned_items": {},
+                  "possibly_sensitive": false,
+                  "privacy": {
+                   "protected": false
+                  },
+                  "professional": {
+                   "category": [
+                    {
+                     "icon_name": "IconBriefcaseStroke",
+                     "id": 561,
+                     "name": "Editorial Service"
+                    }
+                   ],
+                   "professional_type": "Business",
+                   "rest_id": "1573345869734232064"
+                  },
+                  "profile_bio": {
+                   "description": "\ud83d\udcf0 Raccontiamo il senso delle cose. Ogni giorno, dal 1867\n\n\ud83c\udf0e Da Torino al mondo",
+                   "entities": {
+                    "description": {},
+                    "url": {
+                     "urls": [
+                      {
+                       "display_url": "hootbio.com/la_stampa",
+                       "expanded_url": "http://hootbio.com/la_stampa",
+                       "indices": [
+                        0,
+                        23
+                       ],
+                       "url": "https://t.co/XZzyc3om9W"
+                      }
+                     ]
+                    }
+                   }
+                  },
+                  "profile_description_language": "it",
+                  "profile_image_shape": "Circle",
+                  "profile_metadata": {
+                   "profile_interstitial_type": ""
+                  },
+                  "profile_translation": {
+                   "translator_type": "none"
+                  },
+                  "relationship_counts": {
+                   "followers": 1354283,
+                   "following": 401
+                  },
+                  "relationship_perspectives": {
+                   "blocked_by": false,
+                   "blocking": false,
+                   "followed_by": false,
+                   "following": false,
+                   "live_following": false,
+                   "muting": false
+                  },
+                  "rest_id": "29416653",
+                  "super_follow_eligible": false,
+                  "super_followed_by": false,
+                  "super_following": false,
+                  "tweet_counts": {
+                   "media_tweets": 102596,
+                   "tweets": 647721
+                  },
+                  "verification": {
+                   "verified": false
+                  },
+                  "website": {
+                   "url": "https://t.co/XZzyc3om9W"
+                  }
+                 }
+                }
+               }
+              }
+             }
+            ]
+           },
+           "entryId": "who-to-follow-2099482088754380807",
+           "sortIndex": "2099482088754380793"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineCursor",
+            "cursorType": "Top",
+            "entryType": "TimelineTimelineCursor",
+            "value": "DAAJAAA"
+           },
+           "entryId": "cursor-top-2099482088754380801",
+           "sortIndex": "2099482088754380801"
+          },
+          {
+           "content": {
+            "__typename": "TimelineTimelineCursor",
+            "cursorType": "Bottom",
+            "entryType": "TimelineTimelineCursor",
+            "value": "DAADCgABHSLb1hB___YPAAIKAAAAAAAA"
+           },
+           "entryId": "cursor-bottom-2099482088754380792",
+           "sortIndex": "2099482088754380792"
+          }
+         ],
+         "type": "TimelineAddEntries"
+        }
+       ],
+       "responseObjects": {
+        "feedbackActions": [
+         {
+          "key": "-619311538",
+          "value": {
+           "confirmation": "Thanks. Refresh this page to update these trends.",
+           "confirmationDisplayType": "Inline",
+           "feedbackType": "SeeFewer",
+           "feedbackUrl": "/2/guide/insert_feedback/trend_not_interested_in_this_feedback_key.json",
+           "hasUndoAction": false,
+           "prompt": "Not interested in this"
+          }
+         },
+         {
+          "key": "15718569",
+          "value": {
+           "confirmation": "Thanks. Refresh this page to update these trends.",
+           "confirmationDisplayType": "Inline",
+           "feedbackType": "SeeFewer",
+           "feedbackUrl": "/2/guide/insert_feedback/trend_abusive_feedback_key.json",
+           "hasUndoAction": false,
+           "prompt": "This trend is abusive or harmful"
+          }
+         },
+         {
+          "key": "-1457103155",
+          "value": {
+           "confirmation": "Thanks. Refresh this page to update these trends.",
+           "confirmationDisplayType": "Inline",
+           "feedbackType": "SeeFewer",
+           "feedbackUrl": "/2/guide/insert_feedback/trend_duplicate_feedback_key.json",
+           "hasUndoAction": false,
+           "prompt": "This trend is a duplicate"
+          }
+         },
+         {
+          "key": "-1336659320",
+          "value": {
+           "confirmation": "Thanks. Refresh this page to update these trends.",
+           "confirmationDisplayType": "BottomSheet",
+           "feedbackType": "SeeFewer",
+           "feedbackUrl": "/2/guide/insert_feedback/trend_irrelevant_content_feedback_key.json",
+           "hasUndoAction": false,
+           "prompt": "The associated content is not relevant"
+          }
+         },
+         {
+          "key": "1628041751",
+          "value": {
+           "confirmation": "Thanks. Refresh this page to update these trends.",
+           "confirmationDisplayType": "Inline",
+           "feedbackType": "SeeFewer",
+           "feedbackUrl": "/2/guide/insert_feedback/trend_spam_feedback_key.json",
+           "hasUndoAction": false,
+           "prompt": "This trend is spam"
+          }
+         },
+         {
+          "key": "2103484841",
+          "value": {
+           "confirmation": "Thanks. Refresh this page to update these trends.",
+           "confirmationDisplayType": "BottomSheet",
+           "feedbackType": "SeeFewer",
+           "feedbackUrl": "/2/guide/insert_feedback/trend_abusive_or_harmful_feedback_key.json",
+           "hasUndoAction": false,
+           "prompt": "This trend is harmful or spammy"
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    "timelines": [
+     {
+      "id": "for_you",
+      "labelText": "Explore",
+      "refreshIntervalSec": 1200,
+      "scribeConfig": {
+       "page": "explore",
+       "section": "for_you"
+      },
+      "timeline": {
+       "id": "VGltZWxpbmU6DAC2CwABAAAAB2Zvcl95b3UAAA=="
+      }
+     },
+     {
+      "id": "trending",
+      "labelText": "Trending",
+      "refreshIntervalSec": 1200,
+      "scribeConfig": {
+       "page": "explore",
+       "section": "trending"
+      },
+      "timeline": {
+       "id": "VGltZWxpbmU6DAC2CwABAAAACHRyZW5kaW5nAAA="
+      }
+     },
+     {
+      "id": "news",
+      "labelText": "News",
+      "refreshIntervalSec": 1200,
+      "scribeConfig": {
+       "page": "explore",
+       "section": "news"
+      },
+      "timeline": {
+       "id": "VGltZWxpbmU6DAC2CwABAAAABG5ld3MAAA=="
+      }
+     },
+     {
+      "id": "sports",
+      "labelText": "Sports",
+      "refreshIntervalSec": 1200,
+      "scribeConfig": {
+       "page": "explore",
+       "section": "sports"
+      },
+      "timeline": {
+       "id": "VGltZWxpbmU6DAC2CwABAAAABnNwb3J0cwAA"
+      }
+     },
+     {
+      "id": "entertainment",
+      "labelText": "Entertainment",
+      "refreshIntervalSec": 1200,
+      "scribeConfig": {
+       "page": "explore",
+       "section": "entertainment"
+      },
+      "timeline": {
+       "id": "VGltZWxpbmU6DAC2CwABAAAADWVudGVydGFpbm1lbnQAAA=="
+      }
+     }
+    ]
+   },
+   "id": "ExplorePageProduct-Page"
+  }
+ }
+}

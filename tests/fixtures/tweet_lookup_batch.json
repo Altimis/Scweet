@@ -1,0 +1,1334 @@
+{
+ "data": {
+  "tweetResult": [
+   {
+    "result": {
+     "__typename": "Tweet",
+     "core": {
+      "user_results": {
+       "result": {
+        "__typename": "User",
+        "action_counts": {
+         "favorites_count": 37791
+        },
+        "affiliates_highlighted_label": {},
+        "avatar": {
+         "image_url": "https://pbs.twimg.com/profile_images/2095024006059655168/8PEEMndd_normal.jpg"
+        },
+        "banner": {
+         "image_url": "https://pbs.twimg.com/profile_banners/1465309872657166349/1762168106"
+        },
+        "core": {
+         "created_at": "Mon Nov 29 13:21:40 +0000 2021",
+         "name": "bitcoin\u26a1\ufe0fvaccine\ud83d\udc89",
+         "screen_name": "bitcoinvaccine"
+        },
+        "follow_request_sent": false,
+        "has_graduated_access": true,
+        "id": "VXNlcjoxNDY1MzA5ODcyNjU3MTY2MzQ5",
+        "is_blue_verified": true,
+        "location": {
+         "location": ""
+        },
+        "media_permissions": {
+         "can_media_tag": false
+        },
+        "notifications_settings": {
+         "notifications_enabled": false
+        },
+        "parody_commentary_fan_label": "None",
+        "pinned_items": {},
+        "possibly_sensitive": false,
+        "privacy": {
+         "protected": false
+        },
+        "profile_bio": {
+         "description": "AI creates abundance. Bitcoin preserves it bitcoinvaccine@walletofsatoshi.com",
+         "entities": {
+          "description": {}
+         }
+        },
+        "profile_description_language": "en",
+        "profile_image_shape": "Circle",
+        "profile_metadata": {
+         "profile_interstitial_type": ""
+        },
+        "profile_translation": {
+         "translator_type": "none"
+        },
+        "relationship_counts": {
+         "followers": 3283,
+         "following": 1751
+        },
+        "relationship_perspectives": {
+         "blocked_by": false,
+         "blocking": false,
+         "followed_by": false,
+         "following": false,
+         "live_following": false,
+         "muting": false
+        },
+        "rest_id": "1465309872657166349",
+        "super_follow_eligible": false,
+        "super_followed_by": false,
+        "super_following": false,
+        "tweet_counts": {
+         "media_tweets": 2270,
+         "tweets": 30086
+        },
+        "verification": {
+         "verified": false
+        },
+        "website": {
+         "url": ""
+        }
+       }
+      }
+     },
+     "edit_control": {
+      "edit_tweet_ids": [
+       "2090227249551483321"
+      ],
+      "editable_until_msecs": "1787187585000",
+      "edits_remaining": "5",
+      "is_edit_eligible": true
+     },
+     "grok_analysis_button": true,
+     "is_translatable": true,
+     "legacy": {
+      "bookmark_count": 1,
+      "bookmarked": false,
+      "conversation_id_str": "2090227249551483321",
+      "created_at": "Wed Aug 19 23:59:45 +0000 2026",
+      "display_text_range": [
+       0,
+       42
+      ],
+      "entities": {
+       "media": [
+        {
+         "allow_download_status": {
+          "allow_download": true
+         },
+         "display_url": "pic.x.com/tTtnZeuTlR",
+         "expanded_url": "https://x.com/bitcoinvaccine/status/2090227249551483321/photo/1",
+         "ext_media_availability": {
+          "status": "Available"
+         },
+         "features": {
+          "large": {
+           "faces": [
+            {
+             "h": 100,
+             "w": 100,
+             "x": 74,
+             "y": 529
+            },
+            {
+             "h": 101,
+             "w": 101,
+             "x": 664,
+             "y": 438
+            },
+            {
+             "h": 135,
+             "w": 135,
+             "x": 1201,
+             "y": 565
+            }
+           ]
+          },
+          "medium": {
+           "faces": [
+            {
+             "h": 73,
+             "w": 73,
+             "x": 54,
+             "y": 389
+            },
+            {
+             "h": 74,
+             "w": 74,
+             "x": 489,
+             "y": 322
+            },
+            {
+             "h": 99,
+             "w": 99,
+             "x": 885,
+             "y": 416
+            }
+           ]
+          },
+          "orig": {
+           "faces": [
+            {
+             "h": 100,
+             "w": 100,
+             "x": 74,
+             "y": 529
+            },
+            {
+             "h": 101,
+             "w": 101,
+             "x": 664,
+             "y": 438
+            },
+            {
+             "h": 135,
+             "w": 135,
+             "x": 1201,
+             "y": 565
+            }
+           ]
+          },
+          "small": {
+           "faces": [
+            {
+             "h": 41,
+             "w": 41,
+             "x": 30,
+             "y": 220
+            },
+            {
+             "h": 42,
+             "w": 42,
+             "x": 277,
+             "y": 182
+            },
+            {
+             "h": 56,
+             "w": 56,
+             "x": 501,
+             "y": 235
+            }
+           ]
+          }
+         },
+         "id_str": "2090226973994004480",
+         "indices": [
+          43,
+          66
+         ],
+         "media_key": "3_2090226973994004480",
+         "media_results": {
+          "result": {
+           "media_key": "3_2090226973994004480"
+          }
+         },
+         "media_url_https": "https://pbs.twimg.com/media/HQH6W7zaMAAurOm.jpg",
+         "original_info": {
+          "focus_rects": [
+           {
+            "h": 906,
+            "w": 1618,
+            "x": 0,
+            "y": 0
+           },
+           {
+            "h": 906,
+            "w": 906,
+            "x": 238,
+            "y": 0
+           },
+           {
+            "h": 906,
+            "w": 795,
+            "x": 294,
+            "y": 0
+           },
+           {
+            "h": 906,
+            "w": 453,
+            "x": 465,
+            "y": 0
+           },
+           {
+            "h": 906,
+            "w": 1628,
+            "x": 0,
+            "y": 0
+           }
+          ],
+          "height": 906,
+          "width": 1628
+         },
+         "sizes": {
+          "large": {
+           "h": 906,
+           "resize": "fit",
+           "w": 1628
+          },
+          "medium": {
+           "h": 668,
+           "resize": "fit",
+           "w": 1200
+          },
+          "small": {
+           "h": 378,
+           "resize": "fit",
+           "w": 680
+          },
+          "thumb": {
+           "h": 150,
+           "resize": "crop",
+           "w": 150
+          }
+         },
+         "type": "photo",
+         "url": "https://t.co/tTtnZeuTlR"
+        }
+       ]
+      },
+      "extended_entities": {
+       "media": [
+        {
+         "allow_download_status": {
+          "allow_download": true
+         },
+         "display_url": "pic.x.com/tTtnZeuTlR",
+         "expanded_url": "https://x.com/bitcoinvaccine/status/2090227249551483321/photo/1",
+         "ext_media_availability": {
+          "status": "Available"
+         },
+         "features": {
+          "large": {
+           "faces": [
+            {
+             "h": 100,
+             "w": 100,
+             "x": 74,
+             "y": 529
+            },
+            {
+             "h": 101,
+             "w": 101,
+             "x": 664,
+             "y": 438
+            },
+            {
+             "h": 135,
+             "w": 135,
+             "x": 1201,
+             "y": 565
+            }
+           ]
+          },
+          "medium": {
+           "faces": [
+            {
+             "h": 73,
+             "w": 73,
+             "x": 54,
+             "y": 389
+            },
+            {
+             "h": 74,
+             "w": 74,
+             "x": 489,
+             "y": 322
+            },
+            {
+             "h": 99,
+             "w": 99,
+             "x": 885,
+             "y": 416
+            }
+           ]
+          },
+          "orig": {
+           "faces": [
+            {
+             "h": 100,
+             "w": 100,
+             "x": 74,
+             "y": 529
+            },
+            {
+             "h": 101,
+             "w": 101,
+             "x": 664,
+             "y": 438
+            },
+            {
+             "h": 135,
+             "w": 135,
+             "x": 1201,
+             "y": 565
+            }
+           ]
+          },
+          "small": {
+           "faces": [
+            {
+             "h": 41,
+             "w": 41,
+             "x": 30,
+             "y": 220
+            },
+            {
+             "h": 42,
+             "w": 42,
+             "x": 277,
+             "y": 182
+            },
+            {
+             "h": 56,
+             "w": 56,
+             "x": 501,
+             "y": 235
+            }
+           ]
+          }
+         },
+         "id_str": "2090226973994004480",
+         "indices": [
+          43,
+          66
+         ],
+         "media_key": "3_2090226973994004480",
+         "media_results": {
+          "result": {
+           "media_key": "3_2090226973994004480"
+          }
+         },
+         "media_url_https": "https://pbs.twimg.com/media/HQH6W7zaMAAurOm.jpg",
+         "original_info": {
+          "focus_rects": [
+           {
+            "h": 906,
+            "w": 1618,
+            "x": 0,
+            "y": 0
+           },
+           {
+            "h": 906,
+            "w": 906,
+            "x": 238,
+            "y": 0
+           },
+           {
+            "h": 906,
+            "w": 795,
+            "x": 294,
+            "y": 0
+           },
+           {
+            "h": 906,
+            "w": 453,
+            "x": 465,
+            "y": 0
+           },
+           {
+            "h": 906,
+            "w": 1628,
+            "x": 0,
+            "y": 0
+           }
+          ],
+          "height": 906,
+          "width": 1628
+         },
+         "sizes": {
+          "large": {
+           "h": 906,
+           "resize": "fit",
+           "w": 1628
+          },
+          "medium": {
+           "h": 668,
+           "resize": "fit",
+           "w": 1200
+          },
+          "small": {
+           "h": 378,
+           "resize": "fit",
+           "w": 680
+          },
+          "thumb": {
+           "h": 150,
+           "resize": "crop",
+           "w": 150
+          }
+         },
+         "type": "photo",
+         "url": "https://t.co/tTtnZeuTlR"
+        }
+       ]
+      },
+      "favorite_count": 11,
+      "favorited": false,
+      "full_text": "\uc88b\uc740 \ud0c4\uc218\ud654\ubb3c\uc774\ub77c\ub294\uac8c \ubb50\uc5d0\uc694??\n\n\uace0\uae30 \uba39\uc73c\ub77c\ub294 \uc774\uc57c\uae30\ub294 \ud55c \uac1c\ub3c4 \uc5c6\ub124 \u3160\u3160 https://t.co/tTtnZeuTlR",
+      "id_str": "2090227249551483321",
+      "is_quote_status": false,
+      "lang": "ko",
+      "possibly_sensitive": false,
+      "possibly_sensitive_editable": true,
+      "quote_count": 0,
+      "reply_count": 3,
+      "retweet_count": 0,
+      "retweeted": false,
+      "user_id_str": "1465309872657166349"
+     },
+     "rest_id": "2090227249551483321",
+     "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+     "unmention_data": {},
+     "views": {
+      "count": "355",
+      "state": "EnabledWithCount"
+     }
+    }
+   },
+   {
+    "result": {
+     "__typename": "Tweet",
+     "core": {
+      "user_results": {
+       "result": {
+        "__typename": "User",
+        "action_counts": {
+         "favorites_count": 16055
+        },
+        "affiliates_highlighted_label": {},
+        "avatar": {
+         "image_url": "https://pbs.twimg.com/profile_images/1832963945952612352/7zSq5x96_normal.jpg"
+        },
+        "banner": {
+         "image_url": "https://pbs.twimg.com/profile_banners/1390948342021120000/1620463656"
+        },
+        "core": {
+         "created_at": "Sat May 08 08:35:14 +0000 2021",
+         "name": "Astronomer",
+         "screen_name": "astronomer_zero"
+        },
+        "follow_request_sent": false,
+        "has_graduated_access": true,
+        "id": "VXNlcjoxMzkwOTQ4MzQyMDIxMTIwMDAw",
+        "is_blue_verified": true,
+        "location": {
+         "location": "Giving back to the community:"
+        },
+        "media_permissions": {
+         "can_media_tag": true
+        },
+        "notifications_settings": {
+         "notifications_enabled": false
+        },
+        "parody_commentary_fan_label": "None",
+        "pinned_items": {
+         "tweet_ids_str": [
+          "1790757634133667981"
+         ]
+        },
+        "possibly_sensitive": false,
+        "privacy": {
+         "protected": false
+        },
+        "profile_bio": {
+         "description": "8 Years in Trading  | 2 Years of Transparent Trade Sharing on X\n\nCrypto Cycles - Market Mastery - #BTC \u20bf |\n\nhttps://t.co/SnRl41f4h4",
+         "entities": {
+          "description": {
+           "urls": [
+            {
+             "display_url": "t.me/AstronomerZero",
+             "expanded_url": "https://t.me/AstronomerZero",
+             "indices": [
+              108,
+              131
+             ],
+             "url": "https://t.co/SnRl41f4h4"
+            }
+           ]
+          },
+          "url": {
+           "urls": [
+            {
+             "display_url": "x.com/astronomer_zer\u2026",
+             "expanded_url": "https://x.com/astronomer_zero/status/1816454399075750023",
+             "indices": [
+              0,
+              23
+             ],
+             "url": "https://t.co/ZkiWa8WdHJ"
+            }
+           ]
+          }
+         }
+        },
+        "profile_description_language": "en",
+        "profile_image_shape": "Circle",
+        "profile_metadata": {
+         "profile_interstitial_type": ""
+        },
+        "profile_translation": {
+         "translator_type": "none"
+        },
+        "relationship_counts": {
+         "followers": 64552,
+         "following": 98
+        },
+        "relationship_perspectives": {
+         "blocked_by": false,
+         "blocking": false,
+         "followed_by": false,
+         "following": false,
+         "live_following": false,
+         "muting": false
+        },
+        "rest_id": "1390948342021120000",
+        "super_follow_eligible": false,
+        "super_followed_by": false,
+        "super_following": false,
+        "tweet_counts": {
+         "media_tweets": 4125,
+         "tweets": 20364
+        },
+        "verification": {
+         "verified": false
+        },
+        "website": {
+         "url": "https://t.co/ZkiWa8WdHJ"
+        }
+       }
+      }
+     },
+     "edit_control": {
+      "edit_tweet_ids": [
+       "2090227137332855238"
+      ],
+      "editable_until_msecs": "1787187558000",
+      "edits_remaining": "5",
+      "is_edit_eligible": true
+     },
+     "grok_analysis_button": true,
+     "is_translatable": false,
+     "legacy": {
+      "bookmark_count": 16,
+      "bookmarked": false,
+      "conversation_id_str": "2090227137332855238",
+      "created_at": "Wed Aug 19 23:59:18 +0000 2026",
+      "display_text_range": [
+       0,
+       277
+      ],
+      "entities": {
+       "media": [
+        {
+         "allow_download_status": {
+          "allow_download": true
+         },
+         "display_url": "pic.x.com/s6SZrpPsL3",
+         "expanded_url": "https://x.com/astronomer_zero/status/2090227137332855238/photo/1",
+         "ext_media_availability": {
+          "status": "Available"
+         },
+         "features": {
+          "large": {
+           "faces": []
+          },
+          "medium": {
+           "faces": []
+          },
+          "orig": {
+           "faces": []
+          },
+          "small": {
+           "faces": []
+          }
+         },
+         "id_str": "2090226073934196736",
+         "indices": [
+          278,
+          301
+         ],
+         "media_key": "3_2090226073934196736",
+         "media_results": {
+          "result": {
+           "media_key": "3_2090226073934196736"
+          }
+         },
+         "media_url_https": "https://pbs.twimg.com/media/HQH5ii0bcAAgzKq.jpg",
+         "original_info": {
+          "focus_rects": [
+           {
+            "h": 1474,
+            "w": 2632,
+            "x": 39,
+            "y": 0
+           },
+           {
+            "h": 1474,
+            "w": 1474,
+            "x": 618,
+            "y": 0
+           },
+           {
+            "h": 1474,
+            "w": 1293,
+            "x": 709,
+            "y": 0
+           },
+           {
+            "h": 1474,
+            "w": 737,
+            "x": 987,
+            "y": 0
+           },
+           {
+            "h": 1474,
+            "w": 2710,
+            "x": 0,
+            "y": 0
+           }
+          ],
+          "height": 1474,
+          "width": 2710
+         },
+         "sizes": {
+          "large": {
+           "h": 1114,
+           "resize": "fit",
+           "w": 2048
+          },
+          "medium": {
+           "h": 653,
+           "resize": "fit",
+           "w": 1200
+          },
+          "small": {
+           "h": 370,
+           "resize": "fit",
+           "w": 680
+          },
+          "thumb": {
+           "h": 150,
+           "resize": "crop",
+           "w": 150
+          }
+         },
+         "type": "photo",
+         "url": "https://t.co/s6SZrpPsL3"
+        }
+       ],
+       "symbols": [
+        {
+         "indices": [
+          0,
+          4
+         ],
+         "tag": {
+          "info": {
+           "info": {
+            "name": "Bitcoin",
+            "ticker": "BTC"
+           }
+          }
+         },
+         "text": "btc"
+        }
+       ]
+      },
+      "extended_entities": {
+       "media": [
+        {
+         "allow_download_status": {
+          "allow_download": true
+         },
+         "display_url": "pic.x.com/s6SZrpPsL3",
+         "expanded_url": "https://x.com/astronomer_zero/status/2090227137332855238/photo/1",
+         "ext_media_availability": {
+          "status": "Available"
+         },
+         "features": {
+          "large": {
+           "faces": []
+          },
+          "medium": {
+           "faces": []
+          },
+          "orig": {
+           "faces": []
+          },
+          "small": {
+           "faces": []
+          }
+         },
+         "id_str": "2090226073934196736",
+         "indices": [
+          278,
+          301
+         ],
+         "media_key": "3_2090226073934196736",
+         "media_results": {
+          "result": {
+           "media_key": "3_2090226073934196736"
+          }
+         },
+         "media_url_https": "https://pbs.twimg.com/media/HQH5ii0bcAAgzKq.jpg",
+         "original_info": {
+          "focus_rects": [
+           {
+            "h": 1474,
+            "w": 2632,
+            "x": 39,
+            "y": 0
+           },
+           {
+            "h": 1474,
+            "w": 1474,
+            "x": 618,
+            "y": 0
+           },
+           {
+            "h": 1474,
+            "w": 1293,
+            "x": 709,
+            "y": 0
+           },
+           {
+            "h": 1474,
+            "w": 737,
+            "x": 987,
+            "y": 0
+           },
+           {
+            "h": 1474,
+            "w": 2710,
+            "x": 0,
+            "y": 0
+           }
+          ],
+          "height": 1474,
+          "width": 2710
+         },
+         "sizes": {
+          "large": {
+           "h": 1114,
+           "resize": "fit",
+           "w": 2048
+          },
+          "medium": {
+           "h": 653,
+           "resize": "fit",
+           "w": 1200
+          },
+          "small": {
+           "h": 370,
+           "resize": "fit",
+           "w": 680
+          },
+          "thumb": {
+           "h": 150,
+           "resize": "crop",
+           "w": 150
+          }
+         },
+         "type": "photo",
+         "url": "https://t.co/s6SZrpPsL3"
+        }
+       ]
+      },
+      "favorite_count": 154,
+      "favorited": false,
+      "full_text": "$btc\n \nFirst things first: macro (monthly chart) plan updated\n\nWith a major move just performed by the market in a very short period of recent time, quite literally in one day, it has implications on the larger timeframe due to the sheer extent of the move, but also the volume https://t.co/s6SZrpPsL3",
+      "id_str": "2090227137332855238",
+      "is_quote_status": true,
+      "lang": "en",
+      "possibly_sensitive": false,
+      "possibly_sensitive_editable": true,
+      "quote_count": 1,
+      "quoted_status_id_str": "2072430884343697811",
+      "quoted_status_permalink": {
+       "display": "x.com/astronomer_zer\u2026",
+       "expanded": "https://twitter.com/astronomer_zero/status/2072430884343697811",
+       "url": "https://t.co/MPOcYxpzLY"
+      },
+      "reply_count": 11,
+      "retweet_count": 4,
+      "retweeted": false,
+      "user_id_str": "1390948342021120000"
+     },
+     "note_tweet": {
+      "is_expandable": true,
+      "note_tweet_results": {
+       "result": {
+        "entity_set": {
+         "hashtags": [],
+         "symbols": [
+          {
+           "indices": [
+            0,
+            4
+           ],
+           "tag": {
+            "info": {
+             "info": {
+              "name": "Bitcoin",
+              "ticker": "BTC"
+             }
+            }
+           },
+           "text": "btc"
+          }
+         ],
+         "urls": [],
+         "user_mentions": []
+        },
+        "id": "Tm90ZVR3ZWV0OjIwOTAyMjcxMzcwOTc5NDA5OTI=",
+        "media": {
+         "inline_media": []
+        },
+        "richtext": {
+         "richtext_tags": [
+          {
+           "from_index": 7,
+           "richtext_types": [
+            "Bold",
+            "Italic"
+           ],
+           "to_index": 61
+          },
+          {
+           "from_index": 2686,
+           "richtext_types": [
+            "Bold",
+            "Italic"
+           ],
+           "to_index": 2690
+          }
+         ]
+        },
+        "text": "$btc\n \nFirst things first: macro (monthly chart) plan updated\n\nWith a major move just performed by the market in a very short period of recent time, quite literally in one day, it has implications on the larger timeframe due to the sheer extent of the move, but also the volume and breach of the general rhythm of boredom we saw recently.\n\nThat's a good thing. The fact we paid a short loss for it is less favourable.\n\nIn terms of chart analysis, the impact should IMO not be ignored. That's exactly the reason to not jump in another high conviction trade straight away. Instead, do the opposite, close some high conviction trades, just like we with some long runners a few hours ago.\n\nBecause from this local coming consolidation, new runners can be built potentially with still a long road up to go.\n\nSo after a large move, indeed comes consolidation next, which is what we will see imo.\n\nAnd inevitably, our \"next trade\" will have to stem from the next local consolidation/range we anticipate forming.\n\nMore on what's next locally. But in terms of the higher timeframes now, we remind ourselves to our estimate of 60k to be the bottom, and where that means that this type of large push we just saw Yesterday, is part of that bottom being confirmed, and therefore should not be ignored.\n\nWe had a lot of confirmation and confluence of our 60k bottom call. By that I mean \"4+ years worth of confirmation\", including the sentiment, how everyone called for a bottom in Q4, how my call received a lot of backlash \"Astro we are at 58k, you are wrong\", but that's in our favour. It means the sentiment backs up our claims in contrarian manner.\n\nSo in short, macro (monthly) is going absolutely to plan. It's a consolation prize to say the least.\n\nAnd so the key message is that given our macro plan, this move we just had should not be faded just like that, let alone shorted against blindly with \"new lows in Q4\" in mind. As mentioned many times, Q4 lows believers may end up paying for it, and not in the sense of losing 1 short, but in the sense of missing a generational entry which can end up costing much much more.\n\nThat's the first baseline for when I start shifting down timeframes in the next posts.\n\nSo I will shift down slowly next. For now, I already reiterated the bottom idea, why isn't unlikely in Q4, but is already in. Will share more reiterations of local timeframes, the significance of the 7.12% bounce and the spot buy.\n\nOn the chart also the monthly range we talked about, how we swept the low and how it now reached that midpoint area. That's not \"resistance\" per se but confirmation of the range, before higher, and a notion to some consolidation locally next, but not a move back down on imo."
+       }
+      }
+     },
+     "quoted_status_result": {
+      "result": {
+       "__typename": "Tweet",
+       "core": {
+        "user_results": {
+         "result": {
+          "__typename": "User",
+          "action_counts": {
+           "favorites_count": 16055
+          },
+          "affiliates_highlighted_label": {},
+          "avatar": {
+           "image_url": "https://pbs.twimg.com/profile_images/1832963945952612352/7zSq5x96_normal.jpg"
+          },
+          "banner": {
+           "image_url": "https://pbs.twimg.com/profile_banners/1390948342021120000/1620463656"
+          },
+          "core": {
+           "created_at": "Sat May 08 08:35:14 +0000 2021",
+           "name": "Astronomer",
+           "screen_name": "astronomer_zero"
+          },
+          "follow_request_sent": false,
+          "has_graduated_access": true,
+          "id": "VXNlcjoxMzkwOTQ4MzQyMDIxMTIwMDAw",
+          "is_blue_verified": true,
+          "location": {
+           "location": "Giving back to the community:"
+          },
+          "media_permissions": {
+           "can_media_tag": true
+          },
+          "notifications_settings": {
+           "notifications_enabled": false
+          },
+          "parody_commentary_fan_label": "None",
+          "pinned_items": {
+           "tweet_ids_str": [
+            "1790757634133667981"
+           ]
+          },
+          "possibly_sensitive": false,
+          "privacy": {
+           "protected": false
+          },
+          "profile_bio": {
+           "description": "8 Years in Trading  | 2 Years of Transparent Trade Sharing on X\n\nCrypto Cycles - Market Mastery - #BTC \u20bf |\n\nhttps://t.co/SnRl41f4h4",
+           "entities": {
+            "description": {
+             "urls": [
+              {
+               "display_url": "t.me/AstronomerZero",
+               "expanded_url": "https://t.me/AstronomerZero",
+               "indices": [
+                108,
+                131
+               ],
+               "url": "https://t.co/SnRl41f4h4"
+              }
+             ]
+            },
+            "url": {
+             "urls": [
+              {
+               "display_url": "x.com/astronomer_zer\u2026",
+               "expanded_url": "https://x.com/astronomer_zero/status/1816454399075750023",
+               "indices": [
+                0,
+                23
+               ],
+               "url": "https://t.co/ZkiWa8WdHJ"
+              }
+             ]
+            }
+           }
+          },
+          "profile_description_language": "en",
+          "profile_image_shape": "Circle",
+          "profile_metadata": {
+           "profile_interstitial_type": ""
+          },
+          "profile_translation": {
+           "translator_type": "none"
+          },
+          "relationship_counts": {
+           "followers": 64552,
+           "following": 98
+          },
+          "relationship_perspectives": {
+           "blocked_by": false,
+           "blocking": false,
+           "followed_by": false,
+           "following": false,
+           "live_following": false,
+           "muting": false
+          },
+          "rest_id": "1390948342021120000",
+          "super_follow_eligible": false,
+          "super_followed_by": false,
+          "super_following": false,
+          "tweet_counts": {
+           "media_tweets": 4125,
+           "tweets": 20364
+          },
+          "verification": {
+           "verified": false
+          },
+          "website": {
+           "url": "https://t.co/ZkiWa8WdHJ"
+          }
+         }
+        }
+       },
+       "edit_control": {
+        "edit_tweet_ids": [
+         "2072430884343697811"
+        ],
+        "editable_until_msecs": "1782944601000",
+        "edits_remaining": "5",
+        "is_edit_eligible": true
+       },
+       "grok_analysis_button": true,
+       "is_translatable": false,
+       "legacy": {
+        "bookmark_count": 50,
+        "bookmarked": false,
+        "conversation_id_str": "2072430884343697811",
+        "created_at": "Wed Jul 01 21:23:21 +0000 2026",
+        "display_text_range": [
+         0,
+         275
+        ],
+        "entities": {
+         "media": [
+          {
+           "allow_download_status": {
+            "allow_download": true
+           },
+           "display_url": "pic.x.com/FZXwgPmjp2",
+           "expanded_url": "https://x.com/astronomer_zero/status/2072430884343697811/photo/1",
+           "ext_media_availability": {
+            "status": "Available"
+           },
+           "features": {
+            "large": {
+             "faces": []
+            },
+            "medium": {
+             "faces": []
+            },
+            "orig": {
+             "faces": []
+            },
+            "small": {
+             "faces": []
+            }
+           },
+           "id_str": "2072430720845516800",
+           "indices": [
+            276,
+            299
+           ],
+           "media_key": "3_2072430720845516800",
+           "media_results": {
+            "result": {
+             "media_key": "3_2072430720845516800"
+            }
+           },
+           "media_url_https": "https://pbs.twimg.com/media/HMLAwqmakAAmS4-.jpg",
+           "original_info": {
+            "focus_rects": [
+             {
+              "h": 1474,
+              "w": 2632,
+              "x": 78,
+              "y": 0
+             },
+             {
+              "h": 1474,
+              "w": 1474,
+              "x": 821,
+              "y": 0
+             },
+             {
+              "h": 1474,
+              "w": 1293,
+              "x": 912,
+              "y": 0
+             },
+             {
+              "h": 1474,
+              "w": 737,
+              "x": 1190,
+              "y": 0
+             },
+             {
+              "h": 1474,
+              "w": 2710,
+              "x": 0,
+              "y": 0
+             }
+            ],
+            "height": 1474,
+            "width": 2710
+           },
+           "sizes": {
+            "large": {
+             "h": 1114,
+             "resize": "fit",
+             "w": 2048
+            },
+            "medium": {
+             "h": 653,
+             "resize": "fit",
+             "w": 1200
+            },
+            "small": {
+             "h": 370,
+             "resize": "fit",
+             "w": 680
+            },
+            "thumb": {
+             "h": 150,
+             "resize": "crop",
+             "w": 150
+            }
+           },
+           "type": "photo",
+           "url": "https://t.co/FZXwgPmjp2"
+          }
+         ],
+         "symbols": [
+          {
+           "indices": [
+            0,
+            4
+           ],
+           "tag": {
+            "info": {
+             "info": {
+              "name": "Bitcoin",
+              "ticker": "BTC"
+             }
+            }
+           },
+           "text": "btc"
+          }
+         ]
+        },
+        "extended_entities": {
+         "media": [
+          {
+           "allow_download_status": {
+            "allow_download": true
+           },
+           "display_url": "pic.x.com/FZXwgPmjp2",
+           "expanded_url": "https://x.com/astronomer_zero/status/2072430884343697811/photo/1",
+           "ext_media_availability": {
+            "status": "Available"
+           },
+           "features": {
+            "large": {
+             "faces": []
+            },
+            "medium": {
+             "faces": []
+            },
+            "orig": {
+             "faces": []
+            },
+            "small": {
+             "faces": []
+            }
+           },
+           "id_str": "2072430720845516800",
+           "indices": [
+            276,
+            299
+           ],
+           "media_key": "3_2072430720845516800",
+           "media_results": {
+            "result": {
+             "media_key": "3_2072430720845516800"
+            }
+           },
+           "media_url_https": "https://pbs.twimg.com/media/HMLAwqmakAAmS4-.jpg",
+           "original_info": {
+            "focus_rects": [
+             {
+              "h": 1474,
+              "w": 2632,
+              "x": 78,
+              "y": 0
+             },
+             {
+              "h": 1474,
+              "w": 1474,
+              "x": 821,
+              "y": 0
+             },
+             {
+              "h": 1474,
+              "w": 1293,
+              "x": 912,
+              "y": 0
+             },
+             {
+              "h": 1474,
+              "w": 737,
+              "x": 1190,
+              "y": 0
+             },
+             {
+              "h": 1474,
+              "w": 2710,
+              "x": 0,
+              "y": 0
+             }
+            ],
+            "height": 1474,
+            "width": 2710
+           },
+           "sizes": {
+            "large": {
+             "h": 1114,
+             "resize": "fit",
+             "w": 2048
+            },
+            "medium": {
+             "h": 653,
+             "resize": "fit",
+             "w": 1200
+            },
+            "small": {
+             "h": 370,
+             "resize": "fit",
+             "w": 680
+            },
+            "thumb": {
+             "h": 150,
+             "resize": "crop",
+             "w": 150
+            }
+           },
+           "type": "photo",
+           "url": "https://t.co/FZXwgPmjp2"
+          }
+         ]
+        },
+        "favorite_count": 250,
+        "favorited": false,
+        "full_text": "$btc \n\nMy macro bottom call, in one trade\n\nJust a quick one because despite some explanation there are still some (new) people confused as to why I still hold on to the 60k level as my \"bottom call level\".\n\nThe answer is quite simply the difference between actual trading and https://t.co/FZXwgPmjp2",
+        "id_str": "2072430884343697811",
+        "is_quote_status": false,
+        "lang": "en",
+        "possibly_sensitive": false,
+        "possibly_sensitive_editable": true,
+        "quote_count": 1,
+        "reply_count": 29,
+        "retweet_count": 20,
+        "retweeted": false,
+        "user_id_str": "1390948342021120000"
+       },
+       "note_tweet": {
+        "is_expandable": true,
+        "note_tweet_results": {
+         "result": {
+          "entity_set": {
+           "hashtags": [],
+           "symbols": [
+            {
+             "indices": [
+              0,
+              4
+             ],
+             "tag": {
+              "info": {
+               "info": {
+                "name": "Bitcoin",
+                "ticker": "BTC"
+               }
+              }
+             },
+             "text": "btc"
+            }
+           ],
+           "urls": [],
+           "user_mentions": []
+          },
+          "id": "Tm90ZVR3ZWV0OjIwNzI0MzA4ODQxMjE0NDAyNTY=",
+          "media": {
+           "inline_media": []
+          },
+          "richtext": {
+           "richtext_tags": [
+            {
+             "from_index": 7,
+             "richtext_types": [
+              "Bold",
+              "Italic"
+             ],
+             "to_index": 41
+            }
+           ]
+          },
+          "text": "$btc \n\nMy macro bottom call, in one trade\n\nJust a quick one because despite some explanation there are still some (new) people confused as to why I still hold on to the 60k level as my \"bottom call level\".\n\nThe answer is quite simply the difference between actual trading and engagement farming. Where the engagement farmer tries to talk about the bottom with repeated posts of vague and broad levels and numbers, with the sheer goal of trying to be right (\"we will rally\", \"we will go higher from here\", \"the low is forming\", \"I closed my shorts\" etc etc). Just to be able to tell you \"I told you so\", without any actual positions mentioned or taken.\n\nX is a lot about engagement farming, it after all is what generates traffic, all power to the engagement farmer.\n\nBut since we aim to trade this market optimally, that is not of our interest.\n\nSo let's not identify ourselves with that. Let's not try to aim to \"call the 60k bottom perfectly\" and then morph posts in ways that may look good after the fact, just trying to be right and nothing else, whilst deleting old wrong tweets and what not.\n\nLet's just treat this bottom call like any other call, a proper live call with realistic (but bold) expectations. The same way a proper trade works, which I framed so on the chart below.\n\n60k is my estimate, 50k is where I no longer believe my bottom call is correct, and new ath's is where I make money.\n\nThat's 6.5+ in \"loss-to-gain\" ratio, a large amount. It is indeed a bold and aggressive call, made since Feb.\n\nFraming it like this is how actual gains come to fruition, especially when only a small minority believes in it, sticks to it and aligns their capital with it.\n\nThis is of course not a trade I took in the literal sense, this is a virtual trade. No one taking these markets seriously takes a long trade like this, you would lose a third of the gains in funding. It merely represents my spot plan, and weekly bottom bias (different to weekly bias, weekly bias can incorporate countertrend rallies along the way).\n\nLocally, things can change, I can call this plan off earlier for good reasons, or hold through slightly longer for more risk, although also only for very good reason only.\n\nSo with this, all doubts and unclarity of how I view and go about a live bottom call, are lifted.\n\nThe goal is not to call the bottom in an aggressively down trending market to \"scalp\" a 100x long on that. Again you lose most profits in funding so there is no real added value in that.\n\nSo although it looks pretty, there is no need to nail a bottom perfectly to make money consistently. In reality, it only helps to create engagement and morph expectations.\n\nReality check in place, plan in place and the trades continue."
+         }
+        }
+       },
+       "rest_id": "2072430884343697811",
+       "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+       "unmention_data": {},
+       "views": {
+        "count": "174116",
+        "state": "EnabledWithCount"
+       }
+      }
+     },
+     "rest_id": "2090227137332855238",
+     "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+     "unmention_data": {},
+     "views": {
+      "count": "31757",
+      "state": "EnabledWithCount"
+     }
+    }
+   }
+  ]
+ }
+}

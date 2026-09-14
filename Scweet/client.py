@@ -85,6 +85,25 @@ class Scweet:
     def config(self) -> ScweetConfig:
         return self._config
 
+    def refresh_manifest(self) -> dict[str, dict[str, str]]:
+        """Read fresh GraphQL query ids from the live bundle of X.
+
+        X rotates a query id without notice, and a stale id answers 404 for
+        every request. Call this when requests start to fail, or on a schedule.
+        Returns the ids that changed: ``{operation: {"old": ..., "new": ...}}``.
+        """
+        old = {
+            key: value
+            for key, value in self._manifest_provider.get_manifest_sync().query_ids.items()
+        }
+        fresh = self._manifest_provider.scrape_from_x_sync(strict=True, force=True)
+        changes: dict[str, dict[str, str]] = {}
+        for key, new_id in fresh.query_ids.items():
+            old_id = old.get(key)
+            if old_id != new_id:
+                changes[key] = {"old": old_id or "", "new": new_id}
+        return changes
+
     @property
     def db(self):
         from .db import ScweetDB
@@ -470,15 +489,20 @@ class Scweet:
         limit: Optional[int] = None,
         max_empty_pages: Optional[int] = None,
         resume: bool = False,
+        include_replies: bool = False,
         save: bool = False,
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
-        """Fetch tweets from user timelines. Returns list of tweet dicts (same schema as :meth:`search`)."""
+        """Fetch tweets from user timelines. Returns list of tweet dicts (same schema as :meth:`search`).
+
+        Pass ``include_replies=True`` to also collect the replies of each user.
+        """
         return asyncio.run(
             self.aget_profile_tweets(
                 users, limit=limit, max_empty_pages=max_empty_pages,
-                resume=resume, save=save, save_format=save_format, save_name=save_name,
+                resume=resume, include_replies=include_replies,
+                save=save, save_format=save_format, save_name=save_name,
             )
         )
 
@@ -489,11 +513,80 @@ class Scweet:
         limit: Optional[int] = None,
         max_empty_pages: Optional[int] = None,
         resume: bool = False,
+        include_replies: bool = False,
         save: bool = False,
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
         """Async variant of :meth:`get_profile_tweets`."""
+        return await self._run_profile_timeline(
+            users,
+            "profile_timeline_with_replies" if include_replies else "profile_timeline",
+            save_operation="profile_tweets",
+            limit=limit,
+            max_empty_pages=max_empty_pages,
+            resume=resume,
+            save=save,
+            save_format=save_format,
+            save_name=save_name,
+        )
+
+    def get_profile_media(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Fetch the media tweets of user timelines. Returns list of tweet dicts (same schema as :meth:`search`)."""
+        return asyncio.run(
+            self.aget_profile_media(
+                users, limit=limit, max_empty_pages=max_empty_pages,
+                resume=resume, save=save, save_format=save_format, save_name=save_name,
+            )
+        )
+
+    async def aget_profile_media(
+        self,
+        users: list[str],
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Async variant of :meth:`get_profile_media`."""
+        return await self._run_profile_timeline(
+            users,
+            "profile_media",
+            save_operation="profile_media",
+            limit=limit,
+            max_empty_pages=max_empty_pages,
+            resume=resume,
+            save=save,
+            save_format=save_format,
+            save_name=save_name,
+        )
+
+    async def _run_profile_timeline(
+        self,
+        users: list[str],
+        timeline_operation: str,
+        *,
+        save_operation: str,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        resume: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
         from .models import ProfileTimelineRequest
         from .user_identity import normalize_user_targets
 
@@ -506,6 +599,7 @@ class Scweet:
             resume=resume,
             allow_anonymous=self._config.profile_timeline_allow_anonymous,
             max_empty_pages=effective_max_empty,
+            timeline_operation=timeline_operation,
         )
 
         response = await self._runner.run_profile_tweets(request)
@@ -514,8 +608,8 @@ class Scweet:
         tweets = [self._tweet_to_dict(t) for t in (getattr(result, "tweets", None) or [])]
 
         if save:
-            name = save_name or self._build_save_name("profile_tweets", users=users)
-            self._save_output(tweets, "profile_tweets", save_format, save_name=name)
+            name = save_name or self._build_save_name(save_operation, users=users)
+            self._save_output(tweets, save_operation, save_format, save_name=name)
 
         return tweets
 
@@ -692,8 +786,9 @@ class Scweet:
 
     def get_user_info(
         self,
-        users: list[str],
+        users: Optional[list[str]] = None,
         *,
+        user_ids: Optional[list[str]] = None,
         save: bool = False,
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
@@ -703,40 +798,284 @@ class Scweet:
         Each dict has: ``user_id``, ``username``, ``name``, ``description``,
         ``location``, ``followers_count``, ``following_count``, ``verified``,
         ``blue_verified``, ``profile_image_url``, and more.
+
+        Pass ``user_ids`` to look up numeric rest ids. ``users`` and ``user_ids``
+        can combine; the rows keep the input order where possible.
         """
-        return asyncio.run(self.aget_user_info(users, save=save, save_format=save_format, save_name=save_name))
+        return asyncio.run(
+            self.aget_user_info(
+                users, user_ids=user_ids, save=save, save_format=save_format, save_name=save_name,
+            )
+        )
 
     async def aget_user_info(
         self,
-        users: list[str],
+        users: Optional[list[str]] = None,
         *,
+        user_ids: Optional[list[str]] = None,
         save: bool = False,
         save_format: Optional[str] = None,
         save_name: Optional[str] = None,
     ) -> list[dict]:
         """Async variant of :meth:`get_user_info`."""
-        from .models import ProfileRequest
+        from .models import ProfileRequest, UserIdsRequest
         from .user_identity import normalize_user_targets
 
-        resolved = normalize_user_targets(users=users)
-        targets = resolved.get("targets", [])
-        handles = [t.get("username") or t.get("handle") or t.get("raw", "") for t in targets]
-        request = ProfileRequest(handles=handles, targets=targets)
+        items: list[dict] = []
 
-        response = await self._runner.run_profiles(request)
+        if users:
+            resolved = normalize_user_targets(users=users)
+            targets = resolved.get("targets", [])
+            handles = [t.get("username") or t.get("handle") or t.get("raw", "") for t in targets]
+            request = ProfileRequest(handles=handles, targets=targets)
 
-        if isinstance(response, dict):
-            items = response.get("items", [])
-        else:
-            items = getattr(response, "items", None) or []
-        if not isinstance(items, list):
-            items = []
+            response = await self._runner.run_profiles(request)
+            items.extend(self._extract_items(response))
+
+        ids = [str(u).strip() for u in (user_ids or []) if str(u).strip()]
+        if ids:
+            ids_response = await self._runner.run_users_by_ids(UserIdsRequest(user_ids=ids))
+            id_items = self._extract_items(ids_response)
+            status = None
+            if isinstance(ids_response, dict):
+                status = ids_response.get("status_code")
+            if not id_items and status not in (None, 200):
+                # X answers 403 with an HTML page for this lookup on some
+                # connections. A silent empty list would hide that refusal.
+                from .exceptions import EngineError
+
+                raise EngineError(
+                    f"X refused the id lookup (HTTP {status}). "
+                    "The block is per connection and usually short. Retry, "
+                    "or look the profiles up by username instead."
+                )
+            items.extend(id_items)
 
         if save:
-            name = save_name or self._build_save_name("user_info", users=users)
+            name = save_name or self._build_save_name("user_info", users=users or ids)
             self._save_output(items, "user_info", save_format, save_name=name)
 
         return items
+
+    # ── Tweet lookup / replies / reposters ──────────────────────────────
+
+    def get_tweet_info(
+        self,
+        tweet_ids: list[str],
+        *,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Fetch tweets by id. Returns list of tweet dicts (same schema as :meth:`search`).
+
+        A missing or deleted tweet gives no row and no error. Pass
+        ``raw_json=True`` to return the raw API JSON instead of normalized dicts.
+        """
+        return asyncio.run(
+            self.aget_tweet_info(
+                tweet_ids, raw_json=raw_json, save=save, save_format=save_format, save_name=save_name,
+            )
+        )
+
+    async def aget_tweet_info(
+        self,
+        tweet_ids: list[str],
+        *,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Async variant of :meth:`get_tweet_info`."""
+        from .models import TweetLookupRequest
+
+        ids = [str(t).strip() for t in (tweet_ids or []) if str(t).strip()]
+        request = TweetLookupRequest(tweet_ids=ids, raw_json=raw_json)
+
+        response = await self._runner.run_tweet_info(request)
+        items = self._extract_items(response)
+
+        if save:
+            name = save_name or self._build_save_name("tweet_info")
+            self._save_output(items, "tweet_info", save_format, save_name=name)
+
+        return items
+
+    def get_tweet_replies(
+        self,
+        tweet_id: str,
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Fetch the replies of a tweet. Returns list of tweet dicts (same schema as :meth:`search`).
+
+        The focal tweet itself is not a reply, so it gives no row. Pass
+        ``raw_json=True`` to return the raw API JSON instead of normalized dicts.
+        """
+        return asyncio.run(
+            self.aget_tweet_replies(
+                tweet_id, limit=limit, max_empty_pages=max_empty_pages,
+                raw_json=raw_json, save=save, save_format=save_format, save_name=save_name,
+            )
+        )
+
+    async def aget_tweet_replies(
+        self,
+        tweet_id: str,
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Async variant of :meth:`get_tweet_replies`."""
+        from .models import TweetRepliesRequest
+
+        effective_max_empty = max_empty_pages or self._config.max_empty_pages
+        request = TweetRepliesRequest(
+            tweet_id=str(tweet_id).strip(),
+            limit=limit,
+            max_empty_pages=effective_max_empty,
+            raw_json=raw_json,
+        )
+
+        response = await self._runner.run_tweet_replies(request)
+        items = self._extract_items(response)
+
+        if save:
+            name = save_name or self._build_save_name("tweet_replies")
+            self._save_output(items, "tweet_replies", save_format, save_name=name)
+
+        return items
+
+    def get_reposters(
+        self,
+        tweet_id: str,
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Fetch the users that reposted a tweet. Returns list of user dicts.
+
+        Pass ``raw_json=True`` to return the raw API JSON instead of normalized dicts.
+        """
+        return asyncio.run(
+            self.aget_reposters(
+                tweet_id, limit=limit, max_empty_pages=max_empty_pages,
+                raw_json=raw_json, save=save, save_format=save_format, save_name=save_name,
+            )
+        )
+
+    async def aget_reposters(
+        self,
+        tweet_id: str,
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Async variant of :meth:`get_reposters`."""
+        from .models import RepostersRequest
+
+        effective_max_empty = max_empty_pages or self._config.max_empty_pages
+        request = RepostersRequest(
+            tweet_id=str(tweet_id).strip(),
+            limit=limit,
+            max_empty_pages=effective_max_empty,
+            raw_json=raw_json,
+        )
+
+        response = await self._runner.run_reposters(request)
+        items = self._extract_items(response)
+
+        if save:
+            name = save_name or self._build_save_name("reposters")
+            self._save_output(items, "reposters", save_format, save_name=name)
+
+        return items
+
+    # ── User search / trends ────────────────────────────────────────────
+
+    def search_users(
+        self,
+        query: str,
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Search users. Returns list of user dicts.
+
+        Pass ``raw_json=True`` to return the raw API JSON instead of normalized dicts.
+        """
+        return asyncio.run(
+            self.asearch_users(
+                query, limit=limit, max_empty_pages=max_empty_pages,
+                raw_json=raw_json, save=save, save_format=save_format, save_name=save_name,
+            )
+        )
+
+    async def asearch_users(
+        self,
+        query: str,
+        *,
+        limit: Optional[int] = None,
+        max_empty_pages: Optional[int] = None,
+        raw_json: bool = False,
+        save: bool = False,
+        save_format: Optional[str] = None,
+        save_name: Optional[str] = None,
+    ) -> list[dict]:
+        """Async variant of :meth:`search_users`."""
+        from .models import SearchUsersRequest
+
+        effective_max_empty = max_empty_pages or self._config.max_empty_pages
+        request = SearchUsersRequest(
+            query=str(query),
+            limit=limit,
+            max_empty_pages=effective_max_empty,
+            raw_json=raw_json,
+        )
+
+        response = await self._runner.run_search_users(request)
+        items = self._extract_items(response)
+
+        if save:
+            name = save_name or self._build_save_name("search_users", query=query)
+            self._save_output(items, "search_users", save_format, save_name=name)
+
+        return items
+
+    def get_trending(self) -> list[dict]:
+        """Fetch the current trends. Returns list of trend dicts.
+
+        Each dict has: ``name``, ``context``, ``trend_id``, and ``raw``.
+        """
+        return asyncio.run(self.aget_trending())
+
+    async def aget_trending(self) -> list[dict]:
+        """Async variant of :meth:`get_trending`."""
+        response = await self._runner.run_trending()
+        return self._extract_items(response)
 
     # ── Output helpers ──────────────────────────────────────────────────
 
@@ -795,8 +1134,8 @@ class Scweet:
 
         if fmt in ("csv", "both"):
             from .outputs import TWEET_COLUMN_ORDER, USER_COLUMN_ORDER, write_csv_auto_header
-            _tweet_ops = {"search", "profile_tweets"}
-            _user_ops = {"followers", "following", "user_info"}
+            _tweet_ops = {"search", "profile_tweets", "profile_media", "tweet_info", "tweet_replies"}
+            _user_ops = {"followers", "following", "user_info", "reposters", "search_users"}
             if operation in _tweet_ops:
                 csv_rows = [self._flatten_tweet_for_csv(r) for r in rows]
                 preferred_order = TWEET_COLUMN_ORDER
@@ -840,6 +1179,16 @@ class Scweet:
         if isinstance(media, dict):
             out["image_links"] = media.get("image_links") or []
         return out
+
+    @staticmethod
+    def _extract_items(response: Any) -> list[dict]:
+        if isinstance(response, dict):
+            items = response.get("items")
+        else:
+            items = getattr(response, "items", None)
+        if isinstance(items, list):
+            return items
+        return []
 
     @staticmethod
     def _extract_follows_items(response: Any) -> list[dict]:

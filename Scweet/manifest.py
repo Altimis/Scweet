@@ -22,6 +22,14 @@ _OPERATION_NAME_TO_KEY = {
     "Followers": "followers",
     "Following": "following",
     "BlueVerifiedFollowers": "verified_followers",
+    "TweetResultsByRestIds": "tweet_lookup",
+    "TweetDetail": "tweet_detail",
+    "Retweeters": "reposters",
+    "UserByRestId": "user_lookup_rest_id",
+    "UsersByRestIds": "user_lookup_batch",
+    "ExplorePage": "explore_page",
+    "UserMedia": "profile_media",
+    "UserTweetsAndReplies": "profile_timeline_with_replies",
 }
 
 # Endpoint URL templates keyed by manifest key.
@@ -32,6 +40,14 @@ _ENDPOINT_TEMPLATES = {
     "followers": "https://x.com/i/api/graphql/{query_id}/Followers",
     "following": "https://x.com/i/api/graphql/{query_id}/Following",
     "verified_followers": "https://x.com/i/api/graphql/{query_id}/BlueVerifiedFollowers",
+    "tweet_lookup": "https://x.com/i/api/graphql/{query_id}/TweetResultsByRestIds",
+    "tweet_detail": "https://x.com/i/api/graphql/{query_id}/TweetDetail",
+    "reposters": "https://x.com/i/api/graphql/{query_id}/Retweeters",
+    "user_lookup_rest_id": "https://x.com/i/api/graphql/{query_id}/UserByRestId",
+    "user_lookup_batch": "https://x.com/i/api/graphql/{query_id}/UsersByRestIds",
+    "explore_page": "https://x.com/i/api/graphql/{query_id}/ExplorePage",
+    "profile_media": "https://x.com/i/api/graphql/{query_id}/UserMedia",
+    "profile_timeline_with_replies": "https://x.com/i/api/graphql/{query_id}/UserTweetsAndReplies",
 }
 
 _DEFAULT_MANIFEST = {
@@ -43,6 +59,15 @@ _DEFAULT_MANIFEST = {
         "followers": "sF7aRC2fRq7OGOOp_qHntA",
         "following": "4EQGMEhtdVw8NeVBDQHESQ",
         "verified_followers": "UmyQcnz4ojpneJPQeMlPeg",
+        # The eight ids below were read from the live bundle of X on 2026-09-13.
+        "tweet_lookup": "VwY22EyG-lO-eT6Myg_F0A",
+        "tweet_detail": "FyR-GrebyjdkRoW1z6uCgQ",
+        "reposters": "iH7h2J19n7Xd1swL4cNTNg",
+        "user_lookup_rest_id": "IdmRdjYxIGI39Hdwkwo5cQ",
+        "user_lookup_batch": "BuQFwM7wpHl00cfHL-r0rA",
+        "explore_page": "UgdDQQHSWlNm3LEht3PnLg",
+        "profile_media": "atLYUUmER14HCLFnNUKJgA",
+        "profile_timeline_with_replies": "-4Ujf5pYzDdr_qY8qxgF9A",
     },
     "endpoints": {
         "search_timeline": "https://x.com/i/api/graphql/{query_id}/SearchTimeline",
@@ -51,6 +76,14 @@ _DEFAULT_MANIFEST = {
         "followers": "https://x.com/i/api/graphql/{query_id}/Followers",
         "following": "https://x.com/i/api/graphql/{query_id}/Following",
         "verified_followers": "https://x.com/i/api/graphql/{query_id}/BlueVerifiedFollowers",
+        "tweet_lookup": "https://x.com/i/api/graphql/{query_id}/TweetResultsByRestIds",
+        "tweet_detail": "https://x.com/i/api/graphql/{query_id}/TweetDetail",
+        "reposters": "https://x.com/i/api/graphql/{query_id}/Retweeters",
+        "user_lookup_rest_id": "https://x.com/i/api/graphql/{query_id}/UserByRestId",
+        "user_lookup_batch": "https://x.com/i/api/graphql/{query_id}/UsersByRestIds",
+        "explore_page": "https://x.com/i/api/graphql/{query_id}/ExplorePage",
+        "profile_media": "https://x.com/i/api/graphql/{query_id}/UserMedia",
+        "profile_timeline_with_replies": "https://x.com/i/api/graphql/{query_id}/UserTweetsAndReplies",
     },
     "operation_features": {
         "user_lookup_screen_name": {
@@ -60,7 +93,26 @@ _DEFAULT_MANIFEST = {
             "highlights_tweets_tab_ui_enabled": True,
             "responsive_web_twitter_article_notes_tab_enabled": True,
             "subscriptions_feature_can_gift_premium": True,
-        }
+        },
+        # UserByRestId refuses a request without these switches (verified live 2026-09-13).
+        "user_lookup_rest_id": {
+            "hidden_profile_subscriptions_enabled": True,
+            "hidden_profile_likes_enabled": True,
+            "subscriptions_verification_info_verified_since_enabled": True,
+            "subscriptions_verification_info_is_identity_verified_enabled": True,
+            "responsive_web_twitter_article_notes_tab_enabled": True,
+            "subscriptions_feature_can_gift_premium": True,
+            "highlights_tweets_tab_ui_enabled": True,
+        },
+        # UsersByRestIds needs the same switches except hidden_profile_likes_enabled.
+        "user_lookup_batch": {
+            "hidden_profile_subscriptions_enabled": True,
+            "subscriptions_verification_info_verified_since_enabled": True,
+            "subscriptions_verification_info_is_identity_verified_enabled": True,
+            "responsive_web_twitter_article_notes_tab_enabled": True,
+            "subscriptions_feature_can_gift_premium": True,
+            "highlights_tweets_tab_ui_enabled": True,
+        },
     },
     "operation_field_toggles": {
         "user_lookup_screen_name": {
@@ -68,6 +120,10 @@ _DEFAULT_MANIFEST = {
             "withAuxiliaryUserLabels": True,
         },
         "profile_timeline": {
+            "withArticlePlainText": False,
+        },
+        "tweet_detail": {
+            "withArticleRichContentState": True,
             "withArticlePlainText": False,
         },
     },
@@ -262,6 +318,15 @@ class ManifestProvider:
                     return parsed_cached
             return local_manifest
 
+    def get_manifest_sync(self) -> ManifestModel:
+        """The manifest as the engine reads it now, with no network call."""
+        live_cached = self.repo.get_cached("x-live-scrape")
+        if live_cached and isinstance(live_cached.get("manifest"), dict):
+            parsed = self._coerce_manifest(live_cached["manifest"])
+            if parsed is not None:
+                return parsed
+        return self._load_local_manifest()
+
     async def get_manifest(self) -> ManifestModel:
         local_manifest = self._load_local_manifest()
 
@@ -309,18 +374,19 @@ class ManifestProvider:
 
     # ── Live manifest scraping from X ───────────────────────────────────
 
-    def scrape_from_x_sync(self, *, strict: bool = False) -> ManifestModel:
+    def scrape_from_x_sync(self, *, strict: bool = False, force: bool = False) -> ManifestModel:
         """Fetch X's main.js bundle and extract fresh query IDs + features.
 
         Results are cached in the DB (same TTL as remote manifests).
         Falls back to local manifest on failure unless strict=True.
+        A user-triggered refresh passes force=True, so it never answers from the cache.
         """
 
         local_manifest = self._load_local_manifest()
 
         # Check cache first
         cache_key = "x-live-scrape"
-        cached = self.repo.get_cached(cache_key)
+        cached = None if force else self.repo.get_cached(cache_key)
         if cached and isinstance(cached.get("manifest"), dict):
             parsed = self._coerce_manifest(cached["manifest"])
             if parsed is not None:
@@ -361,6 +427,7 @@ def scrape_manifest_from_x(
     home_url: str = "https://x.com/home",
     impersonate: str = "chrome",
     timeout: int = 15,
+    chunk_fetch_max: int = 30,
 ) -> dict[str, Any]:
     """Scrape X's main.js to extract fresh query IDs and per-operation features.
 
@@ -411,6 +478,26 @@ def scrape_manifest_from_x(
         if "search_timeline" not in query_ids:
             raise ManifestError("Failed to extract SearchTimeline query ID from main.js")
 
+        # A lazy chunk of X holds some operations, for example Retweeters, so
+        # main.js lacks their ids. The page embeds the chunk maps; sweep them.
+        missing_ops = {
+            op_name: manifest_key
+            for op_name, manifest_key in _OPERATION_NAME_TO_KEY.items()
+            if manifest_key not in query_ids
+        }
+        if missing_ops:
+            _scrape_missing_from_chunks(
+                session,
+                resp.text,
+                missing_ops,
+                query_ids,
+                endpoints,
+                timeout=timeout,
+                max_fetches=chunk_fetch_max,
+            )
+
+        _fill_missing_operations(query_ids, endpoints)
+
         # Step 4: Build the union of all feature switches (for the global features dict).
         # Use the local default as the base, then add any new features we discovered.
         base_features = dict(_DEFAULT_MANIFEST.get("features", {}))
@@ -440,6 +527,94 @@ def scrape_manifest_from_x(
             session.close()
         except Exception:
             pass
+
+
+def _extract_chunk_script_entries(page_text: str) -> list[tuple[str, str]]:
+    """The chunk names and hashes that the page of X embeds.
+
+    The page holds two maps keyed by chunk id: the hash map, whose values are
+    exactly 7 or 16 lowercase hex digits, and the name map, whose values are
+    the readable chunk names. A chunk resolves to
+    https://abs.twimg.com/responsive-web/client-web/{name}.{hash}a.js
+    """
+
+    hash_map = {
+        m.group(1): m.group(2)
+        for m in re.finditer(r'(\d+):"([0-9a-f]{7}|[0-9a-f]{16})"', page_text)
+    }
+    name_map: dict[str, str] = {}
+    for m in re.finditer(r'(\d+):"([^"]+)"', page_text):
+        value = m.group(2)
+        if not re.fullmatch(r"[0-9a-f]{7}|[0-9a-f]{16}", value):
+            name_map[m.group(1)] = value
+    return [(name_map.get(cid, cid), h) for cid, h in hash_map.items()]
+
+
+# The sweep reads chunks with these names first, so the early exit fires soon.
+# Measured 2026-09-13: Retweeters sits in bundle.TweetEditHistory, found after
+# 9 fetches with this order against 964 chunks without it.
+_CHUNK_PRIORITY = re.compile(r"retweet|repost|edit|engage|activity|tweet|conversation", re.I)
+
+_CHUNK_BASE_URL = "https://abs.twimg.com/responsive-web/client-web"
+
+
+def _scrape_missing_from_chunks(
+    session: Any,
+    page_text: str,
+    missing_ops: dict[str, str],
+    query_ids: dict[str, str],
+    endpoints: dict[str, str],
+    *,
+    timeout: int,
+    max_fetches: int,
+) -> None:
+    """Find the ids of the operations that main.js lacks inside the lazy chunks."""
+
+    entries = _extract_chunk_script_entries(page_text)
+    entries.sort(key=lambda e: (0 if _CHUNK_PRIORITY.search(e[0]) else 1, e[0]))
+
+    fetched = 0
+    for name, chunk_hash in entries:
+        if not missing_ops or fetched >= max_fetches:
+            break
+        try:
+            resp = session.get(f"{_CHUNK_BASE_URL}/{name}.{chunk_hash}a.js", timeout=timeout)
+        except Exception:
+            continue
+        if int(getattr(resp, "status_code", 0) or 0) != 200:
+            continue
+        fetched += 1
+        text = resp.text
+        for op_name in list(missing_ops):
+            match = re.search(r'queryId:"([^"]+)",operationName:"' + re.escape(op_name) + r'"', text)
+            if match:
+                manifest_key = missing_ops.pop(op_name)
+                query_ids[manifest_key] = match.group(1)
+                endpoints.setdefault(
+                    manifest_key,
+                    _ENDPOINT_TEMPLATES.get(manifest_key)
+                    or _DEFAULT_MANIFEST["endpoints"].get(manifest_key, ""),
+                )
+    if missing_ops:
+        logger.info(
+            "The chunk sweep did not find %s within %d fetches; the bundled ids stay",
+            sorted(missing_ops),
+            max_fetches,
+        )
+
+
+def _fill_missing_operations(query_ids: dict[str, str], endpoints: dict[str, str]) -> None:
+    """Keep the bundled default id for an operation that the scrape did not find.
+
+    A lazy chunk of X holds some operations, for example Retweeters, so main.js
+    lacks their ids. Without this merge a live scrape would drop those endpoints.
+    """
+
+    for key, default_id in _DEFAULT_MANIFEST["query_ids"].items():
+        if key in query_ids:
+            continue
+        query_ids[key] = default_id
+        endpoints.setdefault(key, _ENDPOINT_TEMPLATES.get(key) or _DEFAULT_MANIFEST["endpoints"][key])
 
 
 def _extract_operation_features(

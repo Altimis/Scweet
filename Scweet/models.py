@@ -64,6 +64,11 @@ class ProfileTimelineRequest(BaseModel):
     max_account_switches: Optional[int] = None
     allow_anonymous: bool = False
     max_empty_pages: int = Field(default=1, ge=1)
+    # The manifest key of the timeline endpoint. The field arrived in 5.7.0 with a
+    # default that keeps the old behaviour.
+    timeline_operation: Literal[
+        "profile_timeline", "profile_media", "profile_timeline_with_replies"
+    ] = "profile_timeline"
 
 
 class FollowsRequest(BaseModel):
@@ -77,6 +82,36 @@ class FollowsRequest(BaseModel):
     initial_cursors: dict[str, str] = Field(default_factory=dict)
     cursor_handoff: bool = False
     max_account_switches: Optional[int] = None
+    max_empty_pages: int = Field(default=1, ge=1)
+    raw_json: bool = False
+
+
+class TweetLookupRequest(BaseModel):
+    tweet_ids: list[str] = Field(default_factory=list)
+    raw_json: bool = False
+
+
+class TweetRepliesRequest(BaseModel):
+    tweet_id: str
+    limit: Optional[int] = None
+    max_empty_pages: int = Field(default=1, ge=1)
+    raw_json: bool = False
+
+
+class RepostersRequest(BaseModel):
+    tweet_id: str
+    limit: Optional[int] = None
+    max_empty_pages: int = Field(default=1, ge=1)
+    raw_json: bool = False
+
+
+class UserIdsRequest(BaseModel):
+    user_ids: list[str] = Field(default_factory=list)
+
+
+class SearchUsersRequest(BaseModel):
+    query: str
+    limit: Optional[int] = None
     max_empty_pages: int = Field(default=1, ge=1)
     raw_json: bool = False
 

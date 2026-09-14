@@ -134,6 +134,12 @@ class Runner:
         self.profile_engine = self._resolve_engine(engines, "get_profiles")
         self.profile_timeline_engine = self._resolve_engine(engines, "get_profile_tweets")
         self.follows_engine = self._resolve_engine(engines, "get_follows")
+        self.tweet_lookup_engine = self._resolve_engine(engines, "get_tweet_info")
+        self.tweet_replies_engine = self._resolve_engine(engines, "get_tweet_replies")
+        self.reposters_engine = self._resolve_engine(engines, "get_reposters")
+        self.user_ids_engine = self._resolve_engine(engines, "get_users_by_ids")
+        self.search_users_engine = self._resolve_engine(engines, "search_users")
+        self.trending_engine = self._resolve_engine(engines, "get_trending")
         self.account_session_builder = _resolve(engines, "account_session_builder", "session_builder")
 
         self.queue_cls = InMemoryTaskQueue
@@ -576,6 +582,36 @@ class Runner:
         if self._supports_kwarg(get_follows_fn, "on_follows_page"):
             return await _maybe_await(get_follows_fn(follows_request, on_follows_page=on_follows_page))
         return await _maybe_await(get_follows_fn(follows_request))
+
+    async def run_tweet_info(self, tweet_lookup_request):
+        if self.tweet_lookup_engine is None:
+            raise EngineError("No engine available for run_tweet_info")
+        return await _maybe_await(self.tweet_lookup_engine.get_tweet_info(tweet_lookup_request))
+
+    async def run_tweet_replies(self, tweet_replies_request):
+        if self.tweet_replies_engine is None:
+            raise EngineError("No engine available for run_tweet_replies")
+        return await _maybe_await(self.tweet_replies_engine.get_tweet_replies(tweet_replies_request))
+
+    async def run_reposters(self, reposters_request):
+        if self.reposters_engine is None:
+            raise EngineError("No engine available for run_reposters")
+        return await _maybe_await(self.reposters_engine.get_reposters(reposters_request))
+
+    async def run_users_by_ids(self, user_ids_request):
+        if self.user_ids_engine is None:
+            raise EngineError("No engine available for run_users_by_ids")
+        return await _maybe_await(self.user_ids_engine.get_users_by_ids(user_ids_request))
+
+    async def run_search_users(self, search_users_request):
+        if self.search_users_engine is None:
+            raise EngineError("No engine available for run_search_users")
+        return await _maybe_await(self.search_users_engine.search_users(search_users_request))
+
+    async def run_trending(self):
+        if self.trending_engine is None:
+            raise EngineError("No engine available for run_trending")
+        return await _maybe_await(self.trending_engine.get_trending())
 
     async def _run_worker_with_heartbeat(
         self,
