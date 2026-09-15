@@ -96,7 +96,7 @@ This runs on Apify instead of your machine. Use the local library below when you
 
 ## Python Quickstart
 
-Use local Scweet when you want full control from Python or the CLI, with your own browser cookies, accounts, proxies, SQLite state, resume behavior, and output files.
+Three steps from nothing to tweets. One account, one call, one result.
 
 **1. Install**
 
@@ -106,28 +106,42 @@ pip install -U Scweet
 
 **2. Get your `auth_token`**
 
-Log into [x.com](https://x.com) → DevTools `F12` → **Application** → **Cookies** → `https://x.com` → copy the `auth_token` value.
+Log into [x.com](https://x.com) → DevTools `F12` → **Application** → **Cookies** → `https://x.com` → copy the `auth_token` value. That one value is all you need; Scweet builds the rest.
 
-Scweet auto-bootstraps the `ct0` CSRF token from `auth_token` alone — or use the [`cookies.json` format](#multiple-accounts--proxies) for multiple accounts at once.
+> Use a dedicated account, never your personal one.
 
 **3. Scrape**
 
 ```python
 from Scweet import Scweet
 
-# Credentials are stored in scweet_state.db automatically on first run.
-# A proxy is recommended. {session} gives each account its own proxy session on a rotating provider.
-s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user,session-{session}:pass@host:port")
+s = Scweet(auth_token="YOUR_AUTH_TOKEN")
+tweets = s.search("bitcoin", limit=100)
 
-# Search tweets — save to CSV (save_format="json" or "both" also works)
-tweets = s.search("bitcoin", since="2026-01-01", limit=500, save=True)
-
-# Reuse provisioned accounts on subsequent runs — no credentials needed
-s = Scweet(db_path="scweet_state.db")
-tweets = s.search("ethereum", limit=500, save=True)
+for tweet in tweets:
+    print(tweet["text"])
 ```
 
-> Always set `limit` — without it, scraping continues until your account's daily cap is hit.
+That is the whole first run. On the next run, reuse the same accounts with no credentials:
+
+```python
+s = Scweet()                       # reads the state file scweet_state.db
+tweets = s.search("ethereum", limit=100, save=True)   # save=True writes a CSV
+```
+
+> Always set `limit`. Without it, a run continues until the daily cap of the account.
+
+**Next:** [add a proxy](#proxies) for real volume, [use several accounts](#multiple-accounts--proxies), or read the [full documentation](DOCUMENTATION.md).
+
+### Proxies
+
+A proxy is optional for a small run and recommended for real volume, because many requests from one IP raise the risk to an account. Pass one URL for all accounts:
+
+```python
+s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@proxy.example.com:8000")
+```
+
+On a rotating provider, put `{session}` in the URL to give each account its own exit IP: `http://user,session-{session}:pass@proxy.example.com:8000`. For a proxy per account, see [Multiple accounts & proxies](#multiple-accounts--proxies).
 
 > All methods have async variants: `asearch()`, `aget_profile_tweets()`, `aget_followers()`, etc.
 
@@ -308,7 +322,7 @@ Never use your personal account — use dedicated accounts only. To reduce risk 
 No. Only publicly visible content is accessible.
 
 **Does it still work in 2025 / 2026?**
-Yes — last verified with the 5.5.0 release (2026-09-09) against X's current GraphQL API.
+Yes — last verified with the 5.8.0 release (2026-09-15) against X's current GraphQL API.
 
 </details>
 

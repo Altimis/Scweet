@@ -14,34 +14,25 @@ from Scweet import Scweet, ScweetConfig, ScweetDB
 
 ## Account Setup
 
-Scweet needs Twitter/X account cookies to make authenticated API requests.
+Scweet needs the cookie of a logged-in X account to make authenticated requests. The first path uses one
+value; the other forms below add scale.
 
-### Getting your cookies
+### The first path: one auth_token
 
-1. Log into Twitter/X in your browser
-2. Open DevTools (F12) > Application > Cookies > `https://x.com`
-3. Copy `auth_token` and `ct0` values
-
-### Option A: cookies.json (recommended)
-
-Create a `cookies.json` file:
-
-```json
-[
-  {
-    "username": "your_account",
-    "cookies": { "auth_token": "..." }
-  }
-]
-```
-
-`ct0` is optional — Scweet bootstraps it automatically from `auth_token`. You can include it if you have it:
+1. Log into X in your browser.
+2. Open DevTools (F12) > Application > Cookies > `https://x.com`.
+3. Copy the `auth_token` value.
 
 ```python
-s = Scweet(cookies_file="cookies.json")
+s = Scweet(auth_token="YOUR_AUTH_TOKEN")
 ```
 
-For multiple accounts with per-account proxies (enables concurrent scraping and reduces ban risk):
+That one value is enough. Scweet builds the `ct0` (CSRF) token from it. Use a dedicated account, never
+your personal one.
+
+### More accounts, more scale: cookies.json
+
+For several accounts, and for a proxy per account, list them in a `cookies.json` file:
 
 ```json
 [
@@ -50,15 +41,36 @@ For multiple accounts with per-account proxies (enables concurrent scraping and 
 ]
 ```
 
-### Option B: auth_token (quickest)
+```python
+s = Scweet(cookies_file="cookies.json")
+```
 
-If you just have an `auth_token`, Scweet will bootstrap `ct0` automatically:
+`ct0` is optional in each entry; Scweet bootstraps it from the `auth_token`. A file exported by a browser
+cookie extension (a list of `{"name": ..., "value": ...}` objects) is accepted too. The other credential
+forms — an inline `cookies=` dict, a colon-separated `accounts_file=`, and a `.env` file through
+`env_path=` — all reach the same store; see [Configuration reference](#configuration-reference).
+
+### The state file
+
+After the first run, the accounts live in a SQLite state file (`scweet_state.db` by default). A later run
+reuses them with no credential:
 
 ```python
-s = Scweet(auth_token="YOUR_AUTH_TOKEN")
+s = Scweet()                 # reads scweet_state.db
+tweets = s.search("ethereum", limit=100)
+```
 
-# Add a global proxy directly — no ScweetConfig needed
-s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@host:port")
+Pass `db_path="path/to/state.db"` to choose the file. `db_path` is the location of that state, not a
+place where the tweets go; a run returns the tweets and, with `save=True`, writes them to the output
+directory.
+
+### A global proxy
+
+```python
+s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@proxy.example.com:8000")
+
+# Or through ScweetConfig — the same effect
+s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@proxy.example.com:8000")
 ```
 
 ### Proxy modes
