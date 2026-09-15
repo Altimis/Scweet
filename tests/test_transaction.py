@@ -88,6 +88,9 @@ def test_transaction_provider_returns_none_when_ondemand_url_unavailable(monkeyp
         session_factory=lambda: session,
         prefer_curl_cffi=False,
         refresh_ttl_s=900,
+        # One build attempt, so this test covers the ondemand fallback only. The
+        # retry of a failed build has its own test in test_transaction_id_guard.py.
+        init_attempts=1,
     )
 
     tx_id = provider.generate(method="GET", path="/i/api/graphql/qid/SearchTimeline")

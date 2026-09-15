@@ -59,9 +59,13 @@ class TransactionIdProvider:
         impersonate: str = DEFAULT_IMPERSONATE,
         timeout=DEFAULT_HTTP_TIMEOUT,
         cookies: Optional[dict] = None,
+        init_attempts: int = 3,
+        init_backoff_s: float = 1.5,
     ):
         self.enabled = bool(enabled)
         self.refresh_ttl_s = max(60, int(refresh_ttl_s))
+        self.init_attempts = max(1, int(init_attempts))
+        self.init_backoff_s = max(0.0, float(init_backoff_s))
         self.home_url = home_url
         self.prefer_curl_cffi = bool(prefer_curl_cffi)
         self.impersonate = impersonate
@@ -81,6 +85,7 @@ class TransactionIdProvider:
         self._static_tx_id = os.getenv("SCWEET_X_CLIENT_TRANSACTION_ID")
         self._client_transaction = None
         self._client_ready_at = 0.0
+        self._last_failure_at = 0.0
         self._deps_checked = False
         self._deps_available = False
 
@@ -192,6 +197,46 @@ class TransactionIdProvider:
                 except Exception:
                     pass
 
+    def _rebuild_with_retries(self) -> None:
+        # A failed build must never stamp the TTL: the old code did, so one bad
+        # startup answered None for the next 6 hours while every request took a 404.
+        now_ts = time.time()
+        if (
+            self._client_transaction is None
+            and self._last_failure_at
+            and (now_ts - self._last_failure_at) < self.init_backoff_s
+        ):
+            return
+        for attempt in range(1, self.init_attempts + 1):
+            built = self._build_client_transaction()
+            if built is not None:
+                self._client_transaction = built
+                self._client_ready_at = time.time()
+                self._last_failure_at = 0.0
+                return
+            if attempt < self.init_attempts:
+                time.sleep(self.init_backoff_s * attempt)
+        # A stale generator that works beats none, so a TTL rebuild keeps the old one.
+        self._last_failure_at = time.time()
+        if self._client_transaction is None:
+            logger.warning(
+                "Transaction-id build failed after %d attempts; the next request retries. "
+                "A request without the x-client-transaction-id header answers 404.",
+                self.init_attempts,
+            )
+
+    def refresh(self) -> bool:
+        """Discard the generator and build a new one now. Returns the readiness."""
+        if self._static_tx_id:
+            return True
+        if not self.enabled:
+            return False
+        self._client_transaction = None
+        self._client_ready_at = 0.0
+        self._last_failure_at = 0.0
+        self._rebuild_with_retries()
+        return self._client_transaction is not None
+
     def generate(self, *, method: str, path: str) -> Optional[str]:
         if self._static_tx_id:
             return str(self._static_tx_id)
@@ -201,8 +246,7 @@ class TransactionIdProvider:
         now_ts = time.time()
         expired = (now_ts - self._client_ready_at) >= self.refresh_ttl_s
         if self._client_transaction is None or expired:
-            self._client_transaction = self._build_client_transaction()
-            self._client_ready_at = now_ts
+            self._rebuild_with_retries()
 
         if self._client_transaction is None:
             return None

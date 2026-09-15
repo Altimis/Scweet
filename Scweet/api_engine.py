@@ -214,6 +214,7 @@ class ApiEngine:
         self.http_mode = configured_mode
         self.session_factory = session_factory or self._build_default_session_factory(self.http_mode)
         self.transaction_id_provider = transaction_id_provider
+        self._warned_missing_tx_id = False
         self._logged_http_mode_selection: set[tuple[str, str]] = set()
 
     def _build_default_session_factory(self, http_mode: str):
@@ -2964,22 +2965,47 @@ class ApiEngine:
         owns_session = session is None
         account_label = self._account_label(account_context)
         try:
-            request_headers: dict[str, str] = {}
-            tx_id = await self._build_transaction_id(method="GET", url=url)
-            if tx_id:
-                request_headers["X-Client-Transaction-Id"] = tx_id
+            # X answers 404 for a GraphQL request without the x-client-transaction-id
+            # header, and that 404 describes the request and never the account. So a
+            # 404 rebuilds the id and retries on the same session before it returns.
+            retries_404 = self._coerce_positive_int(_cfg(self.config, "request_404_retries", 1)) or 0
+            attempt = 0
+            while True:
+                request_headers: dict[str, str] = {}
+                tx_id = await self._build_transaction_id(method="GET", url=url)
+                if tx_id:
+                    request_headers["X-Client-Transaction-Id"] = tx_id
+                elif not self._warned_missing_tx_id:
+                    self._warned_missing_tx_id = True
+                    logger.warning(
+                        "The request carries no x-client-transaction-id header; "
+                        "X answers 404 for such a request. The build of the id failed."
+                    )
 
-            response = await self._session_get(
-                active_session,
-                url,
-                params=params,
-                timeout=timeout_s,
-                allow_redirects=True,
-                headers=request_headers if request_headers else None,
-            )
-            status = int(getattr(response, "status_code", 0) or 0)
-            headers = dict(getattr(response, "headers", {}) or {})
-            text_snippet = str(getattr(response, "text", "") or "")[:200]
+                response = await self._session_get(
+                    active_session,
+                    url,
+                    params=params,
+                    timeout=timeout_s,
+                    allow_redirects=True,
+                    headers=request_headers if request_headers else None,
+                )
+                status = int(getattr(response, "status_code", 0) or 0)
+                headers = dict(getattr(response, "headers", {}) or {})
+                text_snippet = str(getattr(response, "text", "") or "")[:200]
+
+                if status == 404 and attempt < retries_404:
+                    attempt += 1
+                    refreshed = await self._refresh_transaction_id()
+                    logger.warning(
+                        "API request endpoint=%s answered 404 (had_header=%s); rebuilt the "
+                        "transaction id (ready=%s) and retrying on the same account",
+                        url,
+                        bool(tx_id),
+                        refreshed,
+                    )
+                    continue
+                break
 
             if status != 200:
                 logger.info(
@@ -3108,8 +3134,26 @@ class ApiEngine:
             if inspect.isawaitable(value):
                 return await value
             return value
-        except Exception:
+        except Exception as exc:
+            # A silent None here once hid the cause of a whole failed run.
+            logger.warning("Transaction-id lookup failed: %s: %s", type(exc).__name__, exc)
             return None
+
+    async def _refresh_transaction_id(self) -> bool:
+        provider = self.transaction_id_provider
+        if provider is None or not hasattr(provider, "refresh"):
+            return False
+        try:
+            refresh = getattr(provider, "refresh")
+            if inspect.iscoroutinefunction(refresh):
+                return bool(await refresh())
+            value = await self._call_in_thread(refresh)
+            if inspect.isawaitable(value):
+                value = await value
+            return bool(value)
+        except Exception as exc:
+            logger.warning("Transaction-id refresh failed: %s: %s", type(exc).__name__, exc)
+            return False
 
     async def _call_in_thread(self, func, *args, **kwargs):
         loop = asyncio.get_running_loop()

@@ -14,35 +14,54 @@ logger = logging.getLogger(__name__)
 
 
 class Scweet:
-    """Scweet v5 client — simple API-only Twitter/X scraper.
+    """Scweet v5 client — an API-only reader of X/Twitter.
 
-    Credential options (pick one):
-        s = Scweet(cookies_file="cookies.json")       # path to cookies JSON
-        s = Scweet(auth_token="abc123")               # single auth_token cookie
-        s = Scweet(cookies={"auth_token": "...", "ct0": "..."})  # inline dict
-        s = Scweet(env_path=".env")                   # .env file with AUTH_TOKEN/CT0
-        s = Scweet(db_path="existing.db")             # reuse a pre-populated state DB
+    The first path uses one value. Copy the ``auth_token`` cookie of a logged-in
+    account and pass it; Scweet builds the rest:
+
+        s = Scweet(auth_token="abc123")
+
+    For several accounts, or a proxy per account, list them in a file:
+
+        s = Scweet(cookies_file="cookies.json")
+
+    After the first run the accounts live in a state file, so a later run needs
+    no credential:
+
+        s = Scweet()   # reads scweet_state.db
 
     Args:
-        cookies_file: Path to a JSON file containing account cookies.
-        auth_token: Single auth_token cookie value. The ct0 (CSRF) token will be
-            bootstrapped automatically via a request to x.com.
-        cookies: Inline cookies dict, list of account dicts, or JSON string.
-        accounts_file: Path to a colon-separated accounts.txt file.
-        env_path: Path to a .env file with AUTH_TOKEN, CT0, USERNAME, etc.
-        db_path: Path to the SQLite state file. The constructor arg always takes
-            precedence over any db_path set in ``config``. Default: scweet_state.db.
-        proxy: Proxy URL applied to all accounts, e.g. "http://user:pass@host:port".
-            Takes precedence over any proxy set in ``config``. For per-account
-            proxies, embed the ``proxy`` field in each entry of your cookies.json.
-        manifest_scrape_on_init: If True, scrape X's main.js bundle at startup
-            to fetch fresh GraphQL query IDs and feature flags. Keeps requests
-            aligned with X's current schema without waiting for a library update.
+        auth_token: The ``auth_token`` cookie of one account. Scweet bootstraps
+            the ct0 (CSRF) token from it with a request to x.com. The shortest
+            path to a first result.
+        cookies_file: Path to a JSON file of accounts. It accepts a list of
+            account records, an export of a browser cookie extension (a list of
+            ``{"name": ..., "value": ...}`` objects), or a raw cookie mapping.
+            Use this for several accounts or a proxy per account.
+        cookies: The same shapes as ``cookies_file``, passed inline as a dict,
+            a list, or a JSON string.
+        accounts_file: Path to a colon-separated ``accounts.txt``
+            (``username:password:email:email_password:2fa:auth_token``).
+        env_path: Path to a ``.env`` file with AUTH_TOKEN, CT0, USERNAME.
+        db_path: Path to the SQLite state file that holds the accounts between
+            runs. It is the location of that state, not where the tweets go; a
+            run returns the tweets and, with ``save=True``, writes them to the
+            output directory. The constructor value wins over ``config``.
+            Default: scweet_state.db.
+        proxy: A proxy URL for every account, e.g.
+            "http://user:pass@proxy.example.com:8000". Optional for a small run,
+            recommended for volume. Put ``{session}`` in the URL for one exit IP
+            per account. For a proxy per account, set it in each cookies.json
+            entry. The constructor value wins over ``config``.
+        manifest_scrape_on_init: If True, read fresh GraphQL query IDs from the
+            bundle of X at startup, so a run survives a rotation of the IDs
+            without a library update. Or call ``refresh_manifest()`` at any time.
             Default: False.
-        config: Optional ScweetConfig for advanced settings.
-        provision: If True (default), import credentials into the DB on init.
-            Set to False to skip credential import and use only accounts that
-            already exist in the database (useful when the DB is pre-populated).
+        config: A ScweetConfig for the advanced settings.
+        provision: If True (default), import the credentials into the state file
+            on init. Set to False to use only the accounts already in the file,
+            for example when it is pre-populated. It does not buy or create
+            accounts.
     """
 
     def __init__(
@@ -166,7 +185,9 @@ class Scweet:
                     if imported == 0:
                         warnings.warn(
                             "Account provisioning produced no usable accounts. "
-                            "Check your credentials (auth_token, ct0/CSRF).",
+                            "The auth_token is usually expired or wrong. "
+                            "Check the credentials (auth_token, ct0/CSRF); the first "
+                            "call will fail until one account is usable.",
                             RuntimeWarning,
                             stacklevel=3,
                         )
@@ -195,7 +216,12 @@ class Scweet:
             except Exception:
                 logger.exception("Manifest refresh failed; continuing with cached manifest")
 
-        tx_kwargs: dict[str, Any] = {"proxy": cfg.proxy, "user_agent": cfg.api_user_agent}
+        tx_kwargs: dict[str, Any] = {
+            "proxy": cfg.proxy,
+            "user_agent": cfg.api_user_agent,
+            "init_attempts": cfg.transaction_init_attempts,
+            "init_backoff_s": cfg.transaction_init_backoff_s,
+        }
         if cfg.api_http_impersonate:
             tx_kwargs["impersonate"] = cfg.api_http_impersonate
         tx_cookies = self._get_cookies_for_transaction_init()
@@ -835,20 +861,14 @@ class Scweet:
         ids = [str(u).strip() for u in (user_ids or []) if str(u).strip()]
         if ids:
             ids_response = await self._runner.run_users_by_ids(UserIdsRequest(user_ids=ids))
-            id_items = self._extract_items(ids_response)
-            status = None
-            if isinstance(ids_response, dict):
-                status = ids_response.get("status_code")
-            if not id_items and status not in (None, 200):
-                # X answers 403 with an HTML page for this lookup on some
-                # connections. A silent empty list would hide that refusal.
-                from .exceptions import EngineError
-
-                raise EngineError(
-                    f"X refused the id lookup (HTTP {status}). "
-                    "The block is per connection and usually short. Retry, "
-                    "or look the profiles up by username instead."
-                )
+            # X answers 403 with an HTML page for this lookup on some
+            # connections. A silent empty list would hide that refusal.
+            id_items = self._extract_items_or_raise(
+                ids_response,
+                operation="the id lookup",
+                hint="The block is per connection and usually short. Retry, "
+                "or look the profiles up by username instead.",
+            )
             items.extend(id_items)
 
         if save:
@@ -895,7 +915,11 @@ class Scweet:
         request = TweetLookupRequest(tweet_ids=ids, raw_json=raw_json)
 
         response = await self._runner.run_tweet_info(request)
-        items = self._extract_items(response)
+        items = self._extract_items_or_raise(
+            response,
+            operation="the tweet lookup",
+            hint="A deleted id gives no row and no error; a refusal raises. Retry.",
+        )
 
         if save:
             name = save_name or self._build_save_name("tweet_info")
@@ -1075,7 +1099,9 @@ class Scweet:
     async def aget_trending(self) -> list[dict]:
         """Async variant of :meth:`get_trending`."""
         response = await self._runner.run_trending()
-        return self._extract_items(response)
+        return self._extract_items_or_raise(
+            response, operation="the trends", hint="Retry; the failure is usually short."
+        )
 
     # ── Output helpers ──────────────────────────────────────────────────
 
@@ -1189,6 +1215,22 @@ class Scweet:
         if isinstance(items, list):
             return items
         return []
+
+    @staticmethod
+    def _extract_items_or_raise(response: Any, *, operation: str, hint: str = "") -> list[dict]:
+        """The items of a single-shot answer, or an error that names the refusal.
+
+        An empty list with a non-200 status is a network failure or a refusal
+        of X, and a silent empty list reads as "this data does not exist".
+        """
+        items = Scweet._extract_items(response)
+        status = response.get("status_code") if isinstance(response, dict) else None
+        if not items and status not in (None, 200):
+            from .exceptions import EngineError
+
+            message = f"X refused {operation} (HTTP {status}), and no rows arrived."
+            raise EngineError(message + (f" {hint}" if hint else " Retry."))
+        return items
 
     @staticmethod
     def _extract_follows_items(response: Any) -> list[dict]:

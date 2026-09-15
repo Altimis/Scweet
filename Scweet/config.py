@@ -33,7 +33,8 @@ class ScweetConfig(BaseModel):
     # Rate limiting
     daily_requests_limit: int = Field(default=300, ge=1)
     daily_tweets_limit: int = Field(default=6000, ge=1)
-    # Not 1, because X sends a stray empty page mid-chain while results remain, and 1 loses the rest.
+    # The count of empty pages in a row that ends a chain. Not 1, because X sends a stray empty page
+    # mid-chain while results remain, and 1 loses the rest.
     max_empty_pages: int = Field(default=3, ge=1)
     api_page_size: int = Field(default=20, ge=1, le=100)
     # X counts requests per account per window; measured 2026-08-31: 50 allowed, request 51 gave 429.
@@ -89,10 +90,19 @@ class ScweetConfig(BaseModel):
     # The count of trend rows that one ExplorePage request asks for.
     trending_count: int = Field(default=20, ge=1)
 
-    # Manifest
+    # The transaction id. X answers 404 for a GraphQL request without the
+    # x-client-transaction-id header, and that 404 describes the request, never
+    # the account. The build needs a live page of X, so it retries.
+    transaction_init_attempts: int = Field(default=3, ge=1)
+    transaction_init_backoff_s: float = Field(default=1.5, ge=0.0)
+    # A 404 rebuilds the id and retries once on the same account before any cooldown.
+    request_404_retries: int = Field(default=1, ge=0)
+
+    # Manifest: the GraphQL query ids. X rotates them, and a stale id answers 404.
     manifest_url: Optional[str] = None
     manifest_ttl_s: int = Field(default=3600, ge=1)
     manifest_update_on_init: bool = False
+    # Read fresh query ids from the bundle of X at startup. Or call refresh_manifest() at any time.
     manifest_scrape_on_init: bool = False
 
     @field_validator("api_http_mode", mode="before")
