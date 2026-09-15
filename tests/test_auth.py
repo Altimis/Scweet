@@ -242,7 +242,9 @@ def test_import_accounts_to_db_upserts_from_txt_and_cookies_json(tmp_path):
         bootstrap_fn=lambda *_args, **_kwargs: None,
     )
 
-    assert processed == 4
+    # The return is the count of usable accounts, not of upsert calls. With the
+    # bootstrap stubbed to fail, only `shared` holds a ct0, so only it is usable.
+    assert processed == 1
 
     rows = _read_account_rows(db_path)
     assert [row["username"] for row in rows] == ["cookie_only", "shared", "solo"]
@@ -357,7 +359,8 @@ def test_import_accounts_to_db_marks_missing_auth_material_unusable(tmp_path):
     accounts_file = _write(tmp_path / "accounts.txt", "broken:::::")
 
     processed = import_accounts_to_db(db_path, accounts_file=str(accounts_file), bootstrap_fn=lambda *_a, **_k: None)
-    assert processed == 1
+    # The record enters the store as unusable, so the count of usable accounts is 0.
+    assert processed == 0
 
     rows = _read_account_rows(db_path)
     assert len(rows) == 1

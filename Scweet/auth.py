@@ -639,53 +639,10 @@ def load_cookies_json(path: str) -> list[dict]:
             raise
         payload = [{"cookies": cookies}]
 
-    raw_records: list[Any] = []
-
-    if isinstance(payload, list):
-        raw_records = payload
-    elif isinstance(payload, dict):
-        if isinstance(payload.get("accounts"), list):
-            raw_records = payload["accounts"]
-        elif _looks_like_cookie_mapping_dict(payload):
-            raw_records = [{"cookies": payload}]
-        elif any(
-            key in payload
-            for key in (
-                "username",
-                "user",
-                "handle",
-                "auth_token",
-                "authToken",
-                "token",
-                "cookies",
-                "cookies_json",
-            )
-        ):
-            raw_records = [payload]
-        else:
-            for key, value in payload.items():
-                if isinstance(value, dict):
-                    if _looks_like_cookie_mapping_dict(value):
-                        raw_records.append({"username": key, "cookies": value})
-                    else:
-                        item = dict(value)
-                        item.setdefault("username", key)
-                        raw_records.append(item)
-                else:
-                    raw_records.append({"username": key, "cookies": value})
-
-    records: list[dict[str, Any]] = []
-    for item in raw_records:
-        if isinstance(item, dict):
-            source = item
-        else:
-            source = {"cookies": item}
-
-        normalized = normalize_account_record(source)
-        if normalized.get("username"):
-            records.append(normalized)
-
-    return records
+    # One loader for a file and an inline payload. This function once held its
+    # own shape walk, so a browser-extension export worked inline and gave []
+    # from a file. The same data must give the same accounts from both.
+    return load_cookies_payload(payload)
 
 
 def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30, *, proxy: Any = None) -> Optional[dict]:
@@ -908,24 +865,35 @@ def import_accounts_to_db(
                 normalized["status"] = 1
         return normalized
 
+    usable = 0
+
+    def _upsert_and_count(record: dict) -> None:
+        nonlocal processed, usable
+        enriched = _normalize_and_enrich(record)
+        repo.upsert_account(enriched)
+        processed += 1
+        # A record without auth material enters the store as unusable. The
+        # count of the processed records therefore says nothing to a caller,
+        # and a caller that reads it warned about nothing while 0 accounts
+        # could work.
+        reason = _as_str(enriched.get("cooldown_reason"))
+        if not (reason and reason.startswith("unusable:")):
+            usable += 1
+
     if accounts_file:
         for record in load_accounts_txt(accounts_file):
-            repo.upsert_account(_normalize_and_enrich(record))
-            processed += 1
+            _upsert_and_count(record)
 
     if cookies_file:
         for record in load_cookies_json(cookies_file):
-            repo.upsert_account(_normalize_and_enrich(record))
-            processed += 1
+            _upsert_and_count(record)
 
     if env_path:
         for record in load_env_account(env_path):
-            repo.upsert_account(_normalize_and_enrich(record))
-            processed += 1
+            _upsert_and_count(record)
 
     if cookies_payload is not None:
         for record in load_cookies_payload(cookies_payload):
-            repo.upsert_account(_normalize_and_enrich(record))
-            processed += 1
+            _upsert_and_count(record)
 
-    return processed
+    return usable
