@@ -5,7 +5,7 @@
 <p align="center">
   <strong>Scrape Twitter / X without the official API.</strong>
   <br>
-  Hosted on Apify with no cookies or proxies, or run locally with Python and CLI.
+  Tweets, profiles, followers and trends — from one <code>pip install</code> and one cookie.
 </p>
 
 <p align="center">
@@ -46,9 +46,19 @@
 
 
 ---
-<p align="center">
-<strong>Scrape tweets, profile timelines, followers and more from Twitter/X. Use the hosted Apify Actor when you do not want to manage cookies or proxies, or run locally with your own browser cookies and account pool.</strong>
-</p>
+
+```python
+from Scweet import Scweet
+
+s = Scweet(auth_token="YOUR_AUTH_TOKEN")
+tweets = s.search("bitcoin", limit=100)
+```
+
+**Three reasons people keep it:**
+
+- **Your runs finish.** Interval splitting, cursor recovery and per-account pacing mean one bad page, one stale query id or one tired account does not end the job. In our own test suite of repeated multi-hundred-tweet orders, every run completed.
+- **It protects your accounts.** Accounts are the expensive part. Scweet paces each one to X's real rate-limit window and rests it at a safety margin *before* X pushes back — instead of squeezing out the last request and paying for it later.
+- **Protection costs you no speed.** Several accounts work in parallel, each starting with a full request budget, so a paced run is still a fast run.
 
 ---
 
@@ -248,19 +258,26 @@ s = Scweet(cookies_file="cookies.json")  # proxies are read from the file, one p
 
 ## Why Scweet?
 
-| | twint | snscrape | twscrape | **Scweet** |
-|---|---|---|---|---|
-| **Works in 2026** | ❌ unmaintained | ❌ broken | ✅ | ✅ |
-| Cookie / token auth | ❌ | ❌ | ✅ | ✅ |
-| Multi-account pooling | ❌ | ❌ | ✅ | ✅ |
-| Proxy support | ❌ | ❌ | ✅ | ✅ |
-| Resume interrupted scrapes | ❌ | ❌ | ❌ | ✅ |
-| Built-in CSV / JSON output | ✅ | ✅ | ❌ | ✅ |
-| Sync + async API | ❌ | ❌ | Async only | ✅ both |
-| Hosted, no-setup option | ❌ | ❌ | ❌ | ✅ Apify |
-| Active maintenance | ❌ | ❌ | ⚠️ | ✅ |
+Anything can fetch one page of X. The hard part is the tenth thousand, on a Tuesday, when a cookie dies mid-run.
 
-[twint](https://github.com/twintproject/twint) has been unmaintained since 2023. [snscrape](https://github.com/JustAnotherArchivist/snscrape) broke after X's backend changes. [twscrape](https://github.com/vladkens/twscrape) is the closest active alternative — worth knowing, but async-only, no built-in file output, and no resume support.
+**Built for runs that have to finish**
+- A wide date range splits into intervals worked in parallel, so one truncated cursor chain does not cap the whole job.
+- A chain that X cuts short is continued from the oldest tweet seen, not abandoned.
+- Interrupted? `resume=True` picks up from the SQLite checkpoint instead of starting over.
+
+**Built to keep your accounts alive**
+- Every account is paced to X's real rate-limit window, and rested at a safety margin *before* X complains.
+- A failure is diagnosed before it is punished: a bad request, a stale query id and a genuinely dead session get different treatment — so a routine error never costs you an account for a month.
+- Locked, suspended, rate-limited and transient states are tracked per account in SQLite, with cooldowns that expire on their own.
+
+**Built to keep working after X changes**
+- X rotates its internal GraphQL ids without warning. Scweet reads fresh ids straight from X's own bundles — at startup, or on demand with `refresh_manifest()`.
+
+**Built to be pleasant**
+- 12 read operations, one consistent row shape, sync **and** async, a real CLI, and CSV/JSON output built in.
+- 25 fields per tweet, including view counts, quotes, bookmarks, language and the nested quoted or retweeted post.
+
+> Also on [twint](https://github.com/twintproject/twint) and [snscrape](https://github.com/JustAnotherArchivist/snscrape): both are unmaintained and no longer work against X's current backend. If you are migrating from either, Scweet covers the same ground and more.
 
 ---
 
