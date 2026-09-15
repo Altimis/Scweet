@@ -16,6 +16,7 @@ This release removes the silent failures that a user could meet, makes the first
 ### Added
 
 - **Python 3.13 and 3.14 are supported and tested.** The test suite runs on Python 3.9 through 3.14.
+- **The package ships `py.typed`.** A type checker of a project that uses Scweet now reads the type hints of the library.
 - New `ScweetConfig` fields for the request signature: `transaction_init_attempts` (3), `transaction_init_backoff_s` (1.5), and `request_404_retries` (1). A `TransactionIdProvider.refresh()` method rebuilds the header on demand.
 
 ### Changed
