@@ -11,10 +11,10 @@ come before a feature.
 ## Map
 
 - `Scweet/` — the importable package. Every module is flat inside it, with no sub-package.
-- `tests/` — 42 files and 439 tests. A pytest marker selects the level. `tests/fixtures/` holds the
+- `tests/` — 45 files and 452 tests. A pytest marker selects the level. `tests/fixtures/` holds the
   captured answers of X.
 - `examples/` — short scripts that a reader can run.
-- `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.12.
+- `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.14.
 
 ## The shape of a request
 
@@ -43,6 +43,12 @@ Scweet.search()            the public method, in client.py
   about 297,000 bytes with both, without a cookie. The scrape of the manifest and the bootstrap of the
   transaction id each need one of those markers. Without the transaction id, X answers 404 with an empty body
   for every request from every account, and that 404 describes our request and never the credentials.
+- **A request never leaves without the transaction id, and a 404 rebuilds it before any cooldown.**
+  `TransactionIdProvider.generate` retries the build with a backoff, because the build needs a live page
+  of X and a flaky network drops it. `api_engine._graphql_get` retries a 404 once after a
+  `refresh()` of the id, on the same account. `cooldown.py` spends the account only when a request with a
+  valid header still answers 404. Measured 2026-09-14: with no header the fill was 0%; with it, 102%.
+  A silent `None` from the builder once hid the cause of a whole failed run.
 - **Each path that builds a session fills the `{session}` placeholder of the proxy.** `account_session.py`
   holds `fill_proxy_session_placeholder`, and the check on lease, the bootstrap of the transaction id, and the
   bootstrap of the cookies each call it. A literal `{session}` is not a valid session name: measured
