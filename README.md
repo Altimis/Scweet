@@ -30,6 +30,9 @@
   <a href="https://pypi.org/project/scweet/">
     <img alt="PyPI Version" src="https://img.shields.io/pypi/v/scweet.svg">
   </a>
+  <a href="https://pypi.org/project/scweet/">
+    <img alt="Python versions" src="https://img.shields.io/pypi/pyversions/scweet.svg">
+  </a>
   <a href="https://pepy.tech/projects/scweet">
     <img alt="PyPI Downloads" src="https://static.pepy.tech/badge/scweet/month">
   </a>
