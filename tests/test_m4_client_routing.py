@@ -344,3 +344,52 @@ def test_an_id_lookup_that_x_refuses_raises_and_never_returns_an_empty_list(tmp_
     capture.run_users_by_ids = _refused
     with pytest.raises(EngineError, match="403"):
         asyncio.run(client.aget_user_info(user_ids=["44196397"]))
+
+
+def test_a_tweet_lookup_that_fails_in_transport_raises_and_never_returns_empty(tmp_path):
+    """Measured 2026-09-14: a 599 transport answer gave [] with no error, so a
+    caller read "these tweets do not exist" from a network failure."""
+    import asyncio
+
+    import pytest
+
+    from Scweet.exceptions import EngineError
+
+    client, capture = _client_with_runner(tmp_path)
+
+    async def _refused(request):
+        return {"items": [], "status_code": 599, "meta": {}}
+
+    capture.run_tweet_info = _refused
+    with pytest.raises(EngineError, match="599"):
+        asyncio.run(client.aget_tweet_info(["123"]))
+
+
+def test_trends_that_fail_in_transport_raise_and_never_return_empty(tmp_path):
+    import asyncio
+
+    import pytest
+
+    from Scweet.exceptions import EngineError
+
+    client, capture = _client_with_runner(tmp_path)
+
+    async def _refused():
+        return {"items": [], "status_code": 503, "meta": {}}
+
+    capture.run_trending = _refused
+    with pytest.raises(EngineError, match="503"):
+        asyncio.run(client.aget_trending())
+
+
+def test_a_lookup_with_no_rows_and_status_200_stays_an_empty_list(tmp_path):
+    """A deleted id gives no row and no error: that behaviour must survive."""
+    import asyncio
+
+    client, capture = _client_with_runner(tmp_path)
+
+    async def _empty_ok(request):
+        return {"items": [], "status_code": 200, "meta": {}}
+
+    capture.run_tweet_info = _empty_ok
+    assert asyncio.run(client.aget_tweet_info(["999"])) == []
