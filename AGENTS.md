@@ -83,8 +83,9 @@ Scweet.search()            the public method, in client.py
   with a bounce to `https://x.com/account/access`. Captured 2026-09-07. `ACCOUNT_LOCKED_CODES` maps that code
   to status 423, and `cooldown.py` rests the account for `locked_cooldown_s` (1 hour) with the reason `locked`,
   because only the user can clear the lock. Without that branch the answer counts as a successful empty page.
-- **The package ships no `py.typed`.** Therefore mypy and pyright see no type from Scweet, whatever the
-  annotations in the source say.
+- **The package ships `py.typed` since 5.8.0.** A type checker of a project that uses Scweet therefore
+  reads the annotations of the library. Keep the marker in `package_data` of `setup.py`, or the wheel
+  loses it silently.
 
 ## Commands
 
