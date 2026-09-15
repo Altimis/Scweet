@@ -2,7 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
-## [5.7.0] - 2026-09-13
+## [5.8.0] - 2026-09-15
+
+This release removes the silent failures that a user could meet, makes the first run obvious, and adds the newest versions of Python. Every change is additive: no method, no field and no default of 5.7.x changes.
+
+### Fixed
+
+- **A run no longer fails silently when the request signature cannot build.** X answers HTTP 404 for a GraphQL request without the `x-client-transaction-id` header, and that 404 describes the request, not the account. The build of that header needs a live page of X; a transient network failure of that page left the header absent, and the run then rested the accounts one by one until it ended with no clear cause. Now the build retries with a backoff, a 404 rebuilds the header and retries the request on the same account before any cooldown, and a request that still cannot carry the header logs the reason.
+- **A wrong or expired `auth_token` now reports at once.** Before, the constructor gave no warning and the first call failed with a message about cooldowns. The provisioning now counts the usable accounts, and the constructor warns when none is usable and names the likely cause.
+- **A `cookies_file` accepts every shape that an inline `cookies=` accepts**, including a file exported by a browser cookie extension. The two paths now share one loader, so the same data gives the same accounts.
+- **`get_tweet_info`, `get_trending` and `get_user_info(user_ids=...)` raise a clear error on a refusal.** A missing or deleted item still gives no row and no error, but a transport failure or a non-200 status no longer returns a silent empty list.
+
+### Added
+
+- **Python 3.13 and 3.14 are supported and tested.** The test suite runs on Python 3.9 through 3.14.
+- New `ScweetConfig` fields for the request signature: `transaction_init_attempts` (3), `transaction_init_backoff_s` (1.5), and `request_404_retries` (1). A `TransactionIdProvider.refresh()` method rebuilds the header on demand.
+
+### Changed
+
+- The README quickstart and the documentation teach the same first path: one `auth_token`, one call, one result. The quickstart code block runs as written, with no placeholder proxy. A test pins the two documents to the same first path.
+
+## [5.7.0] - 2026-09-14
 
 The read surface grows from 6 operations to 13, and the query-id refresh now covers every one of them. Every change is additive.
 
