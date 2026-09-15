@@ -1,133 +1,125 @@
 """
-Scweet v5 — sync example.
+Scweet — sync example.
 
-Demonstrates:
-- Initializing Scweet with cookies
-- Searching tweets (with and without structured filters)
-- Profile tweets, followers, following, user info
-- Saving results to disk
-- Inspecting DB state via ScweetDB
+The first path uses one value: the auth_token cookie of a logged-in account.
+Copy it from your browser (DevTools > Application > Cookies > x.com), and Scweet
+builds the rest. Replace the placeholder before you run.
 
-Replace placeholders with your real cookies before running.
+It shows: search and its filters, tweets by id, replies and reposters, profile
+tweets and media, followers and following, user info by handle and by id, a
+people search, the trends, and the state of the pool.
 """
 
 from __future__ import annotations
 
 import logging
 
-from Scweet import Scweet, ScweetConfig, ScweetDB
+from Scweet import Scweet, ScweetDB
 
-# Optional: enable logging to see what Scweet is doing
+# Optional: see what Scweet does.
 logging.basicConfig(level=logging.INFO)
 
 
 def main() -> None:
-    # ── Initialize ───────────────────────────────────────────────────
-    #
-    # Pick one way to provide cookies:
-    #   Scweet(cookies_file="cookies.json")
-    #   Scweet(auth_token="YOUR_AUTH_TOKEN")
-    #   Scweet(cookies={"auth_token": "...", "ct0": "..."})
-    #   Scweet(db_path="scweet_state.db")  # reuse previously provisioned accounts
-    #
-    s = Scweet(
-        cookies_file="examples/cookies.json",
-        # {session} gives each account its own proxy session (own exit IP) on a rotating provider,
-        # and a retry after a transport failure gets a fresh one. A plain URL works too.
-        proxy="http://user,session-{session}:pass@host:port",
-        config=ScweetConfig(
-            concurrency=3,
-            daily_requests_limit=50,
-            manifest_scrape_on_init=True,  # auto-fetch fresh GraphQL query IDs
-        ),
-    )
+    # ── The first path: one auth_token ───────────────────────────────
+    s = Scweet(auth_token="YOUR_AUTH_TOKEN")
 
-    # ── Search tweets ────────────────────────────────────────────────
-    #
-    # Always set `limit` — it controls the max items to collect.
-    # Without it, scraping continues until results are exhausted
-    # or your account's daily caps are hit.
+    # For several accounts, or a proxy per account, use a file instead:
+    #   s = Scweet(cookies_file="examples/cookies.json")
+    # A proxy is optional for a small run and recommended for volume:
+    #   s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@proxy.example.com:8000")
+    # On the next run, reuse the accounts with no credential:
+    #   s = Scweet()   # reads scweet_state.db
 
-    # Simple query (defaults to the last 30 days)
+    # ── Search ───────────────────────────────────────────────────────
+    # Always set `limit`. Without it, a run continues until the daily cap.
     tweets = s.search("python programming", limit=50)
-    print(f"Simple search: {len(tweets)} tweets")
+    print(f"Search: {len(tweets)} tweets")
+    if tweets:
+        t = tweets[0]
+        print(f"  first: {t['views']} views, lang={t['lang']}, {t['likes']} likes")
 
-    # With date range. The default sort "Latest" is chronological and fills a volume order. "Top" is a
-    # ranked selection, so it holds far fewer tweets than the full timeline.
-    tweets = s.search("bitcoin", since="2026-01-01", until="2026-02-01", display_type="Latest", limit=100)
-    print(f"Date range search: {len(tweets)} tweets")
-
-    # Structured filters
+    # A date range. display_type="Latest" (the default) is chronological and fills
+    # a volume order; "Top" is a ranked selection and holds far fewer tweets.
     tweets = s.search(
-        since="2026-01-01",
-        from_users=["elonmusk"],
-        min_likes=100,
-        has_images=True,
-        lang="en",
-        display_type="Latest",
-        limit=100,
+        "bitcoin", since="2026-01-01", until="2026-02-01", display_type="Latest", limit=100
     )
-    print(f"Filtered search: {len(tweets)} tweets")
+    print(f"Date range: {len(tweets)} tweets")
 
-    # Combining query + filters
+    # A query with structured filters, saved to disk.
     tweets = s.search(
         "AI tools",
         since="2026-01-01",
+        from_users=["OpenAI"],
         any_words=["chatgpt", "claude", "gemini"],
-        exclude_words=["spam"],
         min_likes=50,
-        limit=200,
-    )
-    print(f"Combined search: {len(tweets)} tweets")
-
-    # Save results to disk
-    tweets = s.search(
-        "machine learning",
-        since="2026-01-01",
+        has_images=True,
+        lang="en",
         limit=100,
-        save=True,                # write to disk
-        save_format="both",       # csv + json
+        save=True,           # writes a file
+        save_format="both",  # csv + json
     )
-    print(f"Saved search: {len(tweets)} tweets")
+    print(f"Filtered search: {len(tweets)} tweets")
 
-    # Resume an interrupted search
-    tweets = s.search("bitcoin", since="2026-01-01", until="2026-06-01", limit=500, resume=True)
-    print(f"Resumed search: {len(tweets)} tweets")
+    # ── Tweets by id, replies, reposters ─────────────────────────────
+    if tweets:
+        ids = [t["tweet_id"] for t in tweets[:5]]
+        by_id = s.get_tweet_info(ids)          # up to 50 ids in one request
+        print(f"Tweets by id: {len(by_id)}")
 
-    # ── Profile tweets ───────────────────────────────────────────────
+        replies = s.get_tweet_replies(ids[0], limit=50)
+        print(f"Replies: {len(replies)}")
 
-    tweets = s.get_profile_tweets(["elonmusk", "OpenAI"], limit=100)
-    print(f"Profile tweets: {len(tweets)} tweets")
+        reposters = s.get_reposters(ids[0], limit=100)
+        print(f"Reposters: {len(reposters)}")
 
-    # ── Followers / Following ────────────────────────────────────────
+    # ── Profile tweets and media ─────────────────────────────────────
+    tweets = s.get_profile_tweets(["elonmusk"], limit=100)
+    print(f"Profile tweets: {len(tweets)}")
 
+    with_replies = s.get_profile_tweets(["elonmusk"], limit=100, include_replies=True)
+    print(f"Profile tweets with replies: {len(with_replies)}")
+
+    media = s.get_profile_media(["nasa"], limit=100)
+    print(f"Profile media: {len(media)}")
+
+    # ── Followers, following, verified followers ─────────────────────
     followers = s.get_followers(["elonmusk"], limit=500)
-    print(f"Followers: {len(followers)} users")
+    print(f"Followers: {len(followers)}")
 
     following = s.get_following(["OpenAI"], limit=200)
-    print(f"Following: {len(following)} users")
+    print(f"Following: {len(following)}")
 
-    # With raw JSON payload (full GraphQL user objects)
-    followers = s.get_followers(["elonmusk"], limit=100, raw_json=True)
-    if followers:
-        print(f"Raw follower keys: {list(followers[0].keys())}")
+    verified = s.get_verified_followers(["elonmusk"], limit=200)
+    print(f"Verified followers: {len(verified)}")
 
-    # ── User info (no limit needed — one API call per user) ────────
-
+    # ── User info: by handle, or by numeric id ───────────────────────
     profiles = s.get_user_info(["elonmusk", "OpenAI"])
     for p in profiles:
-        print(f"  @{p.get('username')}: {p.get('followers_count')} followers")
+        print(f"  @{p['username']}: {p['followers_count']} followers")
 
-    # ── DB inspection ────────────────────────────────────────────────
+    profiles = s.get_user_info(user_ids=["44196397"])  # up to 100 ids in one request
+    print(f"By id: {len(profiles)}")
 
+    # ── People search and trends ─────────────────────────────────────
+    people = s.search_users("python developer", limit=50)
+    print(f"People: {len(people)}")
+
+    trends = s.get_trending()
+    print(f"Trends: {len(trends)}")
+
+    # ── Keep the query ids fresh ─────────────────────────────────────
+    # X rotates its GraphQL ids, and a stale id answers 404. Call this on a
+    # schedule, or when requests start to fail.
+    changes = s.refresh_manifest()
+    print(f"Manifest ids that rotated: {list(changes)}")
+
+    # ── The state of the pool ────────────────────────────────────────
     db = ScweetDB("scweet_state.db")
-    print("Accounts summary:", db.accounts_summary())
-    print("Eligible accounts:", db.list_accounts(limit=5, eligible_only=True))
-
-    # Maintenance helpers:
+    print("Accounts:", db.accounts_summary())
+    # Maintenance:
     # db.reset_daily_counters()
     # db.clear_leases(expired_only=True)
-    # db.reset_account_cooldowns()
     # db.repair_account("my_account", force_refresh=True)
 
 
