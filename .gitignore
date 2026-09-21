@@ -43,3 +43,6 @@ site/
 .venv/
 graphify-out/
 .codex
+docs/documentation.md
+docs/contributing.md
+docs/changelog.md

@@ -151,3 +151,35 @@ class TestTheServerDoesNotRebuildForEver:
         hook = (_ROOT / "docs_hooks.py").read_text(encoding="utf-8")
         assert "def on_serve" in hook
         assert "server.watch" in hook
+
+
+class TestEveryDocumentPointsAtTheSite:
+    """A reader who opens any document finds the site. A reader of PyPI finds it in the sidebar."""
+
+    SITE = "https://altimis.github.io/Scweet/"
+
+    def test_each_document_names_the_site(self):
+        for name in ("README.md", "DOCUMENTATION.md", "CONTRIBUTING.md", "CHANGELOG.md"):
+            text = (_ROOT / name).read_text(encoding="utf-8")
+            assert "altimis.github.io/Scweet" in text, f"{name} does not name the site"
+
+    def test_the_badge_of_the_readme_opens_the_site(self):
+        """The badge said `#documentation`, which held the reader inside one long file."""
+        readme = (_ROOT / "README.md").read_text(encoding="utf-8")
+        badge = readme.split('alt="Documentation"')[0]
+        assert self.SITE in badge.rsplit("<a href=", 1)[1], (
+            "the badge of the documentation must open the site"
+        )
+
+    def test_pypi_shows_the_site_in_the_sidebar(self):
+        setup = (_ROOT / "setup.py").read_text(encoding="utf-8")
+        assert "project_urls" in setup
+        assert f'"Documentation": "{self.SITE}"' in setup
+
+    def test_the_generated_pages_stay_out_of_git(self):
+        """A copy in git becomes a second source, and the two fall apart."""
+        ignore = (_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+        for page in ("docs/documentation.md", "docs/changelog.md", "docs/contributing.md"):
+            assert page in ignore, f"{page} is generated, so git must ignore it"
+        # `index.md` belongs to the site, so it stays in git.
+        assert "docs/index.md" not in ignore

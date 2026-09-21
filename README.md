@@ -19,7 +19,7 @@
   <a href="#cli">
     <img alt="CLI Quickstart" src="https://img.shields.io/badge/CLI-Quickstart-111111?logo=gnu-bash&logoColor=white">
   </a>
-  <a href="#documentation">
+  <a href="https://altimis.github.io/Scweet/">
     <img alt="Documentation" src="https://img.shields.io/badge/Docs-Full%20Reference-0A66C2">
   </a>
 </p>

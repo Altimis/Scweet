@@ -56,6 +56,13 @@ setup(
     author_email="aitjeddiyassine@gmail.com",
     url="https://github.com/Altimis/Scweet",
     download_url=f"https://github.com/Altimis/Scweet/archive/v{version}.tar.gz",
+    # PyPI shows each entry below in the sidebar of the project.
+    project_urls={
+        "Documentation": "https://altimis.github.io/Scweet/",
+        "Source": "https://github.com/Altimis/Scweet",
+        "Changelog": "https://github.com/Altimis/Scweet/blob/master/CHANGELOG.md",
+        "Issues": "https://github.com/Altimis/Scweet/issues",
+    },
     keywords=[
         "twitter",
         "x",

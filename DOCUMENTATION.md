@@ -1,5 +1,7 @@
 # Scweet v5 — Full Documentation
 
+> This page reads better on the documentation site: **[altimis.github.io/Scweet](https://altimis.github.io/Scweet/)** — same text, with a menu and a search.
+
 Scweet is an **API-only** Twitter/X scraper built on the web GraphQL endpoints. It handles account pooling, rate limiting, cooldowns, resume, and output persistence — all backed by a local SQLite database.
 
 ```bash

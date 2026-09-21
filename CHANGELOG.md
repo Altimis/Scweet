@@ -1,5 +1,7 @@
 # Changelog
 
+> The reference of each version: **[altimis.github.io/Scweet](https://altimis.github.io/Scweet/)**
+
 All notable changes to this project are documented in this file.
 
 ## [5.8.0] - 2026-09-15
