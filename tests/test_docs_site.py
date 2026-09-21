@@ -183,3 +183,44 @@ class TestEveryDocumentPointsAtTheSite:
             assert page in ignore, f"{page} is generated, so git must ignore it"
         # `index.md` belongs to the site, so it stays in git.
         assert "docs/index.md" not in ignore
+
+
+class TestThePageOfTheSiteDoesNotPointAtTheSite:
+    """A file at the root serves two readers, and one line does not suit both.
+
+    `DOCUMENTATION.md` opens with a line that sends a reader of GitHub to the site. That line also reached the
+    page of the site, where it told a reader to go where they already were. The build removes each line that
+    holds the marker `<!-- github-only -->`.
+    """
+
+    def test_the_build_removes_a_line_for_github_only(self):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("docs_hooks", _ROOT / "docs_hooks.py")
+        hooks = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(hooks)
+
+        source = "# Title\n\n> Read it on the site. <!-- github-only -->\n\nThe real text.\n"
+        result = hooks._for_the_site(source)
+        assert "github-only" not in result
+        assert "Read it on the site" not in result
+        assert "The real text." in result
+        assert "# Title" in result
+
+    def test_the_file_at_the_root_keeps_the_line(self):
+        """A reader of GitHub needs it. Only the page of the site loses it."""
+        text = (_ROOT / "DOCUMENTATION.md").read_text(encoding="utf-8")
+        assert "altimis.github.io/Scweet" in text
+        assert "<!-- github-only -->" in text, (
+            "the note must carry the marker, or it reaches the page of the site"
+        )
+
+    def test_the_built_reference_page_does_not_send_a_reader_to_the_site(self):
+        built = _ROOT / "site" / "documentation" / "index.html"
+        if not built.is_file():
+            import pytest as _pytest
+
+            _pytest.skip("run `make docs` first")
+        html = built.read_text(encoding="utf-8")
+        assert "Read this as a site" not in html
+        assert "reads better on the documentation site" not in html

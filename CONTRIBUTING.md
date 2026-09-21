@@ -46,7 +46,7 @@ If you're unsure whether something is in scope, open a discussion in [GitHub Dis
 
 ## Working on the documentation
 
-The site is at **[altimis.github.io/Scweet](https://altimis.github.io/Scweet/)**.
+The site is at **[altimis.github.io/Scweet](https://altimis.github.io/Scweet/)**. <!-- github-only -->
 
 `DOCUMENTATION.md`, `CHANGELOG.md` and `CONTRIBUTING.md` at the root of the repository hold the text. The site
 copies them before each build, so you edit the file at the root and never a copy.

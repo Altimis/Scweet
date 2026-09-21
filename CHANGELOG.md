@@ -1,6 +1,6 @@
 # Changelog
 
-> The reference of each version: **[altimis.github.io/Scweet](https://altimis.github.io/Scweet/)**
+> The reference of each version: **[altimis.github.io/Scweet](https://altimis.github.io/Scweet/)** <!-- github-only -->
 
 All notable changes to this project are documented in this file.
 
