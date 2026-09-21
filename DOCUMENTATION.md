@@ -10,6 +10,14 @@ pip install -U Scweet
 from Scweet import Scweet, ScweetConfig, ScweetDB
 ```
 
+**The constructor reaches no network by default.** It reads the local state file and returns, in about one
+second. Two things change that:
+
+- `manifest_scrape_on_init=True` reads the JavaScript bundles of X while the object is built, which takes a
+  few seconds more.
+- The first call of a read method builds the `x-client-transaction-id` header, and that reads a page of X.
+  The object does not build it before then.
+
 ---
 
 ## Account Setup
@@ -450,7 +458,28 @@ The default format can be set globally via `ScweetConfig(save_format="json")`.
 
 ### Tweet record
 
-Returned by `search()` and `get_profile_tweets()`.
+Returned by `search()` and `get_profile_tweets()`. One real row, with `raw` and the long text removed:
+
+```python
+{
+    "tweet_id": "2090227249551483321",
+    "text": "The text of the tweet",
+    "timestamp": "Wed Aug 19 23:59:45 +0000 2026",
+    "tweet_url": "https://x.com/bitcoinvaccine/status/2090227249551483321",
+    "user": {"screen_name": "bitcoinvaccine", "name": "bitcoin vaccine", "followers_count": 527},
+    "likes": 11, "retweets": 0, "comments": 3, "quotes": 0, "bookmarks": 1, "views": 355,
+    "lang": "ko",
+    "media": {"image_links": ["https://pbs.twimg.com/media/HQH6W7zaMAAurOm.jpg"], "video_links": []},
+    "hashtags": [], "mentions": [], "urls": [],
+    "is_quote": False, "is_retweet": False,
+    "quoted_tweet": None, "retweeted_tweet": None,
+    "in_reply_to_tweet_id": None, "in_reply_to_user": None,
+    "embedded_text": None, "emojis": None,
+    "raw": {"...": "the full answer of X"},
+}
+```
+
+Each method returns a `list` of these. The table below holds every field.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -464,6 +493,7 @@ Returned by `search()` and `get_profile_tweets()`.
 | `tweet_url` | `str` | Permalink, e.g. `"https://x.com/user/status/123"` |
 | `media` | `dict \| None` | `{"image_links": [...], "video_links": [...]}` — `video_links` holds the highest-bitrate MP4 of each video |
 | `embedded_text` | `str \| None` | Text of the quoted or retweeted tweet — `None` for plain tweets |
+| `emojis` | `str \| None` | **Always `None`.** The field stays for a script written against version 4. Read the emoji from `text`. |
 | `raw` | `dict` | Full GraphQL payload |
 | `views` | `int \| None` | View count — `None` when X sends none |
 | `quotes` | `int \| None` | Quote count |
@@ -583,6 +613,19 @@ s = Scweet(
 | `api_http_mode` | `str` | `"auto"` | HTTP mode: `"auto"`, `"async"`, `"sync"` |
 | `api_http_impersonate` | `str \| None` | `"chrome"` | Browser impersonation target for curl_cffi. `"chrome"` follows the newest Chrome fingerprint that the installed curl_cffi supports. |
 | `api_user_agent` | `str \| None` | `None` | Custom User-Agent string |
+| `request_404_retries` | `int` | `1` | Retries of a request that answers 404, after Scweet builds a fresh transaction id. X answers 404 when the id is stale, so one retry usually repairs the request. `0` stops the retry. |
+| `transaction_init_attempts` | `int` | `3` | Attempts to build the transaction id when the client starts. X refuses a request with no `x-client-transaction-id` header, so a failure here stops every request. |
+| `transaction_init_backoff_s` | `float` | `1.5` | Seconds between two attempts to build the transaction id. Each attempt waits this value multiplied by the number of the attempt. |
+
+### Batch Sizes
+
+One request of X carries several ids. These values hold the largest batch that each endpoint accepts.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `tweet_lookup_batch_size` | `int` | `50` | Tweet ids in one request of `get_tweet_info()`. X accepts 50. |
+| `user_lookup_batch_size` | `int` | `100` | User ids in one request of `get_user_info(user_ids=…)`. X accepts 100. |
+| `trending_count` | `int` | `20` | Trends that `get_trending()` asks for. |
 
 ### Rate Limiting
 
@@ -636,24 +679,6 @@ s = Scweet(
 | `manifest_ttl_s` | `int` | `3600` | Cache TTL for remote manifest |
 | `manifest_update_on_init` | `bool` | `False` | Fetch remote manifest on init |
 | `manifest_scrape_on_init` | `bool` | `False` | Scrape fresh query IDs from X on init |
-
----
-
-## Auto-Updating Query IDs
-
-Twitter/X rotates GraphQL query IDs periodically. When IDs go stale, requests return 404. Scweet ships with default IDs that work at release time, but you can auto-fetch fresh ones:
-
-```python
-s = Scweet(cookies_file="cookies.json", manifest_scrape_on_init=True)
-```
-
-This fetches the current `main.js` bundle from X on init and extracts the latest query IDs. It adds a few seconds to startup but ensures your requests use current IDs.
-
-From the CLI:
-
-```bash
-scweet --auth-token TOKEN --manifest-scrape-on-init search "query" --limit 100
-```
 
 ---
 
@@ -821,6 +846,13 @@ All Scweet exceptions inherit from `ScweetError`, so you can catch everything wi
 ```
 ScweetError                          # Base — catch-all
   AccountPoolExhausted               # No eligible accounts (all cooled down / at daily limits)
+  ConfigError                        # A setting is invalid — raised before any request
+  ManifestError                      # The GraphQL query ids could not be loaded or validated
+  ResumeError                        # The checkpoint of a resumed run is missing or unreadable
+  AccountSessionBuildError           # An account session could not be built
+    AccountSessionAuthError          # The cookies of that account are missing or invalid
+    AccountSessionTransientError     # A temporary fault — the account stays in the pool
+    AccountSessionRuntimeError       # An unexpected fault while the session started
   EngineError                        # Engine-level runtime error
     RunFailed                        # Run completed but couldn't produce results
       RateLimitError                 # All accounts rate-limited (429) — wait and retry
@@ -829,12 +861,26 @@ ScweetError                          # Base — catch-all
       ProxyError                     # Proxy misconfiguration or connectivity failure
 ```
 
-All exceptions are importable from the top-level package:
+The `AccountSession*` group tells a dead account from a temporary fault. `AccountSessionAuthError` means the
+cookies of that one account are finished, so Scweet cools it for a long period.
+`AccountSessionTransientError` means the fault was temporary, so the account stays available.
+
+These eight are importable from the top-level package:
 
 ```python
 from Scweet import (
     ScweetError, AccountPoolExhausted,
     RunFailed, RateLimitError, AuthError, NetworkError, ProxyError, EngineError,
+)
+```
+
+The rest come from the module of the exceptions:
+
+```python
+from Scweet.exceptions import (
+    ConfigError, ManifestError, ResumeError,
+    AccountSessionBuildError, AccountSessionAuthError,
+    AccountSessionTransientError, AccountSessionRuntimeError,
 )
 ```
 
@@ -962,14 +1008,16 @@ scweet --auth-token TOKEN profile-tweets USER [USER ...] [options]
 | Flag | Description |
 |------|-------------|
 | `--limit N` | Max tweets to return |
+| `--include-replies` | Read the tab "Posts and replies" instead of "Posts", so the result holds the replies of the user |
 | `--resume` | Resume from last checkpoint |
 | `--max-empty-pages N` | Stop after N consecutive empty pages |
 
-#### `followers` / `following`
+#### `followers` / `following` / `verified-followers`
 
 ```bash
 scweet --auth-token TOKEN followers USER [USER ...] [options]
 scweet --auth-token TOKEN following USER [USER ...] [options]
+scweet --auth-token TOKEN verified-followers USER [USER ...] [options]
 ```
 
 | Flag | Description |
