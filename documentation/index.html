@@ -1,0 +1,3852 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Scrape Twitter / X without the official API. Tweets, profiles, followers and trends.">
+      
+      
+      
+        <link rel="canonical" href="https://altimis.github.io/Scweet/documentation/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../changelog/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Reference - Scweet</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#scweet-v5-full-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Scweet" class="md-header__button md-logo" aria-label="Scweet" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Scweet
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Altimis/Scweet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Altimis/Scweet
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Scweet" class="md-nav__button md-logo" aria-label="Scweet" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Scweet
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Altimis/Scweet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Altimis/Scweet
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#account-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Account Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Account Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-first-path-one-auth_token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The first path: one auth_token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#more-accounts-more-scale-cookiesjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More accounts, more scale: cookies.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-state-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The state file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-global-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A global proxy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxy-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proxy modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-inline-cookies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option C: inline cookies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-provisioning-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How provisioning works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reuse-existing-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reuse existing DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controlling-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controlling Limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#search-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Search API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structured-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#async-variant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Async variant
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profile-tweets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile Tweets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tweet-lookup-replies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tweet Lookup &amp; Replies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#followers-following" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Followers / Following
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Followers / Following">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw_json-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        raw_json option
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User Info
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#search-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search Users
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trending" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trending
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#manifest-refresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manifest Refresh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#saving-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Schemas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Schemas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tweet-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tweet record
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User record
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resume-interrupted-searches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resume Interrupted Searches
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP Tuning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-sizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Sizes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rate-limiting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate Limiting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manifest-query-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manifest (Query IDs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#account-management-scweetdb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Account Management (ScweetDB)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Account Management (ScweetDB)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accounts_summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accounts_summary()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list_accounts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_accounts()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_accountusername" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_account(username)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repair_accountusername" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        repair_account(username)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset_account_cooldowns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset_account_cooldowns()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clear_leases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear_leases()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset_daily_counters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset_daily_counters()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logging
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#async-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Async Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Async Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-close-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No close needed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exception-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exception hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CLI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#global-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subcommands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subcommands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Help
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-from-v4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration from v4
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#account-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Account Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Account Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-first-path-one-auth_token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The first path: one auth_token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#more-accounts-more-scale-cookiesjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More accounts, more scale: cookies.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-state-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The state file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-global-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A global proxy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxy-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proxy modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-inline-cookies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option C: inline cookies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-provisioning-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How provisioning works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reuse-existing-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reuse existing DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controlling-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controlling Limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#search-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Search API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structured-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#async-variant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Async variant
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profile-tweets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile Tweets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tweet-lookup-replies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tweet Lookup &amp; Replies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#followers-following" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Followers / Following
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Followers / Following">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw_json-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        raw_json option
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User Info
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#search-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search Users
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trending" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trending
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#manifest-refresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manifest Refresh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#saving-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Schemas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Schemas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tweet-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tweet record
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User record
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resume-interrupted-searches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resume Interrupted Searches
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP Tuning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-sizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Sizes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rate-limiting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate Limiting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manifest-query-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manifest (Query IDs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#account-management-scweetdb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Account Management (ScweetDB)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Account Management (ScweetDB)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accounts_summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accounts_summary()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#list_accounts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_accounts()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_accountusername" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_account(username)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repair_accountusername" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        repair_account(username)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset_account_cooldowns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset_account_cooldowns()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clear_leases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear_leases()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset_daily_counters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset_daily_counters()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logging
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#async-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Async Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Async Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-close-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No close needed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exception-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exception hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CLI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#global-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subcommands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subcommands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Help
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-from-v4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration from v4
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Altimis/Scweet/edit/master/docs/documentation.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="scweet-v5-full-documentation">Scweet v5 — Full Documentation<a class="headerlink" href="#scweet-v5-full-documentation" title="Permanent link">&para;</a></h1>
+<p>Scweet is an <strong>API-only</strong> Twitter/X scraper built on the web GraphQL endpoints. It handles account pooling, rate limiting, cooldowns, resume, and output persistence — all backed by a local SQLite database.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>Scweet
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">Scweet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scweet</span><span class="p">,</span> <span class="n">ScweetConfig</span><span class="p">,</span> <span class="n">ScweetDB</span>
+</code></pre></div>
+<p><strong>The constructor reaches no network by default.</strong> It reads the local state file and returns, in about one
+second. Two things change that:</p>
+<ul>
+<li><code>manifest_scrape_on_init=True</code> reads the JavaScript bundles of X while the object is built, which takes a
+  few seconds more.</li>
+<li>The first call of a read method builds the <code>x-client-transaction-id</code> header, and that reads a page of X.
+  The object does not build it before then.</li>
+</ul>
+<hr />
+<h2 id="account-setup">Account Setup<a class="headerlink" href="#account-setup" title="Permanent link">&para;</a></h2>
+<p>Scweet needs the cookie of a logged-in X account to make authenticated requests. The first path uses one
+value; the other forms below add scale.</p>
+<h3 id="the-first-path-one-auth_token">The first path: one auth_token<a class="headerlink" href="#the-first-path-one-auth_token" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Log into X in your browser.</li>
+<li>Open DevTools (F12) &gt; Application &gt; Cookies &gt; <code>https://x.com</code>.</li>
+<li>Copy the <code>auth_token</code> value.</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">auth_token</span><span class="o">=</span><span class="s2">"YOUR_AUTH_TOKEN"</span><span class="p">)</span>
+</code></pre></div>
+<p>That one value is enough. Scweet builds the <code>ct0</code> (CSRF) token from it. Use a dedicated account, never
+your personal one.</p>
+<h3 id="more-accounts-more-scale-cookiesjson">More accounts, more scale: cookies.json<a class="headerlink" href="#more-accounts-more-scale-cookiesjson" title="Permanent link">&para;</a></h3>
+<p>For several accounts, and for a proxy per account, list them in a <code>cookies.json</code> file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">[</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"account1"</span><span class="p">,</span><span class="w"> </span><span class="nt">"cookies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"auth_token"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nt">"proxy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://user1:pass1@host1:port1"</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"account2"</span><span class="p">,</span><span class="w"> </span><span class="nt">"cookies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"auth_token"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nt">"proxy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://user2:pass2@host2:port2"</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">]</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">cookies_file</span><span class="o">=</span><span class="s2">"cookies.json"</span><span class="p">)</span>
+</code></pre></div>
+<p><code>ct0</code> is optional in each entry; Scweet bootstraps it from the <code>auth_token</code>. A file exported by a browser
+cookie extension (a list of <code>{"name": ..., "value": ...}</code> objects) is accepted too. The other credential
+forms — an inline <code>cookies=</code> dict, a colon-separated <code>accounts_file=</code>, and a <code>.env</code> file through
+<code>env_path=</code> — all reach the same store; see <a href="#configuration-reference">Configuration reference</a>.</p>
+<h3 id="the-state-file">The state file<a class="headerlink" href="#the-state-file" title="Permanent link">&para;</a></h3>
+<p>After the first run, the accounts live in a SQLite state file (<code>scweet_state.db</code> by default). A later run
+reuses them with no credential:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">()</span>                 <span class="c1"># reads scweet_state.db</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"ethereum"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div>
+<p>Pass <code>db_path="path/to/state.db"</code> to choose the file. <code>db_path</code> is the location of that state, not a
+place where the tweets go; a run returns the tweets and, with <code>save=True</code>, writes them to the output
+directory.</p>
+<h3 id="a-global-proxy">A global proxy<a class="headerlink" href="#a-global-proxy" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">auth_token</span><span class="o">=</span><span class="s2">"YOUR_AUTH_TOKEN"</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s2">"http://user:pass@proxy.example.com:8000"</span><span class="p">)</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># Or through ScweetConfig — the same effect</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">auth_token</span><span class="o">=</span><span class="s2">"YOUR_AUTH_TOKEN"</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s2">"http://user:pass@proxy.example.com:8000"</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="proxy-modes">Proxy modes<a class="headerlink" href="#proxy-modes" title="Permanent link">&para;</a></h3>
+<p>You control how each account reaches the network. There are four modes:</p>
+<ol>
+<li><strong>No proxy.</strong> Requests go direct.</li>
+<li><strong>One global proxy.</strong> Pass <code>proxy="http://user:pass@host:port"</code>. Every account shares it.</li>
+<li><strong>One proxy session per account.</strong> Put <code>{session}</code> in the URL: <code>proxy="http://user,session-{session}:pass@host:port"</code>. Each account session replaces the placeholder with a unique token (letters and digits only), so a rotating provider pins one exit IP per account. A session that is built again after a transport failure gets a new token and a new exit IP, so a retry recovers instead of reaching the same dead exit. The replacement is a plain string substitution, so it works with any provider that names the session inside the URL — write your provider's own syntax around <code>{session}</code> (for example <code>...-session-{session}</code> or <code>...-sessid-{session}</code>). A provider that pins a session by port instead of by name needs mode 4.</li>
+<li><strong>A proxy per account.</strong> Set <code>"proxy"</code> on the account record (in the cookies JSON, or with <code>set_account_proxy</code>). It overrides the global proxy for that account, and it can also contain <code>{session}</code>.</li>
+</ol>
+<h3 id="option-c-inline-cookies">Option C: inline cookies<a class="headerlink" href="#option-c-inline-cookies" title="Permanent link">&para;</a></h3>
+<p>Pass cookies directly — useful for scripts and one-off runs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Single account</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">cookies</span><span class="o">=</span><span class="p">{</span><span class="s2">"auth_token"</span><span class="p">:</span> <span class="s2">"..."</span><span class="p">,</span> <span class="s2">"ct0"</span><span class="p">:</span> <span class="s2">"..."</span><span class="p">})</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Multiple accounts</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">cookies</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="p">{</span><span class="s2">"auth_token"</span><span class="p">:</span> <span class="s2">"tok1"</span><span class="p">,</span> <span class="s2">"ct0"</span><span class="p">:</span> <span class="s2">"ct0_1"</span><span class="p">},</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="p">{</span><span class="s2">"auth_token"</span><span class="p">:</span> <span class="s2">"tok2"</span><span class="p">,</span> <span class="s2">"ct0"</span><span class="p">:</span> <span class="s2">"ct0_2"</span><span class="p">},</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">])</span>
+</code></pre></div>
+<h3 id="how-provisioning-works">How provisioning works<a class="headerlink" href="#how-provisioning-works" title="Permanent link">&para;</a></h3>
+<p>When you create a <code>Scweet</code> instance, it <strong>provisions</strong> your accounts into a local SQLite database (<code>scweet_state.db</code> by default). This means your cookies are imported, validated, and stored so Scweet can manage them — tracking rate limits, cooldowns, daily caps, and lease state across requests.</p>
+<p>This happens automatically on init (<code>provision=True</code> by default). You provide cookies once, and Scweet handles the rest. If an account already exists in the DB (matched by username or auth_token), it's updated rather than duplicated.</p>
+<h3 id="reuse-existing-db">Reuse existing DB<a class="headerlink" href="#reuse-existing-db" title="Permanent link">&para;</a></h3>
+<p>Because accounts are persisted in SQLite, you don't need to provide cookies every time. After the first run, you can just point to the DB:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">db_path</span><span class="o">=</span><span class="s2">"scweet_state.db"</span><span class="p">)</span>
+</code></pre></div>
+<p>This reuses your previously provisioned accounts with all their state (daily counters, cooldowns, etc.) intact.</p>
+<p>You can also skip provisioning entirely if you only want to work with accounts already in the DB:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">db_path</span><span class="o">=</span><span class="s2">"scweet_state.db"</span><span class="p">,</span> <span class="n">provision</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="controlling-limits">Controlling Limits<a class="headerlink" href="#controlling-limits" title="Permanent link">&para;</a></h2>
+<p>Every method that paginates (<code>search</code>, <code>search_users</code>, <code>get_profile_tweets</code>, <code>get_profile_media</code>, <code>get_tweet_replies</code>, <code>get_reposters</code>, <code>get_followers</code>, <code>get_following</code>, <code>get_verified_followers</code>) accepts a <strong><code>limit</code></strong> parameter — the maximum number of items to collect in that call. If omitted (<code>None</code>), scraping continues until results are exhausted or account daily caps are hit.</p>
+<p><strong>Always set a <code>limit</code></strong> to avoid burning through your account quota unexpectedly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"python"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>              <span class="c1"># stop after 200 tweets</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_profile_tweets</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">users</span>  <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_followers</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">users</span>  <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_following</span><span class="p">([</span><span class="s2">"OpenAI"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+</code></pre></div>
+<p>There are two layers of limits:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Where</th>
+<th>What it controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Per-call <code>limit</code></strong></td>
+<td>Method argument</td>
+<td>Max items returned by a single call</td>
+</tr>
+<tr>
+<td><strong>Account daily caps</strong></td>
+<td><code>ScweetConfig</code></td>
+<td>Max API requests / tweets per account per UTC day</td>
+</tr>
+</tbody>
+</table>
+<p>The per-call <code>limit</code> is what you should set in normal usage. The account daily caps (<code>daily_requests_limit</code>, <code>daily_tweets_limit</code>) are safety nets that protect your account from over-use across all calls in a day — see <a href="#rate-limiting">Rate Limiting</a> in the config reference.</p>
+<p><code>get_user_info</code> does not paginate (one API call per user), so it has no <code>limit</code> parameter.</p>
+<hr />
+<h2 id="search-api">Search API<a class="headerlink" href="#search-api" title="Permanent link">&para;</a></h2>
+<h3 id="basic-search">Basic search<a class="headerlink" href="#basic-search" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">cookies_file</span><span class="o">=</span><span class="s2">"cookies.json"</span><span class="p">)</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># Defaults to last 30 days if since/until omitted — always set explicit dates for reproducibility</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"python programming"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># Explicit date range</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"python programming"</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">until</span><span class="o">=</span><span class="s2">"2024-02-01"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tweets</span><span class="p">)</span><span class="si">}</span><span class="s2"> tweets"</span><span class="p">)</span>
+</code></pre></div>
+<p>Both <code>since</code> and <code>until</code> are optional. <code>since</code> defaults to <strong>30 days ago</strong>, <code>until</code> defaults to today. Always set explicit dates for reproducible results.</p>
+<h3 id="structured-filters">Structured filters<a class="headerlink" href="#structured-filters" title="Permanent link">&para;</a></h3>
+<p>All filters are optional and merge with the query string:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">from_users</span><span class="o">=</span><span class="p">[</span><span class="s2">"elonmusk"</span><span class="p">],</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">min_likes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="n">has_images</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="n">lang</span><span class="o">=</span><span class="s2">"en"</span><span class="p">,</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="p">)</span>
+</code></pre></div>
+<p>Combining a query string with filters:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="s2">"AI tools"</span><span class="p">,</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">from_users</span><span class="o">=</span><span class="p">[</span><span class="s2">"OpenAI"</span><span class="p">],</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="n">min_likes</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="p">)</span>
+</code></pre></div>
+<h4 id="available-filters">Available filters<a class="headerlink" href="#available-filters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>all_words</code></td>
+<td><code>list[str]</code></td>
+<td>All words must appear (AND)</td>
+</tr>
+<tr>
+<td><code>any_words</code></td>
+<td><code>list[str]</code></td>
+<td>Any word can appear (OR)</td>
+</tr>
+<tr>
+<td><code>exact_phrases</code></td>
+<td><code>list[str]</code></td>
+<td>Exact phrase match</td>
+</tr>
+<tr>
+<td><code>exclude_words</code></td>
+<td><code>list[str]</code></td>
+<td>Exclude tweets with these words</td>
+</tr>
+<tr>
+<td><code>hashtags_any</code></td>
+<td><code>list[str]</code></td>
+<td>Match any of these hashtags</td>
+</tr>
+<tr>
+<td><code>hashtags_exclude</code></td>
+<td><code>list[str]</code></td>
+<td>Exclude these hashtags</td>
+</tr>
+<tr>
+<td><code>from_users</code></td>
+<td><code>list[str]</code></td>
+<td>Tweets from these users</td>
+</tr>
+<tr>
+<td><code>to_users</code></td>
+<td><code>list[str]</code></td>
+<td>Tweets to these users</td>
+</tr>
+<tr>
+<td><code>mentioning_users</code></td>
+<td><code>list[str]</code></td>
+<td>Tweets mentioning these users</td>
+</tr>
+<tr>
+<td><code>tweet_type</code></td>
+<td><code>str</code></td>
+<td><code>all</code>, <code>originals_only</code>, <code>replies_only</code>, <code>retweets_only</code>, <code>exclude_replies</code>, <code>exclude_retweets</code></td>
+</tr>
+<tr>
+<td><code>verified_only</code></td>
+<td><code>bool</code></td>
+<td>Verified accounts only</td>
+</tr>
+<tr>
+<td><code>blue_verified_only</code></td>
+<td><code>bool</code></td>
+<td>Blue verified only</td>
+</tr>
+<tr>
+<td><code>has_images</code></td>
+<td><code>bool</code></td>
+<td>Must contain images</td>
+</tr>
+<tr>
+<td><code>has_videos</code></td>
+<td><code>bool</code></td>
+<td>Must contain videos</td>
+</tr>
+<tr>
+<td><code>has_links</code></td>
+<td><code>bool</code></td>
+<td>Must contain links</td>
+</tr>
+<tr>
+<td><code>has_mentions</code></td>
+<td><code>bool</code></td>
+<td>Must contain mentions</td>
+</tr>
+<tr>
+<td><code>has_hashtags</code></td>
+<td><code>bool</code></td>
+<td>Must contain hashtags</td>
+</tr>
+<tr>
+<td><code>min_likes</code></td>
+<td><code>int</code></td>
+<td>Minimum likes</td>
+</tr>
+<tr>
+<td><code>min_replies</code></td>
+<td><code>int</code></td>
+<td>Minimum replies</td>
+</tr>
+<tr>
+<td><code>min_retweets</code></td>
+<td><code>int</code></td>
+<td>Minimum retweets</td>
+</tr>
+<tr>
+<td><code>place</code></td>
+<td><code>str</code></td>
+<td>Place filter</td>
+</tr>
+<tr>
+<td><code>geocode</code></td>
+<td><code>str</code></td>
+<td>Geocode filter (e.g., <code>"37.7749,-122.4194,10km"</code>)</td>
+</tr>
+<tr>
+<td><code>near</code></td>
+<td><code>str</code></td>
+<td>Near location</td>
+</tr>
+<tr>
+<td><code>within</code></td>
+<td><code>str</code></td>
+<td>Within radius (e.g., <code>"15mi"</code>)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="standard-parameters">Standard parameters<a class="headerlink" href="#standard-parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>query</code></td>
+<td><code>str</code></td>
+<td><code>""</code></td>
+<td>Raw query string (Twitter search operators)</td>
+</tr>
+<tr>
+<td><code>since</code></td>
+<td><code>str</code></td>
+<td>30 days ago</td>
+<td>Start date (<code>YYYY-MM-DD</code>)</td>
+</tr>
+<tr>
+<td><code>until</code></td>
+<td><code>str</code></td>
+<td>today</td>
+<td>End date (<code>YYYY-MM-DD</code>)</td>
+</tr>
+<tr>
+<td><code>lang</code></td>
+<td><code>str</code></td>
+<td><code>None</code></td>
+<td>Language filter (e.g., <code>"en"</code>)</td>
+</tr>
+<tr>
+<td><code>display_type</code></td>
+<td><code>str</code></td>
+<td><code>"Latest"</code></td>
+<td><code>"Latest"</code> (chronological, fills a volume order) or <code>"Top"</code> (a ranked selection with far fewer tweets)</td>
+</tr>
+<tr>
+<td><code>limit</code></td>
+<td><code>int</code></td>
+<td><code>None</code></td>
+<td>Max tweets to collect. <code>None</code> = no cap (scrapes until exhausted). <strong>Recommended to always set.</strong></td>
+</tr>
+<tr>
+<td><code>max_empty_pages</code></td>
+<td><code>int</code></td>
+<td>config value</td>
+<td>Stop after N consecutive empty pages</td>
+</tr>
+<tr>
+<td><code>resume</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Resume from last checkpoint</td>
+</tr>
+<tr>
+<td><code>save</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Save results to disk</td>
+</tr>
+<tr>
+<td><code>save_format</code></td>
+<td><code>str</code></td>
+<td>config value</td>
+<td><code>"csv"</code>, <code>"json"</code>, or <code>"both"</code></td>
+</tr>
+<tr>
+<td><code>save_name</code></td>
+<td><code>str</code></td>
+<td>auto-generated</td>
+<td>Base filename for saved output (without extension)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="async-variant">Async variant<a class="headerlink" href="#async-variant" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">tweets</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">asearch</span><span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="profile-tweets">Profile Tweets<a class="headerlink" href="#profile-tweets" title="Permanent link">&para;</a></h2>
+<p>Fetch tweets from user timelines:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_profile_tweets</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">,</span> <span class="s2">"OpenAI"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="c1"># With options</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_profile_tweets</span><span class="p">(</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="p">[</span><span class="s2">"elonmusk"</span><span class="p">],</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>    <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="n">max_empty_pages</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="n">save_format</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>users</code></td>
+<td><code>list[str]</code></td>
+<td><em>required</em></td>
+<td>Usernames or profile URLs</td>
+</tr>
+<tr>
+<td><code>limit</code></td>
+<td><code>int</code></td>
+<td><code>None</code></td>
+<td>Max tweets to collect. <code>None</code> = no cap. <strong>Recommended to always set.</strong></td>
+</tr>
+<tr>
+<td><code>max_empty_pages</code></td>
+<td><code>int</code></td>
+<td>config value</td>
+<td>Stop after N consecutive empty pages</td>
+</tr>
+<tr>
+<td><code>resume</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Resume from last checkpoint</td>
+</tr>
+<tr>
+<td><code>save</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Save results to disk</td>
+</tr>
+<tr>
+<td><code>save_format</code></td>
+<td><code>str</code></td>
+<td>config value</td>
+<td><code>"csv"</code>, <code>"json"</code>, or <code>"both"</code></td>
+</tr>
+<tr>
+<td><code>save_name</code></td>
+<td><code>str</code></td>
+<td>auto-generated</td>
+<td>Base filename for saved output (without extension)</td>
+</tr>
+</tbody>
+</table>
+<p>Two variants of the timeline:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># The tweets AND the replies of the profile</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_profile_tweets</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">include_replies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Only the tweets that carry an image or a video</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">media</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_profile_media</span><span class="p">([</span><span class="s2">"nasa"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div>
+<p>Async: <code>await s.aget_profile_tweets(["elonmusk"], limit=100)</code> / <code>await s.aget_profile_media(["nasa"], limit=100)</code></p>
+<hr />
+<h2 id="tweet-lookup-replies">Tweet Lookup &amp; Replies<a class="headerlink" href="#tweet-lookup-replies" title="Permanent link">&para;</a></h2>
+<p>Read full data for tweet ids you already hold — from an earlier scrape, a dataset, or a URL:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Up to 50 ids in one request</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_tweet_info</span><span class="p">([</span><span class="s2">"1866123456789"</span><span class="p">,</span> <span class="s2">"1866123456790"</span><span class="p">])</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># The replies under one tweet</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">replies</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_tweet_replies</span><span class="p">(</span><span class="s2">"1866123456789"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># The accounts that reposted one tweet</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="n">reposters</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_reposters</span><span class="p">(</span><span class="s2">"1866123456789"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li><code>get_tweet_info</code> returns the same tweet record as <code>search()</code>. A deleted or missing id gives no row and no error.</li>
+<li><code>get_tweet_replies</code> returns tweet records; the focal tweet itself is not in the list.</li>
+<li><code>get_reposters</code> returns user records with <code>type: "reposters"</code>.</li>
+</ul>
+<p>Each method takes <code>raw_json</code>, <code>save</code>, <code>save_format</code> and <code>save_name</code>; the paginating two also take <code>limit</code> and <code>max_empty_pages</code>. Async: <code>aget_tweet_info</code>, <code>aget_tweet_replies</code>, <code>aget_reposters</code>.</p>
+<hr />
+<h2 id="followers-following">Followers / Following<a class="headerlink" href="#followers-following" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Followers</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">users</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_followers</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># Following</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">users</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_following</span><span class="p">([</span><span class="s2">"OpenAI"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="c1"># Verified followers only</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="n">users</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_verified_followers</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+</code></pre></div>
+<p>All three methods share the parameters below and return the same user record.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>users</code></td>
+<td><code>list[str]</code></td>
+<td><em>required</em></td>
+<td>Usernames or profile URLs</td>
+</tr>
+<tr>
+<td><code>limit</code></td>
+<td><code>int</code></td>
+<td><code>None</code></td>
+<td>Max users to collect. <code>None</code> = no cap. <strong>Recommended to always set.</strong></td>
+</tr>
+<tr>
+<td><code>max_empty_pages</code></td>
+<td><code>int</code></td>
+<td>config value</td>
+<td>Stop after N consecutive empty pages</td>
+</tr>
+<tr>
+<td><code>resume</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Resume from last checkpoint</td>
+</tr>
+<tr>
+<td><code>raw_json</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Include full Twitter user payload under <code>raw</code> key</td>
+</tr>
+<tr>
+<td><code>save</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Save results to disk</td>
+</tr>
+<tr>
+<td><code>save_format</code></td>
+<td><code>str</code></td>
+<td>config value</td>
+<td><code>"csv"</code>, <code>"json"</code>, or <code>"both"</code></td>
+</tr>
+<tr>
+<td><code>save_name</code></td>
+<td><code>str</code></td>
+<td>auto-generated</td>
+<td>Base filename for saved output (without extension)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="raw_json-option">raw_json option<a class="headerlink" href="#raw_json-option" title="Permanent link">&para;</a></h3>
+<p>By default, follower/following records contain curated fields. With <code>raw_json=True</code>, each record includes the full Twitter user payload under a <code>raw</code> key (CSV output stays curated regardless):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">users</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_followers</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">raw_json</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="c1"># users[0]["raw"] contains the full GraphQL user object</span>
+</code></pre></div>
+<p>Async: <code>await s.aget_followers(["elonmusk"], limit=500)</code> / <code>await s.aget_following(["OpenAI"], limit=500)</code> / <code>await s.aget_verified_followers(["elonmusk"], limit=500)</code></p>
+<p>CLI: <code>scweet ... verified-followers elonmusk --limit 500 --save</code></p>
+<hr />
+<h2 id="user-info">User Info<a class="headerlink" href="#user-info" title="Permanent link">&para;</a></h2>
+<p>Fetch profile information for one or more users:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">profiles</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_user_info</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">,</span> <span class="s2">"OpenAI"</span><span class="p">])</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="c1"># Returns list of dicts with profile fields</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># By numeric id, up to 100 in one request; both inputs combine</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="n">profiles</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_user_info</span><span class="p">(</span><span class="n">user_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">"44196397"</span><span class="p">,</span> <span class="s2">"783214"</span><span class="p">])</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>users</code></td>
+<td><code>list[str]</code></td>
+<td><code>None</code></td>
+<td>Usernames or profile URLs</td>
+</tr>
+<tr>
+<td><code>user_ids</code></td>
+<td><code>list[str]</code></td>
+<td><code>None</code></td>
+<td>Numeric rest ids; combines with <code>users</code></td>
+</tr>
+<tr>
+<td><code>save</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Save results to disk</td>
+</tr>
+<tr>
+<td><code>save_format</code></td>
+<td><code>str</code></td>
+<td>config value</td>
+<td><code>"csv"</code>, <code>"json"</code>, or <code>"both"</code></td>
+</tr>
+<tr>
+<td><code>save_name</code></td>
+<td><code>str</code></td>
+<td>auto-generated</td>
+<td>Base filename for saved output (without extension)</td>
+</tr>
+</tbody>
+</table>
+<p>Async: <code>await s.aget_user_info(["elonmusk"])</code></p>
+<blockquote>
+<p>X sometimes refuses the id lookup for a whole connection (HTTP 403). The call then raises an
+error that names the refusal instead of returning an empty list. Retry later, or look the same
+profiles up by username.</p>
+</blockquote>
+<hr />
+<h2 id="search-users">Search Users<a class="headerlink" href="#search-users" title="Permanent link">&para;</a></h2>
+<p>Find accounts by keyword — the "People" tab of a search:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">people</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search_users</span><span class="p">(</span><span class="s2">"python developer"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="c1"># User records, with type: "search_users"</span>
+</code></pre></div>
+<p>Takes <code>limit</code>, <code>max_empty_pages</code>, <code>raw_json</code> and the save parameters. Async: <code>asearch_users</code>.</p>
+<hr />
+<h2 id="trending">Trending<a class="headerlink" href="#trending" title="Permanent link">&para;</a></h2>
+<p>The trends of the explore page, one request:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">trends</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_trending</span><span class="p">()</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="c1"># [{"name": "...", "context": "1 day ago · Sports · 12K posts", "trend_id": "...", "raw": {...}}]</span>
+</code></pre></div>
+<p>Async: <code>aget_trending</code>.</p>
+<hr />
+<h2 id="manifest-refresh">Manifest Refresh<a class="headerlink" href="#manifest-refresh" title="Permanent link">&para;</a></h2>
+<p>X rotates its GraphQL query ids without notice, and a stale id answers 404 for every request from
+every account. Scweet reads fresh ids from X's own bundles — including the operations that live in
+lazy chunks, which a plain <code>main.js</code> scrape misses:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">auth_token</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span> <span class="n">manifest_scrape_on_init</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>   <span class="c1"># refresh at startup</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="n">changes</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">refresh_manifest</span><span class="p">()</span>   <span class="c1"># refresh at any moment</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># {"search_timeline": {"old": "KPSo2_UW...", "new": "aB3xY9..."}} — empty when current</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>scweet<span class="w"> </span>refresh-manifest
+</code></pre></div>
+<p>When every search suddenly answers 404 while the accounts look healthy, refresh the manifest first:
+that 404 describes the request, not the credentials.</p>
+<hr />
+<h2 id="saving-results">Saving Results<a class="headerlink" href="#saving-results" title="Permanent link">&para;</a></h2>
+<p>By default, results are returned in-memory only (<code>save=False</code>). To persist to disk:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Save as CSV (default format)</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="c1"># Save as JSON</span>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_format</span><span class="o">=</span><span class="s2">"json"</span><span class="p">)</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="c1"># Save both CSV and JSON</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_format</span><span class="o">=</span><span class="s2">"both"</span><span class="p">)</span>
+</code></pre></div>
+<p>Output files are written to the <code>save_dir</code> directory (default: <code>"outputs"</code>). File names are based on the operation type (<code>search.csv</code>, <code>profile_tweets.json</code>, <code>followers.csv</code>, etc.).</p>
+<p>The default format can be set globally via <code>ScweetConfig(save_format="json")</code>.</p>
+<hr />
+<h2 id="output-schemas">Output Schemas<a class="headerlink" href="#output-schemas" title="Permanent link">&para;</a></h2>
+<h3 id="tweet-record">Tweet record<a class="headerlink" href="#tweet-record" title="Permanent link">&para;</a></h3>
+<p>Returned by <code>search()</code> and <code>get_profile_tweets()</code>. One real row, with <code>raw</code> and the long text removed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="p">{</span>
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>    <span class="s2">"tweet_id"</span><span class="p">:</span> <span class="s2">"2090227249551483321"</span><span class="p">,</span>
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>    <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"The text of the tweet"</span><span class="p">,</span>
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>    <span class="s2">"timestamp"</span><span class="p">:</span> <span class="s2">"Wed Aug 19 23:59:45 +0000 2026"</span><span class="p">,</span>
+<a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>    <span class="s2">"tweet_url"</span><span class="p">:</span> <span class="s2">"https://x.com/bitcoinvaccine/status/2090227249551483321"</span><span class="p">,</span>
+<a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>    <span class="s2">"user"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"screen_name"</span><span class="p">:</span> <span class="s2">"bitcoinvaccine"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"bitcoin vaccine"</span><span class="p">,</span> <span class="s2">"followers_count"</span><span class="p">:</span> <span class="mi">527</span><span class="p">},</span>
+<a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>    <span class="s2">"likes"</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span> <span class="s2">"retweets"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"comments"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"quotes"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"bookmarks"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"views"</span><span class="p">:</span> <span class="mi">355</span><span class="p">,</span>
+<a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>    <span class="s2">"lang"</span><span class="p">:</span> <span class="s2">"ko"</span><span class="p">,</span>
+<a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>    <span class="s2">"media"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"image_links"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"https://pbs.twimg.com/media/HQH6W7zaMAAurOm.jpg"</span><span class="p">],</span> <span class="s2">"video_links"</span><span class="p">:</span> <span class="p">[]},</span>
+<a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>    <span class="s2">"hashtags"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"mentions"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"urls"</span><span class="p">:</span> <span class="p">[],</span>
+<a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>    <span class="s2">"is_quote"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"is_retweet"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>    <span class="s2">"quoted_tweet"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"retweeted_tweet"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>    <span class="s2">"in_reply_to_tweet_id"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"in_reply_to_user"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a>    <span class="s2">"embedded_text"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"emojis"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a>    <span class="s2">"raw"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"..."</span><span class="p">:</span> <span class="s2">"the full answer of X"</span><span class="p">},</span>
+<a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a><span class="p">}</span>
+</code></pre></div>
+<p>Each method returns a <code>list</code> of these. The table below holds every field.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tweet_id</code></td>
+<td><code>str</code></td>
+<td>Tweet ID</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td><code>str</code></td>
+<td>Post time — Twitter date string, e.g. <code>"Thu Mar 20 22:25:15 +0000 2025"</code></td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td><code>dict</code></td>
+<td>Author: <code>{"screen_name": "elonmusk", "name": "Elon Musk"}</code></td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td><code>str</code></td>
+<td>Full tweet text</td>
+</tr>
+<tr>
+<td><code>likes</code></td>
+<td><code>int</code></td>
+<td>Like count</td>
+</tr>
+<tr>
+<td><code>retweets</code></td>
+<td><code>int</code></td>
+<td>Retweet count</td>
+</tr>
+<tr>
+<td><code>comments</code></td>
+<td><code>int</code></td>
+<td>Reply count</td>
+</tr>
+<tr>
+<td><code>tweet_url</code></td>
+<td><code>str</code></td>
+<td>Permalink, e.g. <code>"https://x.com/user/status/123"</code></td>
+</tr>
+<tr>
+<td><code>media</code></td>
+<td><code>dict \| None</code></td>
+<td><code>{"image_links": [...], "video_links": [...]}</code> — <code>video_links</code> holds the highest-bitrate MP4 of each video</td>
+</tr>
+<tr>
+<td><code>embedded_text</code></td>
+<td><code>str \| None</code></td>
+<td>Text of the quoted or retweeted tweet — <code>None</code> for plain tweets</td>
+</tr>
+<tr>
+<td><code>emojis</code></td>
+<td><code>str \| None</code></td>
+<td><strong>Always <code>None</code>.</strong> The field stays for a script written against version 4. Read the emoji from <code>text</code>.</td>
+</tr>
+<tr>
+<td><code>raw</code></td>
+<td><code>dict</code></td>
+<td>Full GraphQL payload</td>
+</tr>
+<tr>
+<td><code>views</code></td>
+<td><code>int \| None</code></td>
+<td>View count — <code>None</code> when X sends none</td>
+</tr>
+<tr>
+<td><code>quotes</code></td>
+<td><code>int \| None</code></td>
+<td>Quote count</td>
+</tr>
+<tr>
+<td><code>bookmarks</code></td>
+<td><code>int \| None</code></td>
+<td>Bookmark count</td>
+</tr>
+<tr>
+<td><code>lang</code></td>
+<td><code>str \| None</code></td>
+<td>Language code X assigned, e.g. <code>"en"</code></td>
+</tr>
+<tr>
+<td><code>hashtags</code></td>
+<td><code>list[str]</code></td>
+<td>Hashtags, without the <code>#</code></td>
+</tr>
+<tr>
+<td><code>mentions</code></td>
+<td><code>list[str]</code></td>
+<td>Mentioned screen names</td>
+</tr>
+<tr>
+<td><code>urls</code></td>
+<td><code>list[str]</code></td>
+<td>Expanded links in the tweet</td>
+</tr>
+<tr>
+<td><code>in_reply_to_tweet_id</code></td>
+<td><code>str \| None</code></td>
+<td>The tweet this one answers</td>
+</tr>
+<tr>
+<td><code>in_reply_to_user</code></td>
+<td><code>str \| None</code></td>
+<td>The screen name it answers</td>
+</tr>
+<tr>
+<td><code>is_quote</code></td>
+<td><code>bool</code></td>
+<td>The tweet quotes another tweet</td>
+</tr>
+<tr>
+<td><code>is_retweet</code></td>
+<td><code>bool</code></td>
+<td>The tweet is a retweet</td>
+</tr>
+<tr>
+<td><code>quoted_tweet</code></td>
+<td><code>dict \| None</code></td>
+<td>The quoted tweet, as a tweet record one level deep</td>
+</tr>
+<tr>
+<td><code>retweeted_tweet</code></td>
+<td><code>dict \| None</code></td>
+<td>The retweeted tweet, as a tweet record one level deep</td>
+</tr>
+</tbody>
+</table>
+<p>The fields from <code>views</code> down arrived in 5.6.0. Every one is additive: a script written against an
+earlier version reads the same values from the fields above them. A count is <code>None</code> and never <code>0</code>
+when X sends no value, so a real zero stays a zero.</p>
+<p><code>quoted_tweet</code> and <code>retweeted_tweet</code> nest one level only, and their own <code>raw</code> is <code>None</code>, because the
+<code>raw</code> of the parent already holds the nested payload. <code>embedded_text</code> keeps its old value: it reads
+the truncated text of X, so it can be shorter than the <code>text</code> of the nested record.</p>
+<p><strong>CSV output</strong> flattens <code>user</code> and <code>media</code>: <code>user_screen_name</code>, <code>user_name</code>, and <code>image_links</code> become their own columns (in that order). JSON output and the Python return value preserve the nested structure above.</p>
+<h3 id="user-record">User record<a class="headerlink" href="#user-record" title="Permanent link">&para;</a></h3>
+<p>Returned by <code>get_followers()</code>, <code>get_following()</code>, <code>get_verified_followers()</code>, and <code>get_user_info()</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user_id</code></td>
+<td><code>str</code></td>
+<td>Twitter user ID</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td><code>str</code></td>
+<td>Screen name / handle</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>Display name</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>str</code></td>
+<td>Bio text</td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td><code>str \| None</code></td>
+<td>Self-reported location</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>str</code></td>
+<td>Account creation date (Twitter date string)</td>
+</tr>
+<tr>
+<td><code>followers_count</code></td>
+<td><code>int</code></td>
+<td>Follower count</td>
+</tr>
+<tr>
+<td><code>following_count</code></td>
+<td><code>int</code></td>
+<td>Following count</td>
+</tr>
+<tr>
+<td><code>statuses_count</code></td>
+<td><code>int</code></td>
+<td>Total tweets posted</td>
+</tr>
+<tr>
+<td><code>favourites_count</code></td>
+<td><code>int</code></td>
+<td>Total likes given</td>
+</tr>
+<tr>
+<td><code>media_count</code></td>
+<td><code>int</code></td>
+<td>Media tweet count</td>
+</tr>
+<tr>
+<td><code>listed_count</code></td>
+<td><code>int</code></td>
+<td>List membership count</td>
+</tr>
+<tr>
+<td><code>verified</code></td>
+<td><code>bool</code></td>
+<td>Legacy verified badge</td>
+</tr>
+<tr>
+<td><code>blue_verified</code></td>
+<td><code>bool</code></td>
+<td>Twitter Blue / paid verification</td>
+</tr>
+<tr>
+<td><code>protected</code></td>
+<td><code>bool</code></td>
+<td>Protected (private) account</td>
+</tr>
+<tr>
+<td><code>profile_image_url</code></td>
+<td><code>str</code></td>
+<td>Profile photo URL</td>
+</tr>
+<tr>
+<td><code>profile_banner_url</code></td>
+<td><code>str</code></td>
+<td>Banner image URL</td>
+</tr>
+<tr>
+<td><code>url</code></td>
+<td><code>str \| None</code></td>
+<td>Website URL set in bio</td>
+</tr>
+<tr>
+<td><code>identity_verified</code></td>
+<td><code>bool</code></td>
+<td>X confirmed the identity of the person</td>
+</tr>
+<tr>
+<td><code>pinned_tweet_ids</code></td>
+<td><code>list[str]</code></td>
+<td>The pinned tweet of the profile</td>
+</tr>
+<tr>
+<td><code>description_urls</code></td>
+<td><code>list[str]</code></td>
+<td>Expanded links inside the bio</td>
+</tr>
+<tr>
+<td><code>raw</code></td>
+<td><code>dict</code></td>
+<td>Full GraphQL payload (only present when <code>raw_json=True</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The counts above were <code>0</code> for every profile before 5.6.0. X stopped sending the flat <code>legacy</code> object
+and moved the counts into other nodes of the answer, and the parser read only the old place. Version
+5.6.0 reads both, so an older answer of X keeps working.</p>
+<p><strong>Followers / following only:</strong> each record also has <code>type</code> (<code>"followers"</code>, <code>"following"</code> or <code>"verified_followers"</code>) and <code>target</code> (info about the queried account).</p>
+<p><strong>User info only:</strong> each record has <code>input</code> (the queried input) instead of <code>type</code>/<code>target</code>. The <code>raw</code> field is omitted by default (not present unless the underlying engine returns it).</p>
+<hr />
+<h2 id="resume-interrupted-searches">Resume Interrupted Searches<a class="headerlink" href="#resume-interrupted-searches" title="Permanent link">&para;</a></h2>
+<p>Resume a search from where it left off using SQLite cursor checkpoints:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># First run — gets interrupted or completes partially</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">until</span><span class="o">=</span><span class="s2">"2024-06-01"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1"># Resume — picks up from last saved checkpoint</span>
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">until</span><span class="o">=</span><span class="s2">"2024-06-01"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>Resume works by matching a hash of the query parameters. The same <code>since</code>, <code>until</code>, <code>query</code>, <code>lang</code>, and <code>display_type</code> must be provided to resume correctly.</p>
+<hr />
+<h2 id="configuration-reference">Configuration Reference<a class="headerlink" href="#configuration-reference" title="Permanent link">&para;</a></h2>
+<p>All fields have sensible defaults. Override with <code>ScweetConfig</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">Scweet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scweet</span><span class="p">,</span> <span class="n">ScweetConfig</span>
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span>
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>    <span class="n">cookies_file</span><span class="o">=</span><span class="s2">"cookies.json"</span><span class="p">,</span>
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>    <span class="n">config</span><span class="o">=</span><span class="n">ScweetConfig</span><span class="p">(</span>
+<a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>        <span class="n">concurrency</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>        <span class="n">proxy</span><span class="o">=</span><span class="s2">"http://user:pass@host:port"</span><span class="p">,</span>
+<a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>        <span class="n">min_delay_s</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+<a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>    <span class="p">),</span>
+<a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="core">Core<a class="headerlink" href="#core" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>db_path</code></td>
+<td><code>str</code></td>
+<td><code>"scweet_state.db"</code></td>
+<td>SQLite state file path</td>
+</tr>
+<tr>
+<td><code>proxy</code></td>
+<td><code>str \| dict \| None</code></td>
+<td><code>None</code></td>
+<td>HTTP proxy for API calls</td>
+</tr>
+<tr>
+<td><code>concurrency</code></td>
+<td><code>int</code></td>
+<td><code>5</code></td>
+<td>Number of parallel workers</td>
+</tr>
+</tbody>
+</table>
+<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>save_dir</code></td>
+<td><code>str</code></td>
+<td><code>"outputs"</code></td>
+<td>Default output directory</td>
+</tr>
+<tr>
+<td><code>save_format</code></td>
+<td><code>str</code></td>
+<td><code>"csv"</code></td>
+<td>Default format: <code>"csv"</code>, <code>"json"</code>, or <code>"both"</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="http-tuning">HTTP Tuning<a class="headerlink" href="#http-tuning" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>api_http_mode</code></td>
+<td><code>str</code></td>
+<td><code>"auto"</code></td>
+<td>HTTP mode: <code>"auto"</code>, <code>"async"</code>, <code>"sync"</code></td>
+</tr>
+<tr>
+<td><code>api_http_impersonate</code></td>
+<td><code>str \| None</code></td>
+<td><code>"chrome"</code></td>
+<td>Browser impersonation target for curl_cffi. <code>"chrome"</code> follows the newest Chrome fingerprint that the installed curl_cffi supports.</td>
+</tr>
+<tr>
+<td><code>api_user_agent</code></td>
+<td><code>str \| None</code></td>
+<td><code>None</code></td>
+<td>Custom User-Agent string</td>
+</tr>
+<tr>
+<td><code>request_404_retries</code></td>
+<td><code>int</code></td>
+<td><code>1</code></td>
+<td>Retries of a request that answers 404, after Scweet builds a fresh transaction id. X answers 404 when the id is stale, so one retry usually repairs the request. <code>0</code> stops the retry.</td>
+</tr>
+<tr>
+<td><code>transaction_init_attempts</code></td>
+<td><code>int</code></td>
+<td><code>3</code></td>
+<td>Attempts to build the transaction id when the client starts. X refuses a request with no <code>x-client-transaction-id</code> header, so a failure here stops every request.</td>
+</tr>
+<tr>
+<td><code>transaction_init_backoff_s</code></td>
+<td><code>float</code></td>
+<td><code>1.5</code></td>
+<td>Seconds between two attempts to build the transaction id. Each attempt waits this value multiplied by the number of the attempt.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="batch-sizes">Batch Sizes<a class="headerlink" href="#batch-sizes" title="Permanent link">&para;</a></h3>
+<p>One request of X carries several ids. These values hold the largest batch that each endpoint accepts.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tweet_lookup_batch_size</code></td>
+<td><code>int</code></td>
+<td><code>50</code></td>
+<td>Tweet ids in one request of <code>get_tweet_info()</code>. X accepts 50.</td>
+</tr>
+<tr>
+<td><code>user_lookup_batch_size</code></td>
+<td><code>int</code></td>
+<td><code>100</code></td>
+<td>User ids in one request of <code>get_user_info(user_ids=…)</code>. X accepts 100.</td>
+</tr>
+<tr>
+<td><code>trending_count</code></td>
+<td><code>int</code></td>
+<td><code>20</code></td>
+<td>Trends that <code>get_trending()</code> asks for.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rate-limiting">Rate Limiting<a class="headerlink" href="#rate-limiting" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>daily_requests_limit</code></td>
+<td><code>int</code></td>
+<td><code>300</code></td>
+<td>Max API requests per account per day</td>
+</tr>
+<tr>
+<td><code>daily_tweets_limit</code></td>
+<td><code>int</code></td>
+<td><code>6000</code></td>
+<td>Max tweets per account per day</td>
+</tr>
+<tr>
+<td><code>max_empty_pages</code></td>
+<td><code>int</code></td>
+<td><code>3</code></td>
+<td>Stop only after N <strong>consecutive</strong> empty result pages. X sends a stray empty page mid-stream, so a value of 1 loses the rest of the results.</td>
+</tr>
+<tr>
+<td><code>api_page_size</code></td>
+<td><code>int</code></td>
+<td><code>20</code></td>
+<td>Tweets per API page (1-100)</td>
+</tr>
+<tr>
+<td><code>window_request_limit</code></td>
+<td><code>int</code></td>
+<td><code>50</code></td>
+<td>Requests allowed per account per rate-limit window. X counts the total in a window, so a short run bursts this budget and waits nothing.</td>
+</tr>
+<tr>
+<td><code>relationship_window_request_limit</code></td>
+<td><code>int</code></td>
+<td><code>45</code></td>
+<td>Window budget for the followers/following paths. X allows 50 there and restricts an account more easily than at a search, so this budget keeps a margin of 5.</td>
+</tr>
+<tr>
+<td><code>rate_limit_window_s</code></td>
+<td><code>float</code></td>
+<td><code>900.0</code></td>
+<td>Length of the rate-limit window in seconds (X uses ~15 minutes)</td>
+</tr>
+<tr>
+<td><code>min_delay_s</code></td>
+<td><code>float</code></td>
+<td><code>1.0</code></td>
+<td>Floor between two requests of one account, so a burst does not arrive at wire speed. <code>0</code> removes the floor; the window limit still respects X.</td>
+</tr>
+<tr>
+<td><code>rate_limit_min_remaining</code></td>
+<td><code>int</code></td>
+<td><code>2</code></td>
+<td>Hand off an account when <code>x-rate-limit-remaining</code> falls to this value, and rest it until <code>x-rate-limit-reset</code>. The margin stops the account a few requests before X answers <code>429</code>, which loses a page. <code>0</code> hands off only when the window is fully spent.</td>
+</tr>
+<tr>
+<td><code>requests_per_min</code></td>
+<td><code>int</code></td>
+<td><code>30</code></td>
+<td><strong>Deprecated.</strong> The limiter paces to <code>window_request_limit</code> over <code>rate_limit_window_s</code>, not to a per-minute rate. Kept so an old config still loads.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="advanced">Advanced<a class="headerlink" href="#advanced" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>enable_wal</code></td>
+<td><code>bool</code></td>
+<td><code>True</code></td>
+<td>SQLite WAL mode</td>
+</tr>
+<tr>
+<td><code>busy_timeout_ms</code></td>
+<td><code>int</code></td>
+<td><code>5000</code></td>
+<td>SQLite busy timeout</td>
+</tr>
+<tr>
+<td><code>lease_ttl_s</code></td>
+<td><code>int</code></td>
+<td><code>120</code></td>
+<td>Account lease time-to-live</td>
+</tr>
+<tr>
+<td><code>lease_heartbeat_s</code></td>
+<td><code>float</code></td>
+<td><code>30.0</code></td>
+<td>Heartbeat interval for active leases</td>
+</tr>
+<tr>
+<td><code>cooldown_default_s</code></td>
+<td><code>float</code></td>
+<td><code>120.0</code></td>
+<td>Default cooldown after rate limit</td>
+</tr>
+<tr>
+<td><code>transient_cooldown_s</code></td>
+<td><code>float</code></td>
+<td><code>120.0</code></td>
+<td>Cooldown for transient errors (e.g., 404/stale query IDs)</td>
+</tr>
+<tr>
+<td><code>auth_cooldown_s</code></td>
+<td><code>float</code></td>
+<td><code>2592000.0</code></td>
+<td>Cooldown when an account is <strong>proven</strong> dead (30 days). A 401/403 from a page gives only a short cooldown; the long block applies only after a self-lookup of the account's own handle also fails.</td>
+</tr>
+<tr>
+<td><code>cooldown_jitter_s</code></td>
+<td><code>float</code></td>
+<td><code>10.0</code></td>
+<td>Random jitter added to cooldowns</td>
+</tr>
+<tr>
+<td><code>locked_cooldown_s</code></td>
+<td><code>float</code></td>
+<td><code>3600.0</code></td>
+<td>Rest time for an account that X locked behind a human challenge (code 326 in a 200 answer). The log names the unlock page; the account retries after each rest until you unlock it.</td>
+</tr>
+<tr>
+<td><code>pool_wait_max_s</code></td>
+<td><code>float</code></td>
+<td><code>120.0</code></td>
+<td>When every account is on cooldown, wait up to this long for one to expire before failing. Set <code>0</code> to fail immediately.</td>
+</tr>
+<tr>
+<td><code>pool_wait_poll_s</code></td>
+<td><code>float</code></td>
+<td><code>5.0</code></td>
+<td>How often to retry leasing while waiting for a cooldown to expire</td>
+</tr>
+<tr>
+<td><code>task_retry_base_s</code></td>
+<td><code>int</code></td>
+<td><code>1</code></td>
+<td>Base delay for task retry backoff</td>
+</tr>
+<tr>
+<td><code>task_retry_max_s</code></td>
+<td><code>int</code></td>
+<td><code>30</code></td>
+<td>Max delay for task retry backoff</td>
+</tr>
+<tr>
+<td><code>max_task_attempts</code></td>
+<td><code>int</code></td>
+<td><code>3</code></td>
+<td>Max retry attempts per task</td>
+</tr>
+<tr>
+<td><code>max_fallback_attempts</code></td>
+<td><code>int</code></td>
+<td><code>3</code></td>
+<td>Max fallback attempts on failure</td>
+</tr>
+<tr>
+<td><code>max_account_switches</code></td>
+<td><code>int</code></td>
+<td><code>2</code></td>
+<td>Max account switches per task</td>
+</tr>
+<tr>
+<td><code>scheduler_min_interval_s</code></td>
+<td><code>int</code></td>
+<td><code>300</code></td>
+<td>Minimum time interval split (seconds)</td>
+</tr>
+<tr>
+<td><code>n_splits</code></td>
+<td><code>int</code></td>
+<td><code>5</code></td>
+<td>Number of time interval splits for search. The run raises this to the account count when there are more accounts, so every account does work.</td>
+</tr>
+<tr>
+<td><code>max_interval_depth</code></td>
+<td><code>int</code></td>
+<td><code>100</code></td>
+<td>How many times the run may continue a <code>Latest</code> interval when a cursor chain ends while tweets remain; it continues from the oldest tweet. A <code>Top</code> search is ranked, not in time order, so the run does not continue a <code>Top</code> interval (use <code>Latest</code> for a large volume). This is a safety backstop; the floor <code>scheduler_min_interval_s</code> and the result limit are the real bounds. <code>0</code> turns the continuation off.</td>
+</tr>
+<tr>
+<td><code>priority</code></td>
+<td><code>int</code></td>
+<td><code>1</code></td>
+<td>Task priority</td>
+</tr>
+<tr>
+<td><code>proxy_check_on_lease</code></td>
+<td><code>bool</code></td>
+<td><code>True</code></td>
+<td>Verify proxy connectivity before leasing</td>
+</tr>
+<tr>
+<td><code>proxy_check_url</code></td>
+<td><code>str</code></td>
+<td><code>"https://x.com/robots.txt"</code></td>
+<td>URL for proxy check</td>
+</tr>
+<tr>
+<td><code>proxy_check_timeout_s</code></td>
+<td><code>float</code></td>
+<td><code>10.0</code></td>
+<td>Timeout for proxy check</td>
+</tr>
+<tr>
+<td><code>profile_timeline_allow_anonymous</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Allow anonymous profile timeline requests</td>
+</tr>
+</tbody>
+</table>
+<h3 id="manifest-query-ids">Manifest (Query IDs)<a class="headerlink" href="#manifest-query-ids" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>manifest_url</code></td>
+<td><code>str \| None</code></td>
+<td><code>None</code></td>
+<td>Remote manifest URL for query IDs</td>
+</tr>
+<tr>
+<td><code>manifest_ttl_s</code></td>
+<td><code>int</code></td>
+<td><code>3600</code></td>
+<td>Cache TTL for remote manifest</td>
+</tr>
+<tr>
+<td><code>manifest_update_on_init</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Fetch remote manifest on init</td>
+</tr>
+<tr>
+<td><code>manifest_scrape_on_init</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Scrape fresh query IDs from X on init</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="account-management-scweetdb">Account Management (ScweetDB)<a class="headerlink" href="#account-management-scweetdb" title="Permanent link">&para;</a></h2>
+<p><code>ScweetDB</code> provides direct access to the SQLite state for account inspection and management:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">Scweet</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScweetDB</span>
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="n">db</span> <span class="o">=</span> <span class="n">ScweetDB</span><span class="p">(</span><span class="s2">"scweet_state.db"</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="accounts_summary">accounts_summary()<a class="headerlink" href="#accounts_summary" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">summary</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">accounts_summary</span><span class="p">()</span>
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="c1"># {"db_path": "...", "total": 5, "eligible": 3, "unusable": 1, "cooling_down": 1, ...}</span>
+</code></pre></div>
+<h3 id="list_accounts">list_accounts()<a class="headerlink" href="#list_accounts" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="n">accounts</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">list_accounts</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">eligible_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="c1"># Returns list of account dicts with redacted secrets (fingerprints only)</span>
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="c1"># Include cookie keys</span>
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="n">accounts</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">list_accounts</span><span class="p">(</span><span class="n">include_cookies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>
+<a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="c1"># Reveal full secrets (use with caution)</span>
+<a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="n">accounts</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">list_accounts</span><span class="p">(</span><span class="n">reveal_secrets</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="get_accountusername">get_account(username)<a class="headerlink" href="#get_accountusername" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="n">account</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_account</span><span class="p">(</span><span class="s2">"my_account"</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="repair_accountusername">repair_account(username)<a class="headerlink" href="#repair_accountusername" title="Permanent link">&para;</a></h3>
+<p>Reset cooldowns, clear leases, and optionally refresh auth tokens:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">repair_account</span><span class="p">(</span><span class="s2">"my_account"</span><span class="p">)</span>
+<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="c1"># {"updated": 1, "changes": ["cooldown_cleared", "lease_cleared", ...], ...}</span>
+<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>
+<a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="c1"># Force token refresh even if auth material looks valid</span>
+<a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">repair_account</span><span class="p">(</span><span class="s2">"my_account"</span><span class="p">,</span> <span class="n">force_refresh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="reset_account_cooldowns">reset_account_cooldowns()<a class="headerlink" href="#reset_account_cooldowns" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="c1"># Reset all account cooldowns</span>
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="n">db</span><span class="o">.</span><span class="n">reset_account_cooldowns</span><span class="p">()</span>
+<a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>
+<a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="c1"># Reset specific accounts</span>
+<a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="n">db</span><span class="o">.</span><span class="n">reset_account_cooldowns</span><span class="p">(</span><span class="n">usernames</span><span class="o">=</span><span class="p">[</span><span class="s2">"account1"</span><span class="p">,</span> <span class="s2">"account2"</span><span class="p">])</span>
+<a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a>
+<a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a><span class="c1"># Include unusable accounts (reactivates them)</span>
+<a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a><span class="n">db</span><span class="o">.</span><span class="n">reset_account_cooldowns</span><span class="p">(</span><span class="n">include_unusable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="clear_leases">clear_leases()<a class="headerlink" href="#clear_leases" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="c1"># Clear expired leases only (safe)</span>
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a><span class="n">db</span><span class="o">.</span><span class="n">clear_leases</span><span class="p">(</span><span class="n">expired_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>
+<a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a><span class="c1"># Clear all leases</span>
+<a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a><span class="n">db</span><span class="o">.</span><span class="n">clear_leases</span><span class="p">(</span><span class="n">expired_only</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="reset_daily_counters">reset_daily_counters()<a class="headerlink" href="#reset_daily_counters" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="n">db</span><span class="o">.</span><span class="n">reset_daily_counters</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="other-methods">Other methods<a class="headerlink" href="#other-methods" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>delete_account(username)</code> — Remove an account from the pool.</li>
+<li><code>set_account_proxy(username, proxy)</code> — Set or clear a per-account proxy override.</li>
+<li><code>mark_account_unusable(username)</code> — Mark an account as unusable (won't be leased).</li>
+<li><code>import_accounts_from_sources(...)</code> — Import accounts from files/cookies into the DB.</li>
+<li><code>collapse_duplicates_by_auth_token(dry_run=True)</code> — Find and merge duplicate accounts.</li>
+<li><code>get_checkpoint(query_hash)</code> / <code>clear_checkpoint(query_hash)</code> / <code>clear_all_checkpoints()</code> — Manage resume checkpoints.</li>
+<li><code>list_runs(limit=50)</code> / <code>last_run()</code> / <code>runs_summary()</code> — Inspect run history.</li>
+</ul>
+<hr />
+<h2 id="logging">Logging<a class="headerlink" href="#logging" title="Permanent link">&para;</a></h2>
+<p>Scweet uses Python's standard <code>logging</code> module under the <code>"Scweet"</code> logger namespace. By default no output is produced (NullHandler — standard library practice). To see logs, configure a handler on the <code>"Scweet"</code> logger in your application:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>
+<a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a><span class="c1"># or target only Scweet:</span>
+<a id="__codelineno-37-5" name="__codelineno-37-5" href="#__codelineno-37-5"></a><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"Scweet"</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<a id="__codelineno-37-6" name="__codelineno-37-6" href="#__codelineno-37-6"></a><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"Scweet"</span><span class="p">)</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
+</code></pre></div>
+<p>The CLI automatically sets up INFO-level logging to stderr. Pass <code>-v</code> / <code>--verbose</code> to the CLI for DEBUG-level output.</p>
+<hr />
+<h2 id="async-usage">Async Usage<a class="headerlink" href="#async-usage" title="Permanent link">&para;</a></h2>
+<p>All public methods have async variants. Use them in async contexts:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">Scweet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scweet</span>
+<a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a>
+<a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">cookies_file</span><span class="o">=</span><span class="s2">"cookies.json"</span><span class="p">)</span>
+<a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a>
+<a id="__codelineno-38-7" name="__codelineno-38-7" href="#__codelineno-38-7"></a>    <span class="n">tweets</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">asearch</span><span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-38-8" name="__codelineno-38-8" href="#__codelineno-38-8"></a>    <span class="n">profiles</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">aget_user_info</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">])</span>
+<a id="__codelineno-38-9" name="__codelineno-38-9" href="#__codelineno-38-9"></a>    <span class="n">followers</span> <span class="o">=</span> <span class="k">await</span> <span class="n">s</span><span class="o">.</span><span class="n">aget_followers</span><span class="p">([</span><span class="s2">"elonmusk"</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<a id="__codelineno-38-10" name="__codelineno-38-10" href="#__codelineno-38-10"></a>
+<a id="__codelineno-38-11" name="__codelineno-38-11" href="#__codelineno-38-11"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</code></pre></div>
+<p>The sync methods (<code>search</code>, <code>get_followers</code>, etc.) wrap their async counterparts with <code>asyncio.run()</code>, so they cannot be called from within an already-running event loop.</p>
+<h3 id="no-close-needed">No close needed<a class="headerlink" href="#no-close-needed" title="Permanent link">&para;</a></h3>
+<p><code>Scweet</code> and <code>ScweetDB</code> don't require explicit closing. HTTP sessions are created and closed per-request internally, and SQLite connections are scoped per-operation. You can create a <code>Scweet</code> instance, use it, and let it go out of scope — no resource leaks.</p>
+<hr />
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<p>All Scweet methods raise exceptions on failure. Wrap calls in try/except to handle errors explicitly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">Scweet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scweet</span><span class="p">,</span> <span class="n">AccountPoolExhausted</span><span class="p">,</span> <span class="n">RateLimitError</span><span class="p">,</span> <span class="n">AuthError</span><span class="p">,</span> <span class="n">NetworkError</span><span class="p">,</span> <span class="n">RunFailed</span>
+<a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>
+<a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a><span class="n">s</span> <span class="o">=</span> <span class="n">Scweet</span><span class="p">(</span><span class="n">cookies_file</span><span class="o">=</span><span class="s2">"cookies.json"</span><span class="p">)</span>
+<a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>
+<a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>    <span class="n">tweets</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"query"</span><span class="p">)</span>
+<a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a><span class="k">except</span> <span class="n">AccountPoolExhausted</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No accounts available: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a><span class="k">except</span> <span class="n">RateLimitError</span><span class="p">:</span>
+<a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">"Rate limited — wait for cooldowns and retry"</span><span class="p">)</span>
+<a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a><span class="k">except</span> <span class="n">AuthError</span><span class="p">:</span>
+<a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">"Credentials expired — refresh your auth_token/ct0"</span><span class="p">)</span>
+<a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a><span class="k">except</span> <span class="n">NetworkError</span><span class="p">:</span>
+<a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">"Network issue — check your connection or proxy"</span><span class="p">)</span>
+<a id="__codelineno-39-15" name="__codelineno-39-15" href="#__codelineno-39-15"></a><span class="k">except</span> <span class="n">RunFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-39-16" name="__codelineno-39-16" href="#__codelineno-39-16"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Scrape failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</code></pre></div>
+<p>This applies to all methods: <code>search</code>, <code>get_profile_tweets</code>, <code>get_followers</code>, <code>get_following</code>, and <code>get_user_info</code>.</p>
+<h3 id="exception-hierarchy">Exception hierarchy<a class="headerlink" href="#exception-hierarchy" title="Permanent link">&para;</a></h3>
+<p>All Scweet exceptions inherit from <code>ScweetError</code>, so you can catch everything with a single handler:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>ScweetError                          # Base — catch-all
+<a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>  AccountPoolExhausted               # No eligible accounts (all cooled down / at daily limits)
+<a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>  ConfigError                        # A setting is invalid — raised before any request
+<a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a>  ManifestError                      # The GraphQL query ids could not be loaded or validated
+<a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a>  ResumeError                        # The checkpoint of a resumed run is missing or unreadable
+<a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>  AccountSessionBuildError           # An account session could not be built
+<a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a>    AccountSessionAuthError          # The cookies of that account are missing or invalid
+<a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a>    AccountSessionTransientError     # A temporary fault — the account stays in the pool
+<a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a>    AccountSessionRuntimeError       # An unexpected fault while the session started
+<a id="__codelineno-40-10" name="__codelineno-40-10" href="#__codelineno-40-10"></a>  EngineError                        # Engine-level runtime error
+<a id="__codelineno-40-11" name="__codelineno-40-11" href="#__codelineno-40-11"></a>    RunFailed                        # Run completed but couldn't produce results
+<a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a>      RateLimitError                 # All accounts rate-limited (429) — wait and retry
+<a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a>      AuthError                      # Credentials invalid or expired (401/403)
+<a id="__codelineno-40-14" name="__codelineno-40-14" href="#__codelineno-40-14"></a>      NetworkError                   # Network/connectivity failure
+<a id="__codelineno-40-15" name="__codelineno-40-15" href="#__codelineno-40-15"></a>      ProxyError                     # Proxy misconfiguration or connectivity failure
+</code></pre></div>
+<p>The <code>AccountSession*</code> group tells a dead account from a temporary fault. <code>AccountSessionAuthError</code> means the
+cookies of that one account are finished, so Scweet cools it for a long period.
+<code>AccountSessionTransientError</code> means the fault was temporary, so the account stays available.</p>
+<p>These eight are importable from the top-level package:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">Scweet</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>    <span class="n">ScweetError</span><span class="p">,</span> <span class="n">AccountPoolExhausted</span><span class="p">,</span>
+<a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a>    <span class="n">RunFailed</span><span class="p">,</span> <span class="n">RateLimitError</span><span class="p">,</span> <span class="n">AuthError</span><span class="p">,</span> <span class="n">NetworkError</span><span class="p">,</span> <span class="n">ProxyError</span><span class="p">,</span> <span class="n">EngineError</span><span class="p">,</span>
+<a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a><span class="p">)</span>
+</code></pre></div>
+<p>The rest come from the module of the exceptions:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">Scweet.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>    <span class="n">ConfigError</span><span class="p">,</span> <span class="n">ManifestError</span><span class="p">,</span> <span class="n">ResumeError</span><span class="p">,</span>
+<a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>    <span class="n">AccountSessionBuildError</span><span class="p">,</span> <span class="n">AccountSessionAuthError</span><span class="p">,</span>
+<a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>    <span class="n">AccountSessionTransientError</span><span class="p">,</span> <span class="n">AccountSessionRuntimeError</span><span class="p">,</span>
+<a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h3>
+<p><strong>Empty results / fewer tweets than expected</strong>
+- Check your date range — Twitter search is often shallow on older dates
+- Check <code>display_type</code> — the default <code>"Latest"</code> is chronological; <code>"Top"</code> is a ranked selection and holds far fewer tweets
+- Your account may have hit its daily cap (<code>daily_requests_limit</code> / <code>daily_tweets_limit</code> in <code>ScweetConfig</code>). Check with <code>ScweetDB("scweet_state.db").accounts_summary()</code>
+- Run with logging enabled to see what's happening: <code>logging.basicConfig(level=logging.INFO)</code></p>
+<p><strong><code>AccountPoolExhausted</code></strong>
+- All accounts are cooling down or at daily limits. The error message includes counts: <code>total=N, unusable=M, cooling_down=K</code>
+- Wait for cooldowns to expire, or add more accounts
+- Reset cooldowns manually: <code>ScweetDB("scweet_state.db").reset_account_cooldowns()</code></p>
+<p><strong><code>RateLimitError</code></strong>
+- X has rate-limited your accounts. Wait for cooldowns (usually a few minutes) and retry
+- Add more accounts to spread the load</p>
+<p><strong><code>AuthError</code></strong>
+- Your <code>auth_token</code> or <code>ct0</code> cookie has expired — refresh them from your browser
+- Use <code>ScweetDB("scweet_state.db").repair_account("username", force_refresh=True)</code> to trigger token refresh</p>
+<p><strong><code>RunFailed</code> / <code>NetworkError</code></strong>
+- Check your internet connection and proxy configuration
+- X may have rotated GraphQL query IDs — pass <code>manifest_scrape_on_init=True</code> to <code>Scweet()</code> (or <code>--manifest-scrape-on-init</code> in the CLI) to auto-fetch fresh ones
+- 404 errors in logs mean stale query IDs (transient) — not bad auth</p>
+<hr />
+<h2 id="cli">CLI<a class="headerlink" href="#cli" title="Permanent link">&para;</a></h2>
+<p>Scweet ships with a <code>scweet</code> command-line tool installed automatically alongside the package. No extra setup required — just <code>pip install -U Scweet</code>.</p>
+<h3 id="usage-pattern">Usage pattern<a class="headerlink" href="#usage-pattern" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>scweet [auth options] [config options] &lt;subcommand&gt; [subcommand options]
+</code></pre></div>
+<h3 id="global-options">Global options<a class="headerlink" href="#global-options" title="Permanent link">&para;</a></h3>
+<p><strong>Auth:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--auth-token TOKEN</code></td>
+<td><code>auth_token</code> cookie value</td>
+</tr>
+<tr>
+<td><code>--cookies-file FILE</code></td>
+<td>Path to a cookies JSON file</td>
+</tr>
+<tr>
+<td><code>--env-file FILE</code></td>
+<td>Path to a <code>.env</code> file</td>
+</tr>
+<tr>
+<td><code>--db-path PATH</code></td>
+<td>SQLite state file (default: <code>scweet_state.db</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Config:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--proxy PROXY</code></td>
+<td>Proxy URL or JSON string</td>
+</tr>
+<tr>
+<td><code>--concurrency N</code></td>
+<td>Worker concurrency (default: <code>5</code>)</td>
+</tr>
+<tr>
+<td><code>--manifest-scrape-on-init</code></td>
+<td>Scrape fresh query IDs from X's main.js on startup</td>
+</tr>
+</tbody>
+</table>
+<h3 id="output-options">Output options<a class="headerlink" href="#output-options" title="Permanent link">&para;</a></h3>
+<p>Available on every subcommand:</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--save</code></td>
+<td>Save results to file</td>
+</tr>
+<tr>
+<td><code>--save-format {csv,json,both}</code></td>
+<td>File format (default: <code>csv</code>)</td>
+</tr>
+<tr>
+<td><code>--save-dir DIR</code></td>
+<td>Output directory (default: <code>outputs</code>)</td>
+</tr>
+<tr>
+<td><code>--save-name NAME</code></td>
+<td>Base filename for saved output</td>
+</tr>
+<tr>
+<td><code>--pretty</code></td>
+<td>Print results as indented JSON to stdout</td>
+</tr>
+</tbody>
+</table>
+<p>By default the CLI runs silently — no output is printed. Use <code>--save</code> to write results to a file, <code>--pretty</code> to print to stdout, or both together.</p>
+<h3 id="subcommands">Subcommands<a class="headerlink" href="#subcommands" title="Permanent link">&para;</a></h3>
+<h4 id="search"><code>search</code><a class="headerlink" href="#search" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>search<span class="w"> </span><span class="o">[</span>QUERY<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</code></pre></div>
+<p><code>QUERY</code> is optional — you can use filters alone.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--since DATE</code></td>
+<td>Start date <code>YYYY-MM-DD</code></td>
+</tr>
+<tr>
+<td><code>--until DATE</code></td>
+<td>End date <code>YYYY-MM-DD</code></td>
+</tr>
+<tr>
+<td><code>--limit N</code></td>
+<td>Max tweets to return</td>
+</tr>
+<tr>
+<td><code>--lang CODE</code></td>
+<td>Language code (e.g. <code>en</code>)</td>
+</tr>
+<tr>
+<td><code>--display-type {Top,Latest}</code></td>
+<td>Default: <code>Latest</code></td>
+</tr>
+<tr>
+<td><code>--from USER [USER ...]</code></td>
+<td>Tweets from these users</td>
+</tr>
+<tr>
+<td><code>--to USER [USER ...]</code></td>
+<td>Tweets sent to these users</td>
+</tr>
+<tr>
+<td><code>--mention USER [USER ...]</code></td>
+<td>Tweets mentioning these users</td>
+</tr>
+<tr>
+<td><code>--all-words WORD [WORD ...]</code></td>
+<td>Tweets containing ALL of these words (AND)</td>
+</tr>
+<tr>
+<td><code>--any-words WORD [WORD ...]</code></td>
+<td>Tweets containing ANY of these words (OR)</td>
+</tr>
+<tr>
+<td><code>--exact-phrases PHRASE [PHRASE ...]</code></td>
+<td>Tweets containing these exact phrases</td>
+</tr>
+<tr>
+<td><code>--hashtags-any TAG [TAG ...]</code></td>
+<td>Tweets containing any of these hashtags</td>
+</tr>
+<tr>
+<td><code>--hashtags-exclude TAG [TAG ...]</code></td>
+<td>Exclude tweets with these hashtags</td>
+</tr>
+<tr>
+<td><code>--exclude-words WORD [WORD ...]</code></td>
+<td>Exclude tweets with these words</td>
+</tr>
+<tr>
+<td><code>--tweet-type {originals-only,replies-only,retweets-only,exclude-replies,exclude-retweets}</code></td>
+<td>Filter by tweet type</td>
+</tr>
+<tr>
+<td><code>--min-likes N</code></td>
+<td>Minimum likes</td>
+</tr>
+<tr>
+<td><code>--min-replies N</code></td>
+<td>Minimum replies</td>
+</tr>
+<tr>
+<td><code>--min-retweets N</code></td>
+<td>Minimum retweets</td>
+</tr>
+<tr>
+<td><code>--has-images</code></td>
+<td>Must contain images</td>
+</tr>
+<tr>
+<td><code>--has-videos</code></td>
+<td>Must contain videos</td>
+</tr>
+<tr>
+<td><code>--has-links</code></td>
+<td>Must contain links</td>
+</tr>
+<tr>
+<td><code>--has-mentions</code></td>
+<td>Must contain @mentions</td>
+</tr>
+<tr>
+<td><code>--has-hashtags</code></td>
+<td>Must contain hashtags</td>
+</tr>
+<tr>
+<td><code>--verified-only</code></td>
+<td>Verified accounts only</td>
+</tr>
+<tr>
+<td><code>--blue-verified-only</code></td>
+<td>Blue verified accounts only</td>
+</tr>
+<tr>
+<td><code>--place PLACE</code></td>
+<td>Place filter</td>
+</tr>
+<tr>
+<td><code>--geocode GEOCODE</code></td>
+<td>Geocode filter (e.g. <code>40.7,-74.0,10km</code>)</td>
+</tr>
+<tr>
+<td><code>--near PLACE</code></td>
+<td>Near this location (e.g. <code>"San Francisco"</code>)</td>
+</tr>
+<tr>
+<td><code>--within RADIUS</code></td>
+<td>Radius for <code>--near</code> (e.g. <code>15km</code> or <code>10mi</code>)</td>
+</tr>
+<tr>
+<td><code>--resume</code></td>
+<td>Resume from last checkpoint</td>
+</tr>
+<tr>
+<td><code>--max-empty-pages N</code></td>
+<td>Stop after N consecutive empty pages</td>
+</tr>
+</tbody>
+</table>
+<h4 id="profile-tweets_1"><code>profile-tweets</code><a class="headerlink" href="#profile-tweets_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>profile-tweets<span class="w"> </span>USER<span class="w"> </span><span class="o">[</span>USER<span class="w"> </span>...<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--limit N</code></td>
+<td>Max tweets to return</td>
+</tr>
+<tr>
+<td><code>--include-replies</code></td>
+<td>Read the tab "Posts and replies" instead of "Posts", so the result holds the replies of the user</td>
+</tr>
+<tr>
+<td><code>--resume</code></td>
+<td>Resume from last checkpoint</td>
+</tr>
+<tr>
+<td><code>--max-empty-pages N</code></td>
+<td>Stop after N consecutive empty pages</td>
+</tr>
+</tbody>
+</table>
+<h4 id="followers-following-verified-followers"><code>followers</code> / <code>following</code> / <code>verified-followers</code><a class="headerlink" href="#followers-following-verified-followers" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>followers<span class="w"> </span>USER<span class="w"> </span><span class="o">[</span>USER<span class="w"> </span>...<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>following<span class="w"> </span>USER<span class="w"> </span><span class="o">[</span>USER<span class="w"> </span>...<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>verified-followers<span class="w"> </span>USER<span class="w"> </span><span class="o">[</span>USER<span class="w"> </span>...<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--limit N</code></td>
+<td>Max users to return</td>
+</tr>
+<tr>
+<td><code>--resume</code></td>
+<td>Resume from last checkpoint</td>
+</tr>
+<tr>
+<td><code>--max-empty-pages N</code></td>
+<td>Stop after N consecutive empty pages</td>
+</tr>
+<tr>
+<td><code>--raw-json</code></td>
+<td>Return raw API JSON instead of normalized dicts</td>
+</tr>
+</tbody>
+</table>
+<h4 id="user-info_1"><code>user-info</code><a class="headerlink" href="#user-info_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>user-info<span class="w"> </span>USER<span class="w"> </span><span class="o">[</span>USER<span class="w"> </span>...<span class="o">]</span>
+<a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>user-info<span class="w"> </span>--ids<span class="w"> </span>ID<span class="w"> </span><span class="o">[</span>ID<span class="w"> </span>...<span class="o">]</span>
+</code></pre></div>
+<p>No pagination — one API call per user, or one call per 100 ids.</p>
+<h4 id="tweet-info-tweet-replies-reposters"><code>tweet-info</code> / <code>tweet-replies</code> / <code>reposters</code><a class="headerlink" href="#tweet-info-tweet-replies-reposters" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>tweet-info<span class="w"> </span>ID<span class="w"> </span><span class="o">[</span>ID<span class="w"> </span>...<span class="o">]</span><span class="w">           </span><span class="c1"># up to 50 ids per request</span>
+<a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>tweet-replies<span class="w"> </span>ID<span class="w"> </span>--limit<span class="w"> </span><span class="m">200</span>
+<a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>reposters<span class="w"> </span>ID<span class="w"> </span>--limit<span class="w"> </span><span class="m">500</span>
+</code></pre></div>
+<h4 id="search-users-trending-profile-media"><code>search-users</code> / <code>trending</code> / <code>profile-media</code><a class="headerlink" href="#search-users-trending-profile-media" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>search-users<span class="w"> </span><span class="s2">"python developer"</span><span class="w"> </span>--limit<span class="w"> </span><span class="m">50</span>
+<a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>trending<span class="w"> </span>--pretty
+<a id="__codelineno-49-3" name="__codelineno-49-3" href="#__codelineno-49-3"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>profile-media<span class="w"> </span>nasa<span class="w"> </span>--limit<span class="w"> </span><span class="m">100</span>
+</code></pre></div>
+<h4 id="refresh-manifest"><code>refresh-manifest</code><a class="headerlink" href="#refresh-manifest" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a>scweet<span class="w"> </span>refresh-manifest
+<a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a><span class="c1"># reposters: ROjiuYUeo... -&gt; iH7h2J19n...   (or: "Every query id is current.")</span>
+</code></pre></div>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a><span class="c1"># Search (defaults to last 30 days — set explicit dates for reproducibility)</span>
+<a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>search<span class="w"> </span><span class="s2">"ChatGPT"</span><span class="w"> </span>--limit<span class="w"> </span><span class="m">200</span><span class="w"> </span>--pretty
+<a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a>
+<a id="__codelineno-51-4" name="__codelineno-51-4" href="#__codelineno-51-4"></a><span class="c1"># Search with date range and engagement filters</span>
+<a id="__codelineno-51-5" name="__codelineno-51-5" href="#__codelineno-51-5"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>search<span class="w"> </span><span class="s2">"AI tools"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-51-6" name="__codelineno-51-6" href="#__codelineno-51-6"></a><span class="w">  </span>--since<span class="w"> </span><span class="m">2026</span>-01-01<span class="w"> </span>--until<span class="w"> </span><span class="m">2026</span>-06-01<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-51-7" name="__codelineno-51-7" href="#__codelineno-51-7"></a><span class="w">  </span>--min-likes<span class="w"> </span><span class="m">100</span><span class="w"> </span>--has-images<span class="w"> </span>--limit<span class="w"> </span><span class="m">500</span>
+<a id="__codelineno-51-8" name="__codelineno-51-8" href="#__codelineno-51-8"></a>
+<a id="__codelineno-51-9" name="__codelineno-51-9" href="#__codelineno-51-9"></a><span class="c1"># Tweets from specific accounts containing a hashtag</span>
+<a id="__codelineno-51-10" name="__codelineno-51-10" href="#__codelineno-51-10"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>search<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-51-11" name="__codelineno-51-11" href="#__codelineno-51-11"></a><span class="w">  </span>--from<span class="w"> </span>elonmusk<span class="w"> </span>naval<span class="w"> </span>sama<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-51-12" name="__codelineno-51-12" href="#__codelineno-51-12"></a><span class="w">  </span>--hashtags-any<span class="w"> </span>AI<span class="w"> </span>startups<span class="w"> </span>--limit<span class="w"> </span><span class="m">100</span>
+<a id="__codelineno-51-13" name="__codelineno-51-13" href="#__codelineno-51-13"></a>
+<a id="__codelineno-51-14" name="__codelineno-51-14" href="#__codelineno-51-14"></a><span class="c1"># Pull a user's timeline, save to JSON</span>
+<a id="__codelineno-51-15" name="__codelineno-51-15" href="#__codelineno-51-15"></a>scweet<span class="w"> </span>--cookies-file<span class="w"> </span>cookies.json<span class="w"> </span>profile-tweets<span class="w"> </span>elonmusk<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-51-16" name="__codelineno-51-16" href="#__codelineno-51-16"></a><span class="w">  </span>--limit<span class="w"> </span><span class="m">200</span><span class="w"> </span>--save<span class="w"> </span>--save-format<span class="w"> </span>json
+<a id="__codelineno-51-17" name="__codelineno-51-17" href="#__codelineno-51-17"></a>
+<a id="__codelineno-51-18" name="__codelineno-51-18" href="#__codelineno-51-18"></a><span class="c1"># Get followers and pipe to jq</span>
+<a id="__codelineno-51-19" name="__codelineno-51-19" href="#__codelineno-51-19"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>followers<span class="w"> </span>elonmusk<span class="w"> </span>--limit<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--pretty<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.[].username'</span>
+<a id="__codelineno-51-20" name="__codelineno-51-20" href="#__codelineno-51-20"></a>
+<a id="__codelineno-51-21" name="__codelineno-51-21" href="#__codelineno-51-21"></a><span class="c1"># Lookup multiple profiles</span>
+<a id="__codelineno-51-22" name="__codelineno-51-22" href="#__codelineno-51-22"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>user-info<span class="w"> </span>elonmusk<span class="w"> </span>OpenAI<span class="w"> </span>sama<span class="w"> </span>--pretty
+<a id="__codelineno-51-23" name="__codelineno-51-23" href="#__codelineno-51-23"></a>
+<a id="__codelineno-51-24" name="__codelineno-51-24" href="#__codelineno-51-24"></a><span class="c1"># Resume a previously interrupted search</span>
+<a id="__codelineno-51-25" name="__codelineno-51-25" href="#__codelineno-51-25"></a>scweet<span class="w"> </span>--auth-token<span class="w"> </span>TOKEN<span class="w"> </span>search<span class="w"> </span><span class="s2">"python"</span><span class="w"> </span>--since<span class="w"> </span><span class="m">2026</span>-01-01<span class="w"> </span>--resume
+</code></pre></div>
+<h3 id="help">Help<a class="headerlink" href="#help" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a>scweet<span class="w"> </span>--help
+<a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a>scweet<span class="w"> </span>search<span class="w"> </span>--help
+<a id="__codelineno-52-3" name="__codelineno-52-3" href="#__codelineno-52-3"></a>scweet<span class="w"> </span>followers<span class="w"> </span>--help
+</code></pre></div>
+<hr />
+<h2 id="migration-from-v4">Migration from v4<a class="headerlink" href="#migration-from-v4" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>v4</th>
+<th>v5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Scweet.from_sources(...)</code></td>
+<td><code>Scweet(cookies_file=...)</code></td>
+</tr>
+<tr>
+<td><code>scweet.scrape(words=["bitcoin"], ...)</code></td>
+<td><code>s.search("bitcoin", ...)</code></td>
+</tr>
+<tr>
+<td><code>scweet.ascrape(...)</code></td>
+<td><code>s.asearch(...)</code></td>
+</tr>
+<tr>
+<td><code>scweet.profile_tweets(usernames=[...])</code></td>
+<td><code>s.get_profile_tweets([...])</code></td>
+</tr>
+<tr>
+<td><code>scweet.get_user_information(usernames=[...])</code></td>
+<td><code>s.get_user_info([...])</code></td>
+</tr>
+<tr>
+<td><code>ScweetConfig.from_sources(overrides={...})</code></td>
+<td><code>ScweetConfig(field=value)</code></td>
+</tr>
+<tr>
+<td>Nested config (<code>pool.concurrency</code>)</td>
+<td>Flat config (<code>concurrency</code>)</td>
+</tr>
+<tr>
+<td><code>from Scweet.scweet import Scweet</code></td>
+<td><code>from Scweet import Scweet</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p>MIT License</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      MIT licence
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Altimis/Scweet" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/scweet/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "toc.follow", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

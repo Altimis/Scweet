@@ -1,0 +1,1680 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Scrape Twitter / X without the official API. Tweets, profiles, followers and trends.">
+      
+      
+      
+        <link rel="canonical" href="https://altimis.github.io/Scweet/changelog/">
+      
+      
+        <link rel="prev" href="../documentation/">
+      
+      
+        <link rel="next" href="../contributing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Changelog - Scweet</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Scweet" class="md-header__button md-logo" aria-label="Scweet" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Scweet
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Altimis/Scweet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Altimis/Scweet
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Scweet" class="md-nav__button md-logo" aria-label="Scweet" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Scweet
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Altimis/Scweet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Altimis/Scweet
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#580-2026-09-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.8.0] - 2026-09-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.8.0] - 2026-09-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#570-2026-09-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.7.0] - 2026-09-14
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.7.0] - 2026-09-14">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#560-2026-09-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.6.0] - 2026-09-13
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.6.0] - 2026-09-13">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#551-2026-09-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.5.1] - 2026-09-13
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.5.1] - 2026-09-13">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#550-2026-09-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.5.0] - 2026-09-09
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.5.0] - 2026-09-09">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#540-2026-09-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.4.0] - 2026-09-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.4.0] - 2026-09-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#531-2026-05-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.3.1] - 2026-05-19
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.3.1] - 2026-05-19">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#530-2026-04-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.3.0] - 2026-04-14
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.3.0] - 2026-04-14">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#520-2026-04-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.2.0] - 2026-04-03
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.2.0] - 2026-04-03">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#510-2026-03-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.1.0] - 2026-03-25
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.1.0] - 2026-03-25">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#500-2025" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.0.0] - 2025
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.0.0] - 2025">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#breaking-vs-v4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking (vs v4)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#580-2026-09-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.8.0] - 2026-09-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.8.0] - 2026-09-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#570-2026-09-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.7.0] - 2026-09-14
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.7.0] - 2026-09-14">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#560-2026-09-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.6.0] - 2026-09-13
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.6.0] - 2026-09-13">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#551-2026-09-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.5.1] - 2026-09-13
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.5.1] - 2026-09-13">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#550-2026-09-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.5.0] - 2026-09-09
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.5.0] - 2026-09-09">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#540-2026-09-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.4.0] - 2026-09-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.4.0] - 2026-09-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#531-2026-05-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.3.1] - 2026-05-19
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.3.1] - 2026-05-19">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#530-2026-04-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.3.0] - 2026-04-14
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.3.0] - 2026-04-14">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#520-2026-04-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.2.0] - 2026-04-03
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.2.0] - 2026-04-03">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#510-2026-03-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.1.0] - 2026-03-25
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.1.0] - 2026-03-25">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#500-2025" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [5.0.0] - 2025
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[5.0.0] - 2025">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#breaking-vs-v4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking (vs v4)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Altimis/Scweet/edit/master/docs/changelog.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<p>All notable changes to this project are documented in this file.</p>
+<h2 id="580-2026-09-15">[5.8.0] - 2026-09-15<a class="headerlink" href="#580-2026-09-15" title="Permanent link">&para;</a></h2>
+<p>This release removes the silent failures that a user could meet, makes the first run obvious, and adds the newest versions of Python. Every change is additive: no method, no field and no default of 5.7.x changes.</p>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>A run no longer fails silently when the request signature cannot build.</strong> X answers HTTP 404 for a GraphQL request without the <code>x-client-transaction-id</code> header, and that 404 describes the request, not the account. The build of that header needs a live page of X; a transient network failure of that page left the header absent, and the run then rested the accounts one by one until it ended with no clear cause. Now the build retries with a backoff, a 404 rebuilds the header and retries the request on the same account before any cooldown, and a request that still cannot carry the header logs the reason.</li>
+<li><strong>A wrong or expired <code>auth_token</code> now reports at once.</strong> Before, the constructor gave no warning and the first call failed with a message about cooldowns. The provisioning now counts the usable accounts, and the constructor warns when none is usable and names the likely cause.</li>
+<li><strong>A <code>cookies_file</code> accepts every shape that an inline <code>cookies=</code> accepts</strong>, including a file exported by a browser cookie extension. The two paths now share one loader, so the same data gives the same accounts.</li>
+<li><strong><code>get_tweet_info</code>, <code>get_trending</code> and <code>get_user_info(user_ids=...)</code> raise a clear error on a refusal.</strong> A missing or deleted item still gives no row and no error, but a transport failure or a non-200 status no longer returns a silent empty list.</li>
+</ul>
+<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Python 3.13 and 3.14 are supported and tested.</strong> The test suite runs on Python 3.9 through 3.14.</li>
+<li><strong>The package ships <code>py.typed</code>.</strong> A type checker of a project that uses Scweet now reads the type hints of the library.</li>
+<li>New <code>ScweetConfig</code> fields for the request signature: <code>transaction_init_attempts</code> (3), <code>transaction_init_backoff_s</code> (1.5), and <code>request_404_retries</code> (1). A <code>TransactionIdProvider.refresh()</code> method rebuilds the header on demand.</li>
+</ul>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The README quickstart and the documentation teach the same first path: one <code>auth_token</code>, one call, one result. The quickstart code block runs as written, with no placeholder proxy. A test pins the two documents to the same first path.</li>
+</ul>
+<h2 id="570-2026-09-14">[5.7.0] - 2026-09-14<a class="headerlink" href="#570-2026-09-14" title="Permanent link">&para;</a></h2>
+<p>The read surface grows from 6 operations to 13, and the query-id refresh now covers every one of them. Every change is additive.</p>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>get_tweet_info(tweet_ids)</code></strong> — full tweet records for ids you already hold, up to 50 ids in one request. A deleted id gives no row and no error.</li>
+<li><strong><code>get_tweet_replies(tweet_id, limit=...)</code></strong> — the replies under one tweet, as full tweet records, without the focal tweet itself.</li>
+<li><strong><code>get_reposters(tweet_id, limit=...)</code></strong> — the accounts that reposted one tweet, as user records.</li>
+<li><strong><code>get_user_info(user_ids=[...])</code></strong> — profile lookup by numeric id, up to 100 ids in one request; combines with lookup by username. When X refuses the id endpoint for a connection (it answers HTTP 403 there at times), the call raises an error that names the refusal and the username alternative, instead of returning an empty list.</li>
+<li><strong><code>search_users(query, limit=...)</code></strong> — the "People" tab of a search, as user records.</li>
+<li><strong><code>get_trending()</code></strong> — the trends of the explore page: the name, the context line with the post count, and the raw item.</li>
+<li><strong><code>get_profile_media(users, limit=...)</code></strong> — only the tweets of a profile that carry an image or a video.</li>
+<li><strong><code>get_profile_tweets(..., include_replies=True)</code></strong> — the timeline with the replies of the profile included.</li>
+<li><strong><code>refresh_manifest()</code></strong> and the CLI command <strong><code>scweet refresh-manifest</code></strong> — read fresh GraphQL query ids from the live bundles of X at any moment, and report each id that rotated. A stale id answers 404 for every request, so call this when requests start to fail.</li>
+<li>Every new method has an async twin and a CLI subcommand: <code>tweet-info</code>, <code>tweet-replies</code>, <code>reposters</code>, <code>search-users</code>, <code>trending</code>, <code>profile-media</code>, <code>profile-tweets --include-replies</code>, <code>user-info --ids</code>.</li>
+</ul>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>The query-id scrape now reaches the operations that <code>main.js</code> does not carry.</strong> Some operations live in lazy chunk files. The scrape reads the chunk maps that the page of X embeds, sweeps the likely chunks first, and stops at the find — measured: the missing id was found within 9 small fetches. Before, an id outside <code>main.js</code> could never heal.</li>
+<li>The bundled default ids were refreshed from the live bundle on 2026-09-13, and each new endpoint ships with its measured request allowance.</li>
+</ul>
+<h2 id="560-2026-09-13">[5.6.0] - 2026-09-13<a class="headerlink" href="#560-2026-09-13" title="Permanent link">&para;</a></h2>
+<p>Every change below is additive. A script written against 5.5.x reads the same values from the same fields.</p>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>A profile reported 0 followers, 0 following and 0 tweets.</strong> X stopped sending the flat <code>legacy</code> object of a user and moved the counts into <code>relationship_counts</code>, <code>tweet_counts</code> and <code>action_counts</code>. The parser read only the old place, so <code>get_user_info</code>, <code>get_followers</code>, <code>get_following</code> and <code>get_verified_followers</code> returned a zero for every count. Captured 2026-09-13: one profile with 241,659,598 followers reported 0. The parser now reads the old place first and the new nodes after it, so an older answer of X keeps working. A real zero stays a zero.</li>
+<li>A profile record now carries its banner image again, and the links inside the bio, for the same reason.</li>
+</ul>
+<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>get_verified_followers()</code> / <code>aget_verified_followers()</code> and the CLI command <code>verified-followers</code>.</strong> The engine already supported the endpoint of X for the verified followers of a profile, and no public method reached it.</li>
+<li><strong>A tweet record carries the fields that X already sends:</strong> <code>views</code>, <code>quotes</code>, <code>bookmarks</code>, <code>lang</code>, <code>hashtags</code>, <code>mentions</code>, <code>urls</code>, <code>in_reply_to_tweet_id</code>, <code>in_reply_to_user</code>, <code>is_quote</code> and <code>is_retweet</code>. No extra request: the data was in the <code>raw</code> payload of every row.</li>
+<li><strong><code>quoted_tweet</code> and <code>retweeted_tweet</code></strong> hold the embedded tweet as a full tweet record, one level deep. <code>embedded_text</code> keeps its old value, which is the truncated text that X sends, so it can be shorter than the <code>text</code> of the nested record.</li>
+<li><strong><code>media.video_links</code></strong> holds the highest-bitrate MP4 of each video. An <code>m3u8</code> playlist is a stream index and not a file to save, so it is left out.</li>
+<li>A user record carries <code>identity_verified</code>, <code>pinned_tweet_ids</code> and <code>description_urls</code>.</li>
+</ul>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A count that X does not send reads <code>None</code> instead of <code>0</code>, so a caller can tell "unknown" from "zero". The counts <code>likes</code>, <code>retweets</code> and <code>comments</code> keep their old default of <code>0</code>.</li>
+</ul>
+<h2 id="551-2026-09-13">[5.5.1] - 2026-09-13<a class="headerlink" href="#551-2026-09-13" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>beautifulsoup4</code> is now a declared dependency. Two modules import <code>bs4</code>, and the package arrived only through a transitive dependency, so one dependency-resolver change could break a fresh install.</li>
+<li>The license badge in the README opens the tracked license file. The old link answered 404.</li>
+<li>The FAQ names the release of the last live verification instead of a fixed month.</li>
+</ul>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The test dependencies are declared in <code>requirements-dev.txt</code>. Before, a contributor who installed the package and ran <code>pytest</code> saw 5 async tests fail, because <code>pytest-asyncio</code> was installed only inside CI. <code>pip install -e . -r requirements-dev.txt</code> now installs everything the suite needs.</li>
+<li>The repository no longer tracks IDE settings.</li>
+</ul>
+<h2 id="550-2026-09-09">[5.5.0] - 2026-09-09<a class="headerlink" href="#550-2026-09-09" title="Permanent link">&para;</a></h2>
+<p>A search works again. Released 5.4.0 returned HTTP 404 for every search, from every account, because X
+changed the page that the library reads to bootstrap itself. This release repairs that, and it raises the
+defaults that made a first run smaller and slower than the accounts allow. Every change below is verified
+with a live run against real accounts.</p>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>A search works again. Upgrade from 5.4.0 and 5.3: in those versions every search returned HTTP 404 from every account, and the library could not repair itself.</strong> Both bootstrap paths read <code>https://x.com</code>, which answers a short shell page: it holds no <code>main.js</code> reference and no <code>"ondemand.s"</code> marker. So the manifest scrape found no bundle and kept a stale query ID, and the transaction-ID bootstrap built no <code>x-client-transaction-id</code> header. X answers 404 when that header is absent. Both paths now read <code>https://x.com/home</code>, and the six bundled query IDs are refreshed. The failure looks like a dead account, and it is not: a 404 from every account describes the request, not the credentials.</li>
+<li>A proxy URL that carries a <code>{session}</code> placeholder works on every path. The proxy check on lease, the transaction-ID bootstrap, and the cookie bootstrap from an <code>auth_token</code> each sent the literal text <code>{session}</code> as the proxy user name, and a provider answers HTTP 407 for that name. Only the account session builder replaced it.</li>
+<li>A locked account is no longer read as a successful empty page. X locks an account behind a human challenge and answers HTTP 200 with code 326 in the body. The engine now maps that answer to a <code>locked</code> status, rests the account for <code>locked_cooldown_s</code> (default 1 hour), and logs the unlock page (<code>https://x.com/account/access</code>). Before, the locked account stayed in rotation and silently returned nothing.</li>
+</ul>
+<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The daily caps per account rose: <code>daily_requests_limit</code> from 30 to 300, <code>daily_tweets_limit</code> from 600 to 6,000. The window limiter still bounds the burst rate to X's measured allowance (50 requests per 15 minutes).</li>
+<li><code>api_http_impersonate</code> now defaults to <code>"chrome"</code>, which follows the newest Chrome fingerprint that the installed <code>curl_cffi</code> supports. Before, the engine pinned <code>chrome120</code> (a December 2023 browser), and an old TLS fingerprint next to current cookies is a mismatch that anti-bot systems weigh.</li>
+<li><code>min_delay_s</code> now defaults to <code>1.0</code>: a floor between two requests of one account, so a burst does not arrive at wire speed. X counts the window total, so the floor costs little. Set <code>0</code> to remove it.</li>
+<li>The followers/following paths now hold their own window budget, <code>relationship_window_request_limit</code> (default 45). X allows 50 requests per window at the graph endpoint and restricts an account there more easily than at a search, so the budget keeps a margin of 5 instead of spending the full search budget.</li>
+<li><code>search()</code> sorts by <code>"Latest"</code> by default. <code>"Top"</code> is a ranked selection: a measured 20,000-tweet Top order returned about 1,900 unique tweets because the ranked pages repeat. <code>"Latest"</code> is chronological and fills a volume order. Pass <code>display_type="Top"</code> for the old behavior. Note: a resume checkpoint keys on the full query including <code>display_type</code>, so a resume started under the old default does not match a run under the new default.</li>
+</ul>
+<h2 id="540-2026-09-07">[5.4.0] - 2026-09-07<a class="headerlink" href="#540-2026-09-07" title="Permanent link">&para;</a></h2>
+<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A proxy URL can now contain a <code>{session}</code> placeholder, for example <code>http://user,session-{session}:pass@proxy.example.com:8000</code>. Each account session replaces it with a unique token, so each account keeps its own exit IP on a rotating proxy. Without it, every account shares one exit IP, and when that exit IP dies, every retry reaches the same dead exit and the run loses data. With it, a session that is built again after a transport failure gets a new token and a new exit IP, so a retry recovers. A proxy without the placeholder works unchanged.</li>
+</ul>
+<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Rate limiting now paces to X's real window (about 50 requests per account per 15 minutes) instead of a fixed delay between requests. A short run bursts its window budget and finishes far faster, and a long run no longer exceeds the window and triggers <code>429</code>s that get accounts blocked. New config: <code>window_request_limit</code> (50) and <code>rate_limit_window_s</code> (900). <code>min_delay_s</code> now defaults to <code>0</code> (an optional floor); <code>requests_per_min</code> is deprecated.</li>
+</ul>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>An account now hands off a margin above its rate-limit window, so a large run meets far fewer <code>429</code>s. X returns <code>x-rate-limit-remaining</code> on each page, and the count can lag, so X sometimes answers <code>429</code> one request before the header reaches zero. A <code>429</code> loses the page and forces a retry. The run now stops an account when the header falls to <code>rate_limit_min_remaining</code> (2 by default), rests it until its window resets (from <code>x-rate-limit-reset</code>), and continues its cursor on a fresh account. A measured live 20,000-tweet order lost about 10% of the data to <code>429</code>s that the margin prevents. Set <code>rate_limit_min_remaining=0</code> for the old behaviour, which hands off only when the window is fully spent.</li>
+<li>A large <code>Latest</code> search over a wide time range now returns far more of the data. A cursor chain of X stops at a depth limit while tweets remain in the range, and the run used to end there and report success. A measured live order of 20,000 tweets over 3 months returned about 21% before and about 90% after. The run now continues the range from the time of the oldest tweet it saw, which re-queries only the older, unfetched part. The run also splits the range into at least one interval per account, so every account does work and no account uses up its request budget on one dense interval. A <code>Top</code> search is ranked by engagement, not by time, and the top tweets of a range and of each half are mostly the same tweets, so the run does not continue a <code>Top</code> interval; use the <code>Latest</code> sort for a large volume. New config: <code>max_interval_depth</code> (100) caps the continuation as a safety backstop; the floor <code>scheduler_min_interval_s</code> and the result limit are the real bounds. Set <code>max_interval_depth=0</code> to turn the continuation off.</li>
+<li><code>max_empty_pages</code> now defaults to <code>3</code> instead of <code>1</code>. X sends an empty page in the middle of a chain while results remain, so a value of <code>1</code> ended the search at the first gap and returned a small part of the data while reporting success. A fixture where empty pages fall singly between data pages collected 2 of 6 tweets at <code>1</code> and all 6 at <code>3</code>. Set it back to <code>1</code> for the old behaviour.</li>
+<li>An account is no longer blocked for 30 days by a routine message from X. A <code>401</code> or <code>403</code> from a page of tweets is not proof that an account is dead — X sends it for a tweet one account cannot read, while the credentials still work. The worker now confirms with a self-lookup of the account's own handle before the long block. An unconfirmed error gives a short cooldown, so a healthy account returns in minutes instead of a month. Set <code>pool_wait_max_s</code> and the cooldown fields in <code>ScweetConfig</code> to tune the behaviour.</li>
+<li>A run no longer fails at once when every account is on a cooldown. It waits up to <code>pool_wait_max_s</code> (120s by default) for a cooldown to expire and retries, because a cooldown expires. Set <code>pool_wait_max_s=0</code> to keep the old immediate failure.</li>
+<li>Account repair no longer reports success when the write fails. <code>_attempt_account_repair</code> returned <code>True</code> and logged "repair succeeded" even when the database write raised, so an operator believed the pool held a repaired account that was not there. It now returns <code>False</code> and logs a warning. A failed account release also logs a warning instead of passing silently, because a failed release drops the account from the pool with no record.</li>
+</ul>
+<h2 id="531-2026-05-19">[5.3.1] - 2026-05-19<a class="headerlink" href="#531-2026-05-19" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Transaction-id bootstrap failure — Twitter changed the webpack manifest format, breaking the upstream <code>get_ondemand_file_url</code> regex (<code>XClientTransaction</code> 1.0.2). Replaced with positional string extraction that survives manifest reshuffles.</li>
+</ul>
+<hr />
+<h2 id="530-2026-04-14">[5.3.0] - 2026-04-14<a class="headerlink" href="#530-2026-04-14" title="Permanent link">&para;</a></h2>
+<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>manifest_scrape_on_init=</code> constructor shorthand</strong> — pass <code>manifest_scrape_on_init=True</code> directly to <code>Scweet()</code> without needing <code>ScweetConfig</code>. Overrides the config value (same pattern as <code>proxy=</code>).</li>
+<li><strong><code>--manifest-scrape-on-init</code> CLI flag</strong> — scrape fresh GraphQL query IDs from X's <code>main.js</code> bundle on startup from the command line.</li>
+<li><strong><code>save_name=</code> parameter</strong> on <code>search</code>, <code>get_profile_tweets</code>, <code>get_followers</code>, <code>get_following</code>, and <code>get_user_info</code> — set a custom base filename for saved output (without extension).</li>
+</ul>
+<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Documentation now marks <code>ct0</code> as optional in cookies examples — Scweet bootstraps it automatically from <code>auth_token</code>.</li>
+<li>Manifest scrape docs updated to reflect the new top-level constructor arg and CLI flag.</li>
+</ul>
+<hr />
+<h2 id="520-2026-04-03">[5.2.0] - 2026-04-03<a class="headerlink" href="#520-2026-04-03" title="Permanent link">&para;</a></h2>
+<h3 id="added_5">Added<a class="headerlink" href="#added_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>proxy=</code> constructor shorthand</strong> — pass a proxy URL directly to <code>Scweet(proxy="http://host:port")</code> without needing <code>ScweetConfig</code>. Overrides any proxy set in config.</li>
+</ul>
+<h3 id="fixed_6">Fixed<a class="headerlink" href="#fixed_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Python 3.9 compatibility — replaced <code>dict[str, Any] | str</code> union syntax with <code>Union[dict[str, Any], str]</code> in <code>ScweetConfig</code>. Pydantic evaluates field annotations at runtime, so the <code>|</code> syntax (PEP 604, Python 3.10+) caused a <code>TypeError</code> on 3.9.</li>
+</ul>
+<hr />
+<h2 id="510-2026-03-25">[5.1.0] - 2026-03-25<a class="headerlink" href="#510-2026-03-25" title="Permanent link">&para;</a></h2>
+<h3 id="added_6">Added<a class="headerlink" href="#added_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Command-line interface</strong> — <code>scweet</code> command installed with the package. Subcommands: <code>search</code>, <code>profile-tweets</code>, <code>followers</code>, <code>following</code>, <code>user-info</code>. Full filter, auth, and output options. Use <code>--pretty</code> to print to stdout or <code>--save</code> to write files.</li>
+<li><strong><code>embedded_text</code></strong> field — populated for quote tweets (quoted tweet text) and retweets (full retweet text), extracted from the GraphQL response.</li>
+<li><strong><code>RateLimitError</code> / <code>AuthError</code></strong> — targeted exception subclasses of <code>RunFailed</code>, raised automatically based on dominant HTTP error codes (429 → <code>RateLimitError</code>, 401/403 → <code>AuthError</code>). Both exported from the top-level package.</li>
+<li><strong>Canonical CSV column order</strong> — <code>TWEET_COLUMN_ORDER</code> / <code>USER_COLUMN_ORDER</code> constants ensure consistent, human-readable column ordering. User and media fields are flattened to <code>user_screen_name</code>, <code>user_name</code>, <code>image_links</code> in CSV; Python/JSON output preserves nested structure.</li>
+<li>Progress logging — human-readable start message with query/dates/limit; per-batch "Collected N / limit" updates; internal noise demoted to DEBUG.</li>
+<li>Output schema tables, method docstrings, troubleshooting guide, and full error hierarchy in <code>DOCUMENTATION.md</code>.</li>
+</ul>
+<h3 id="fixed_7">Fixed<a class="headerlink" href="#fixed_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>strict</code> removed from <code>ScweetConfig</code> — errors always raise exceptions (was silently swallowed by default).</li>
+<li><code>--tweet-type</code> CLI choices corrected to <code>originals-only</code>, <code>replies-only</code>, <code>retweets-only</code>, <code>exclude-replies</code>, <code>exclude-retweets</code>.</li>
+<li><code>--hashtag</code> renamed to <code>--hashtags-any</code>, <code>--exclude</code> renamed to <code>--exclude-words</code> to match library parameter names.</li>
+<li>Default search window extended from 7 to 30 days when <code>since</code> is omitted.</li>
+<li><code>configure_logging</code> removed from public exports (still used internally by the CLI).</li>
+<li><code>AccountPoolExhausted</code> message now includes account counts (total, unusable, cooling down).</li>
+<li><code>db_path</code> constructor argument now always takes precedence over <code>ScweetConfig(db_path=...)</code>.</li>
+<li>Fixed <code>query=''</code> in runner logs (was reading wrong field from <code>SearchRequest</code>).</li>
+</ul>
+<hr />
+<h2 id="500-2025">[5.0.0] - 2025<a class="headerlink" href="#500-2025" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Why the rewrite?</strong> The migration from browser automation to direct GraphQL API calls began in v3. Twitter/X progressively restricted anonymous access from 2023 onwards, making the browser-based approach increasingly brittle. v5 completed the transition by removing the browser dependency entirely. Scweet now calls X's internal GraphQL API directly — the same one the web app uses — authenticated with browser cookies. The result is faster, leaner (no headless browser), and maintainable as X's API evolves.</p>
+</blockquote>
+<h3 id="added_7">Added<a class="headerlink" href="#added_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Simplified public API: <code>Scweet</code>, <code>ScweetConfig</code>, <code>ScweetDB</code>, <code>configure_logging</code>.</li>
+<li>Flat <code>ScweetConfig</code> (~35 fields, all with sensible defaults). No nested config sections.</li>
+<li>Structured search filters: <code>all_words</code>, <code>any_words</code>, <code>exact_phrases</code>, <code>from_users</code>, <code>to_users</code>, <code>mentioning_users</code>, <code>hashtags_any</code>, <code>has_images</code>, <code>has_videos</code>, <code>min_likes</code>, <code>min_replies</code>, <code>min_retweets</code>, geo filters, and more.</li>
+<li>Profile tweets: <code>get_profile_tweets()</code> / <code>aget_profile_tweets()</code>.</li>
+<li>Followers/following: <code>get_followers()</code> / <code>aget_followers()</code>, <code>get_following()</code> / <code>aget_following()</code> with optional <code>raw_json</code> toggle.</li>
+<li>User info: <code>get_user_info()</code> / <code>aget_user_info()</code>.</li>
+<li>Output saving: <code>save=True</code> + <code>save_format="csv|json|both"</code> on all methods.</li>
+<li>Resume interrupted searches: <code>resume=True</code> (SQLite cursor checkpoints).</li>
+<li>Auto-updating GraphQL query IDs: <code>ScweetConfig(manifest_scrape_on_init=True)</code>.</li>
+<li>Account management via <code>ScweetDB</code>: <code>accounts_summary</code>, <code>list_accounts</code>, <code>repair_account</code>, <code>reset_account_cooldowns</code>, <code>clear_leases</code>, <code>reset_daily_counters</code>, and more.</li>
+<li>SQLite-backed account pool with lease/heartbeat lifecycle, daily caps, and cooldown tracking.</li>
+<li><code>XClientTransaction</code> header generation (required by X since late 2024).</li>
+<li><code>configure_logging()</code> helper with <code>simple</code> and <code>detailed</code> profiles.</li>
+</ul>
+<h3 id="breaking-vs-v4">Breaking (vs v4)<a class="headerlink" href="#breaking-vs-v4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Removed legacy import path <code>from Scweet.scweet import Scweet</code>.</li>
+<li>Removed legacy constructor args <code>n_splits</code>, <code>concurrency</code> (on constructor — use <code>ScweetConfig(concurrency=...)</code>).</li>
+<li>Removed legacy query input keys on <code>scrape</code>/<code>ascrape</code> (<code>words</code>, <code>from_account</code>, etc.).</li>
+<li>Removed <code>ResumeMode</code>, <code>BootstrapStrategy</code>, <code>ApiHttpMode</code> from public exports.</li>
+<li>Removed nested config sections (<code>pool.concurrency</code> -&gt; <code>concurrency</code>, <code>operations.daily_requests_limit</code> -&gt; <code>daily_requests_limit</code>, etc.).</li>
+<li>Config is now a flat <code>ScweetConfig</code> Pydantic model (no <code>from_sources</code> class method).</li>
+<li>Constructor is now <code>Scweet(cookies_file=, auth_token=, cookies=, db_path=, config=)</code>.</li>
+<li><code>scrape()</code>/<code>ascrape()</code> replaced by <code>search()</code>/<code>asearch()</code>.</li>
+<li>Resume mode is <code>db_cursor</code> only (CSV-based resume removed).</li>
+</ul>
+<h3 id="removed">Removed<a class="headerlink" href="#removed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>nodriver</code> dependency and browser-based login.</li>
+<li><code>requests</code> HTTP fallback (v5 requires <code>curl_cffi</code>).</li>
+<li>Legacy CSV resume mode.</li>
+<li><code>DOCUMENTATION.md</code> (was stale v4 docs; recreated for v5).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      MIT licence
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Altimis/Scweet" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/scweet/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "toc.follow", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
