@@ -1,0 +1,53 @@
+name: Docs
+
+# The site must never fall behind a release. Every push and every pull request builds it and verifies it.
+# The deploy needs `workflow_dispatch`, so nothing reaches the public site until a person starts it.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Publish the site to GitHub Pages"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the tools that build the site
+        run: pip install -r docs-requirements.txt
+
+      # `--strict` stops the build for a broken link or a page outside the navigation.
+      - name: Build the site
+        run: mkdocs build --strict
+
+      # The same file that a contributor runs with `make docs-check`, so the two results cannot disagree.
+      - name: Verify that the site holds the text of the repository
+        run: python scripts/check_docs_site.py
+
+      - name: Keep the site for a review
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ github.sha }}
+          path: site/
+          retention-days: 14
+
+      - name: Publish to GitHub Pages
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdocs gh-deploy --force

@@ -285,7 +285,9 @@ One page of X is easy to fetch. 10,000 tweets is not, because accounts get rate-
 
 ## Documentation
 
-Full API reference, config options, structured search filters, async patterns, resume, proxies, and troubleshooting:
+Full API reference, config options, structured search filters, async patterns, resume, proxies, and troubleshooting.
+
+**Read it as a site: [altimis.github.io/Scweet](https://altimis.github.io/Scweet/)** — the same text, with search and a navigation menu.
 
 - [Account setup](DOCUMENTATION.md#account-setup)
 - [Search API](DOCUMENTATION.md#search-api)

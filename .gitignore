@@ -37,3 +37,9 @@ tools/
 
 # Local notes, not part of the package
 strategy/
+
+# the built documentation site
+site/
+.venv/
+graphify-out/
+.codex

@@ -1,0 +1,4 @@
+# The tools that build the site. The versions are exact, because the team of Material warns that MkDocs 2.0
+# removes the system of plugins and gives no path to migrate.
+mkdocs==1.6.1
+mkdocs-material==9.7.7

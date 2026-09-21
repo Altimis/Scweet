@@ -1,0 +1,76 @@
+site_name: Scweet
+site_description: Scrape Twitter / X without the official API. Tweets, profiles, followers and trends.
+site_url: https://altimis.github.io/Scweet/
+repo_url: https://github.com/Altimis/Scweet
+repo_name: Altimis/Scweet
+edit_uri: edit/master/docs/
+copyright: MIT licence
+
+docs_dir: docs
+
+# `docs_hooks.py` copies DOCUMENTATION.md, CHANGELOG.md and CONTRIBUTING.md from the root of the repository
+# into `docs/` before each build. One file therefore holds each text, and the site cannot fall behind a
+# release. The three copies stay out of git.
+hooks:
+  - docs_hooks.py
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - toc.follow
+    - content.code.copy
+    - content.action.edit
+    - search.suggest
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+
+nav:
+  - Home: index.md
+  - Reference: documentation.md
+  - Changelog: changelog.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Altimis/Scweet
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/scweet/
+
+# `--strict` then stops the build for a broken link, so a release cannot publish one.
+strict: true
