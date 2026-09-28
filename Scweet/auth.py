@@ -10,7 +10,14 @@ from pathlib import Path
 from typing import Any, Mapping, Optional
 
 from .account_session import DEFAULT_X_BEARER_TOKEN, prepare_account_auth_material
-from .http_utils import apply_proxies_to_session, is_curl_cffi_session, normalize_http_proxies
+from .http_utils import (
+    X_PAGE_LOGIN,
+    apply_proxies_to_session,
+    classify_x_page,
+    describe_rejected_x_page,
+    is_curl_cffi_session,
+    normalize_http_proxies,
+)
 from .repos import AccountsRepo
 
 logger = logging.getLogger(__name__)
@@ -645,7 +652,18 @@ def load_cookies_json(path: str) -> list[dict]:
     return load_cookies_payload(payload)
 
 
-def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30, *, proxy: Any = None) -> Optional[dict]:
+def bootstrap_cookies_from_auth_token(
+    auth_token: str,
+    timeout_s: int = 30,
+    *,
+    proxy: Any = None,
+    outcome: Optional[dict[str, Any]] = None,
+) -> Optional[dict]:
+    """Read the cookies that X sets for one ``auth_token``, or None.
+
+    ``outcome``, when given, receives ``{"rejected": True, "page": kind}`` when X answered its login page
+    or set no ``ct0``: a rejected token, and not a fault of the network.
+    """
     token = _as_str(auth_token)
     if not token:
         logger.warning("Auth bootstrap skipped: missing auth_token")
@@ -688,6 +706,7 @@ def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30, *, p
         if status_code >= 400:
             logger.warning("Auth bootstrap failed token_fp=%s: response_status=%s", token_fp, status_code)
             return None
+        page_kind = classify_x_page(getattr(response, "text", ""), getattr(response, "url", None))
 
         def _cookies_to_dict(value: Any) -> dict[str, Any]:
             if value is None:
@@ -719,11 +738,25 @@ def bootstrap_cookies_from_auth_token(auth_token: str, timeout_s: int = 30, *, p
             return None
 
         cookies.setdefault("auth_token", token)
+        has_ct0 = bool(_as_str(cookies.get("ct0")))
+        if page_kind == X_PAGE_LOGIN or not has_ct0:
+            # The login page also sets cookies (gt, guest_id), so a count of cookies is not a success.
+            if outcome is not None:
+                outcome["rejected"] = True
+                outcome["page"] = page_kind
+            logger.warning(
+                "Auth bootstrap rejected token_fp=%s page=%s has_ct0=%s: %s",
+                token_fp,
+                page_kind,
+                has_ct0,
+                describe_rejected_x_page(page_kind),
+            )
+            return None
         logger.info(
             "Auth bootstrap success token_fp=%s cookie_count=%s has_ct0=%s",
             token_fp,
             len(cookies),
-            bool(_as_str(cookies.get("ct0"))),
+            has_ct0,
         )
         return cookies
     except Exception as exc:
@@ -760,17 +793,18 @@ def import_accounts_to_db(
         strategy = "auto"
     allow_token_bootstrap = strategy in {"auto", "token_only"}
 
-    def _call_token_bootstrap(auth_token: str, *, proxy: Any) -> Optional[dict]:
+    def _call_token_bootstrap(auth_token: str, *, proxy: Any, outcome: dict[str, Any]) -> Optional[dict]:
         if effective_bootstrap is None:
             return None
         try:
             params = inspect.signature(effective_bootstrap).parameters
+            kwargs: dict[str, Any] = {"timeout_s": bootstrap_timeout_s}
             if "proxy" in params:
-                return effective_bootstrap(
-                    auth_token,
-                    timeout_s=bootstrap_timeout_s,
-                    proxy=proxy,
-                )
+                kwargs["proxy"] = proxy
+            if "outcome" in params:
+                kwargs["outcome"] = outcome
+            if len(kwargs) > 1:
+                return effective_bootstrap(auth_token, **kwargs)
         except Exception:
             pass
         return effective_bootstrap(auth_token, timeout_s=bootstrap_timeout_s)
@@ -812,7 +846,12 @@ def import_accounts_to_db(
                 token_fp,
                 reason,
             )
-            bootstrapped = _call_token_bootstrap(token, proxy=record_proxy)
+            outcome: dict[str, Any] = {}
+            bootstrapped = _call_token_bootstrap(token, proxy=record_proxy, outcome=outcome)
+            if bootstrapped is None and outcome.get("rejected"):
+                # X answered its login page: the token itself is rejected. A fault of the network keeps
+                # the reason missing_csrf, because a retry can still succeed.
+                reason = "rejected_auth_token"
             if bootstrapped:
                 cookies_dict = _cookies_to_dict(_normalize_cookies_payload(bootstrapped))
                 if cookies_dict:
@@ -829,9 +868,13 @@ def import_accounts_to_db(
                 material, reason = prepare_account_auth_material(normalized)
             else:
                 logger.warning(
-                    "Import account bootstrap failed username=%s token_fp=%s",
+                    "Import account bootstrap failed username=%s token_fp=%s reason=%s%s",
                     username,
                     token_fp,
+                    reason,
+                    (": " + describe_rejected_x_page(outcome.get("page") or X_PAGE_LOGIN))
+                    if outcome.get("rejected")
+                    else "",
                 )
 
         if material is None:

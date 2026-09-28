@@ -115,7 +115,9 @@ class Scweet:
             key: value
             for key, value in self._manifest_provider.get_manifest_sync().query_ids.items()
         }
-        fresh = self._manifest_provider.scrape_from_x_sync(strict=True, force=True)
+        fresh = self._manifest_provider.scrape_from_x_sync(
+            strict=True, force=True, **self._bootstrap_page_kwargs()
+        )
         changes: dict[str, dict[str, str]] = {}
         for key, new_id in fresh.query_ids.items():
             old_id = old.get(key)
@@ -185,8 +187,8 @@ class Scweet:
                     if imported == 0:
                         warnings.warn(
                             "Account provisioning produced no usable accounts. "
-                            "The auth_token is usually expired or wrong. "
-                            "Check the credentials (auth_token, ct0/CSRF); the first "
+                            "X did not accept the auth_token, or the credentials are incomplete. "
+                            "Copy a fresh auth_token from a browser where you are logged in; the first "
                             "call will fail until one account is usable.",
                             RuntimeWarning,
                             stacklevel=3,
@@ -207,7 +209,7 @@ class Scweet:
         )
         if cfg.manifest_scrape_on_init:
             try:
-                self._manifest_provider.scrape_from_x_sync(strict=True)
+                self._manifest_provider.scrape_from_x_sync(strict=True, **self._bootstrap_page_kwargs())
             except Exception:
                 logger.exception("Live manifest scrape failed; continuing with cached manifest")
         elif cfg.manifest_update_on_init:
@@ -224,9 +226,9 @@ class Scweet:
         }
         if cfg.api_http_impersonate:
             tx_kwargs["impersonate"] = cfg.api_http_impersonate
-        tx_cookies = self._get_cookies_for_transaction_init()
-        if tx_cookies:
-            tx_kwargs["cookies"] = tx_cookies
+        cookie_sets = self._cookie_sets_for_transaction_init()
+        if cookie_sets:
+            tx_kwargs["cookie_sets"] = cookie_sets
         self._transaction_id_provider = TransactionIdProvider(**tx_kwargs)
 
         self._api_engine = ApiEngine(
@@ -261,30 +263,56 @@ class Scweet:
             outputs={"write_csv": write_csv},
         )
 
-    def _get_cookies_for_transaction_init(self) -> Optional[dict]:
-        """Get cookies from an eligible account for CT bootstrap (only needs auth_token + ct0)."""
+    def _cookie_sets_for_transaction_init(self) -> list[dict]:
+        """The accounts that can serve the bootstrap page of X, the newest first.
+
+        X serves the page that carries the markers only to a request with the cookies of an account that
+        it accepts. A row with a rejected token stays in the state file as ``unusable``, so the selection
+        skips it, requires a ``ct0``, and reads the newest row first: that row is the account the run
+        just provisioned. Each item is ``{"username": ..., "cookies": {...}}``.
+        """
         try:
             from .repos import _cookies_to_dict
             from .schema import AccountTable
             from .storage import session_scope
-            from sqlalchemy import select
+            from sqlalchemy import or_, select
 
             with session_scope(self._config.db_path) as session:
                 stmt = (
                     select(AccountTable)
                     .where(AccountTable.cookies_json.isnot(None))
                     .where(AccountTable.auth_token.isnot(None))
-                    .limit(1)
+                    .where(AccountTable.csrf.isnot(None))
+                    .where(
+                        or_(
+                            AccountTable.cooldown_reason.is_(None),
+                            AccountTable.cooldown_reason.notlike("unusable:%"),
+                        )
+                    )
+                    .order_by(AccountTable.id.desc())
                 )
-                account = session.execute(stmt).scalar_one_or_none()
-                if account is None:
-                    return None
-                cookies = _cookies_to_dict(account.cookies_json)
-                if cookies.get("auth_token"):
-                    return cookies
+                sets: list[dict] = []
+                for account in session.execute(stmt).scalars():
+                    cookies = _cookies_to_dict(account.cookies_json)
+                    if cookies.get("auth_token") and cookies.get("ct0"):
+                        sets.append({"username": account.username, "cookies": cookies})
+                return sets
         except Exception:
-            pass
-        return None
+            logger.exception("Could not read the accounts for the transaction bootstrap")
+        return []
+
+    def _get_cookies_for_transaction_init(self) -> Optional[dict]:
+        """The cookies of the first usable account, or None."""
+        sets = self._cookie_sets_for_transaction_init()
+        return dict(sets[0]["cookies"]) if sets else None
+
+    def _bootstrap_page_kwargs(self) -> dict[str, Any]:
+        """The cookies and the proxy that a scrape of the page of X needs."""
+        kwargs: dict[str, Any] = {"proxy": self._config.proxy}
+        cookies = self._get_cookies_for_transaction_init()
+        if cookies:
+            kwargs["cookies"] = cookies
+        return kwargs
 
     # ── Search ──────────────────────────────────────────────────────────
 

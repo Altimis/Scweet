@@ -290,6 +290,9 @@ class AccountsRepo:
                     reasons.append("missing_cookies")
                 if not self.default_bearer_token and not _as_str(row.get("bearer")):
                     reasons.append("missing_bearer")
+                # A rejected token has no csrf, but the cause is the verdict of X and not a missing field.
+                if _as_str(row.get("cooldown_reason")) == "unusable:rejected_auth_token" and "missing_csrf" in reasons:
+                    reasons[reasons.index("missing_csrf")] = "rejected_auth_token"
 
             if not reasons:
                 eligible += 1

@@ -137,6 +137,55 @@ def extract_proxy_server(proxy: Any) -> Optional[str]:
     return None
 
 
+NO_SIGNATURE_DETAIL = "no x-client-transaction-id header: the build of the request signature failed"
+NO_SIGNATURE_CAUSE = (
+    "cause: X answers 404 to a request without the x-client-transaction-id header. Scweet could not "
+    "build that header, because X did not accept the cookies of any account for its bootstrap page. "
+    "Add an account with a fresh auth_token from a browser where you are logged in."
+)
+
+X_PAGE_FULL = "full"
+X_PAGE_LOGIN = "login"
+X_PAGE_SHELL = "shell"
+
+_LOGIN_URL_MARKERS = ("/i/jf/onboarding/web", "mode=login", "/i/flow/login")
+_LOGIN_TITLE = "X - The Everything App"
+
+
+def classify_x_page(html: Any, final_url: Any = None) -> str:
+    """Name the page that X served to a bootstrap request.
+
+    ``full`` holds the ``"ondemand.s"`` marker or a ``main.js`` URL. ``login`` is the page that X serves
+    when it does not accept the cookies of the request: the final URL is under ``/i/jf/onboarding/web``,
+    or the title is the one of that page. ``shell`` is any other page without the markers.
+    """
+    text = str(html or "")
+    if '"ondemand.s"' in text or "/responsive-web/client-web/main." in text:
+        return X_PAGE_FULL
+    url = _as_str(final_url) or ""
+    if any(marker in url for marker in _LOGIN_URL_MARKERS):
+        return X_PAGE_LOGIN
+    title_start = text.find("<title>")
+    if title_start != -1:
+        title = text[title_start + 7 : title_start + 7 + 120]
+        if title.lstrip().startswith(_LOGIN_TITLE):
+            return X_PAGE_LOGIN
+    return X_PAGE_SHELL
+
+
+def describe_rejected_x_page(kind: str) -> str:
+    """The cause and the action for a page without the markers, in the words of the reader."""
+    if kind == X_PAGE_LOGIN:
+        return (
+            "X answered its login page, so X did not accept the cookies of the request. "
+            "Copy a fresh auth_token from a browser where you are logged in."
+        )
+    return (
+        "X answered a page without the ondemand marker. Since 2026-09 that page needs the cookies of an "
+        "account that X accepts. Add an account with a fresh auth_token."
+    )
+
+
 def is_curl_cffi_session(session: Any) -> bool:
     if session is None:
         return False

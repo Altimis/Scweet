@@ -1,4 +1,4 @@
-The tests for the package. 47 files and 462 tests. They pass in about 130 seconds. The test
+The tests for the package. 51 files and 512 tests. They pass in about 130 seconds. The test
 dependencies are in `requirements-dev.txt`; the async tests fail without `pytest-asyncio`.
 
 > This document uses ASD-STE100 Simplified Technical English.
@@ -41,7 +41,9 @@ These are measured facts about this suite, not opinions.
    ship with no working search. Measured 2026-09-09: released 5.4.0 answered 404 for every search from every
    account, because both bootstrap paths read a page of X that holds no marker. All 336 tests passed while that
    was true. A unit test cannot see a stale query id, a header that X needs, or a proxy user name that a
-   provider rejects. **Only a live run finds this class of defect. Run one before a release.**
+   provider rejects. **Only a live run finds this class of defect. Run one before a release.** Since 2026-09
+   the bootstrap page of X needs the cookies of an account that X accepts, so the live run needs a real
+   account.
 2. **A test asserts that a run across several intervals fills its order.** `tests/test_interval_subdivision.py`
    holds 12 tests with a fake page source: the fill, the cost of a narrow interval, the proof that `Top` must
    not narrow, and one interval for each account.
@@ -52,7 +54,8 @@ These are measured facts about this suite, not opinions.
    cookie and token: the tweet shapes (plain, quote, reply, retweet, animated image, native video), a
    profile, a follower row, one page per M4 operation (tweet lookup, conversation, reposters, user
    batch, people search, explore page, media and with-replies timelines), the chunk-map region of the
-   page of X, and the chunk that holds the Retweeters operation. `golden_records.json` holds the
+   page of X, and the chunk that holds the Retweeters operation, and the login page that X serves to a rejected
+   cookie (`x_login_page.html`, captured 2026-09-28). `golden_records.json` holds the
    original fields of `TweetRecord` as the parser produced them, and `test_record_compatibility.py`
    fails when one of those fields changes. A small answer also lives inline in the test that reads it,
    for example `LOCKED_ERROR` in `tests/test_locked_account.py`. Copy a real answer, never an invented

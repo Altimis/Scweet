@@ -30,12 +30,17 @@ directory.
 - **`manifest.py` holds the query IDs, and a stale ID answers 404 for every account.** A 404 from every account
   therefore describes our configuration and not the accounts. Never retire an account from one 404 when the
   other endpoints also fail.
-- **The bootstrap of the manifest and of the transaction id reads `https://x.com/home`.** Measured 2026-09-09:
-  `https://x.com` answers about 33,000 bytes and holds no `main.js` reference and no `"ondemand.s"` marker,
-  while `/home` answers about 297,000 bytes and holds both, with no cookie. `handle_x_migration` of
-  `x_client_transaction` reads `https://x.com` itself, so `transaction.py` retries against `home_url` when the
-  page of the migration holds no marker. A missing `x-client-transaction-id` header gives 404 with an empty
-  body for every request.
+- **The bootstrap of the manifest and of the transaction id reads `https://x.com/home` with an accepted
+  cookie.** Measured 2026-09-28: `https://x.com` answers a shell of about 34,000 bytes with no `main.js`
+  reference and no `"ondemand.s"` marker. `/home` answers the full document of about 304,000 bytes with both
+  only to a request with the cookies of an account that X accepts. To any other request it answers its login
+  page under `/i/jf/onboarding/web`, 16,852 bytes with neither marker, and that page still sets cookies
+  (`gt`, `guest_id`) but never `ct0`. `http_utils.classify_x_page` names the page. `client.py` selects the
+  accounts for the bootstrap: a `ct0`, no `unusable:` reason, the newest row first, because the state file
+  can hold a revoked token next to a fresh one. `handle_x_migration` of `x_client_transaction` reads
+  `https://x.com` itself, so `transaction.py` retries against `home_url` when the page of the migration holds
+  no marker, and tries the next account when X rejects one. A missing `x-client-transaction-id` header gives
+  404 with an empty body for every request.
 - **A path that builds a session fills the `{session}` placeholder with
   `fill_proxy_session_placeholder`.** A literal placeholder is not a valid session name and the provider
   answers 407. Four paths need it: `account_session.py`, the check on lease in `runner.py`, `transaction.py`,

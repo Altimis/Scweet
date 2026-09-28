@@ -26,7 +26,12 @@ from .exceptions import (
     RunFailed,
 )
 from .account_session import fill_proxy_session_placeholder
-from .http_utils import apply_proxies_to_session, normalize_http_proxies
+from .http_utils import (
+    NO_SIGNATURE_CAUSE,
+    NO_SIGNATURE_DETAIL,
+    apply_proxies_to_session,
+    normalize_http_proxies,
+)
 from .limiter import TokenBucketLimiter
 from .models import ProfileTimelineRequest, RunStats, SearchRequest, SearchResult
 from .queue import InMemoryTaskQueue
@@ -1568,6 +1573,13 @@ class Runner:
                 code = event.get("status_code") or "-"
                 detail = event.get("detail") or event.get("reason") or ""
                 lines.append(f"- {kind} account={username} status={code} detail={_truncate(detail)}")
+            # A 404 without the header describes our request and never the account. The reader needs
+            # the cause and the action, not a list of 404 lines.
+            without_header = sum(
+                1 for event in error_events if NO_SIGNATURE_DETAIL in str(event.get("detail") or "")
+            )
+            if without_header and without_header * 2 >= len(error_events):
+                lines.append(NO_SIGNATURE_CAUSE)
         return "\n".join(lines)
 
     @staticmethod

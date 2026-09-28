@@ -20,6 +20,10 @@ second. Two things change that:
 - The first call of a read method builds the `x-client-transaction-id` header, and that reads a page of X.
   The object does not build it before then.
 
+Both reads need the cookies of an account that X accepts. X answers its login page to any other request,
+and that page names no bundle and holds no marker. The client takes the cookies of the newest usable account
+in the state file, and it tries the next account when X rejects one.
+
 ---
 
 ## Account Setup
@@ -898,6 +902,8 @@ from Scweet.exceptions import (
 - All accounts are cooling down or at daily limits. The error message includes counts: `total=N, unusable=M, cooling_down=K`
 - Wait for cooldowns to expire, or add more accounts
 - Reset cooldowns manually: `ScweetDB("scweet_state.db").reset_account_cooldowns()`
+- `rejected_auth_token=N` in the message: X answered its login page to that token. Copy a fresh `auth_token`
+  from a browser where you are logged in.
 
 **`RateLimitError`**
 - X has rate-limited your accounts. Wait for cooldowns (usually a few minutes) and retry
@@ -910,7 +916,11 @@ from Scweet.exceptions import (
 **`RunFailed` / `NetworkError`**
 - Check your internet connection and proxy configuration
 - X may have rotated GraphQL query IDs — pass `manifest_scrape_on_init=True` to `Scweet()` (or `--manifest-scrape-on-init` in the CLI) to auto-fetch fresh ones
-- 404 errors in logs mean stale query IDs (transient) — not bad auth
+- A 404 on every request, and the summary says `no x-client-transaction-id header`: X did not accept the
+  cookies of any account for the page that the header needs. The state file can hold an old row with a
+  revoked token next to a fresh one; Scweet skips a row marked `unusable` and reads the newest first. Add an
+  account with a fresh `auth_token` from a browser where you are logged in.
+- A 404 with the header means a stale query id, not bad auth. Refresh the query ids as above.
 
 ---
 

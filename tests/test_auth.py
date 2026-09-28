@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -279,8 +280,8 @@ class _FakeResponse:
 
 
 class _FakeSession:
-    def __init__(self, response: _FakeResponse, raise_on_get: bool = False):
-        self.cookies = _FakeCookieJar()
+    def __init__(self, response: _FakeResponse, raise_on_get: bool = False, jar: dict | None = None):
+        self.cookies = _FakeCookieJar(jar)
         self._response = response
         self._raise_on_get = raise_on_get
         self.calls = []
@@ -299,7 +300,8 @@ class _FakeSession:
 def test_bootstrap_cookies_from_auth_token_success_and_failure(monkeypatch):
     import Scweet.auth as auth_mod
 
-    success_session = _FakeSession(_FakeResponse(status_code=200))
+    # X sets ct0 only for a token that it accepts, so the success case carries one.
+    success_session = _FakeSession(_FakeResponse(status_code=200), jar={"ct0": "csrf-boot"})
     monkeypatch.setattr(auth_mod, "_SESSION_FACTORY", lambda: success_session)
 
     cookies = bootstrap_cookies_from_auth_token("token-123", timeout_s=5)
@@ -530,3 +532,81 @@ def test_runner_auth_error_triggers_repair_and_updates_db(monkeypatch, tmp_path)
     cookies = json.loads(updated["cookies_json"])
     assert cookies["ct0"] == "csrf-repaired"
     assert cookies["guest_id"] == "guest-9"
+
+
+# ── A token that X rejects ─────────────────────────────────────────────
+
+LOGIN_PAGE_URL = "https://x.com/i/jf/onboarding/web?redirect_after_login=%2Fhome&mode=login"
+LOGIN_PAGE_HTML = (Path(__file__).parent / "fixtures" / "x_login_page.html").read_text(encoding="utf-8")
+
+
+class _ListHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record):
+        self.records.append(record)
+
+
+def _auth_logs():
+    handler = _ListHandler()
+    logger = logging.getLogger("Scweet.auth")
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    return handler, logger
+
+
+def test_the_login_page_of_x_means_a_rejected_token(monkeypatch):
+    """X answers its login page to a token it does not accept, and that page still sets cookies.
+
+    Measured 2026-09-28: a revoked token got 7 cookies (gt, guest_id, ...) and no ct0. The old code
+    counted the cookies, called that a success, and the account entered the store with the reason
+    missing_csrf, which reads as a defect of the import and not as a rejected token.
+    """
+    import Scweet.auth as auth_mod
+
+    response = _FakeResponse(status_code=200)
+    response.url = LOGIN_PAGE_URL
+    response.text = LOGIN_PAGE_HTML
+    session = _FakeSession(response, jar={"gt": "guest-token", "guest_id": "v1"})
+    monkeypatch.setattr(auth_mod, "_SESSION_FACTORY", lambda: session)
+    handler, logger = _auth_logs()
+    try:
+        assert bootstrap_cookies_from_auth_token("revoked-token") is None
+    finally:
+        logger.removeHandler(handler)
+    messages = [record.getMessage() for record in handler.records if record.levelno >= logging.WARNING]
+    assert any("login page" in message and "fresh auth_token" in message for message in messages), messages
+    assert all("revoked-token" not in message for message in messages), "a log never holds the token"
+
+
+def test_the_import_names_a_rejected_token_as_the_reason(tmp_path):
+    """The store keeps the row, and its reason says what happened and what to do."""
+    db_path = str(tmp_path / "rejected.db")
+
+    def _rejecting_bootstrap(auth_token: str, timeout_s: int = 30, *, proxy=None, outcome=None):
+        if outcome is not None:
+            outcome["rejected"] = True
+            outcome["page"] = "login"
+        return None
+
+    usable = import_accounts_to_db(
+        db_path, cookies_payload={"auth_token": "revoked-token"}, bootstrap_fn=_rejecting_bootstrap
+    )
+    assert usable == 0
+    rows = _read_account_rows(db_path)
+    assert len(rows) == 1
+    assert rows[0]["cooldown_reason"] == "unusable:rejected_auth_token"
+
+
+def test_a_bootstrap_that_fails_on_the_network_is_not_a_rejected_token(tmp_path):
+    """A timeout of the proxy is not a verdict of X. The reason stays missing_csrf, so a retry can succeed."""
+    db_path = str(tmp_path / "timeout.db")
+
+    def _timeout_bootstrap(auth_token: str, timeout_s: int = 30, *, proxy=None, outcome=None):
+        return None
+
+    import_accounts_to_db(db_path, cookies_payload={"auth_token": "unreachable"}, bootstrap_fn=_timeout_bootstrap)
+    rows = _read_account_rows(db_path)
+    assert rows[0]["cooldown_reason"] == "unusable:missing_csrf"

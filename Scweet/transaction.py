@@ -8,7 +8,14 @@ from typing import Any, Optional
 from bs4 import BeautifulSoup
 
 from .account_session import DEFAULT_HTTP_TIMEOUT, DEFAULT_IMPERSONATE, DEFAULT_USER_AGENT
-from .http_utils import apply_proxies_to_session, is_curl_cffi_session, normalize_http_proxies
+from .http_utils import (
+    X_PAGE_FULL,
+    apply_proxies_to_session,
+    classify_x_page,
+    describe_rejected_x_page,
+    is_curl_cffi_session,
+    normalize_http_proxies,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +58,7 @@ class TransactionIdProvider:
         refresh_ttl_s: int = 6 * 60 * 60,
         # Not "https://x.com": that URL answers a 32 KB shell that holds no ondemand.s marker, so the
         # bootstrap finds no file, the header is dropped, and X answers 404 for every GraphQL request.
+        # /home carries the marker only for a request with the cookies of an account that X accepts.
         home_url: str = "https://x.com/home",
         session_factory=None,
         user_agent: Optional[str] = None,
@@ -61,6 +69,7 @@ class TransactionIdProvider:
         cookies: Optional[dict] = None,
         init_attempts: int = 3,
         init_backoff_s: float = 1.5,
+        cookie_sets: Optional[list[dict]] = None,
     ):
         self.enabled = bool(enabled)
         self.refresh_ttl_s = max(60, int(refresh_ttl_s))
@@ -78,7 +87,14 @@ class TransactionIdProvider:
         self._http_proxies = normalize_http_proxies(
             fill_proxy_session_placeholder(proxy, {"username": "manifest"})
         )
-        self._cookies = cookies
+        # One entry for each account that can serve the bootstrap page: {"username": ..., "cookies": {...}}.
+        # X serves the marker only to an accepted cookie, so a build tries the next account when one fails.
+        self._cookie_sets: list[dict] = [
+            dict(item) for item in (cookie_sets or []) if isinstance(item, dict) and item.get("cookies")
+        ]
+        if not self._cookie_sets and cookies:
+            self._cookie_sets = [{"username": None, "cookies": dict(cookies)}]
+        self._cookies = self._cookie_sets[0]["cookies"] if self._cookie_sets else cookies
         self.session_factory = session_factory or self._build_default_session_factory()
         self.user_agent_override = _as_str(user_agent)
 
@@ -132,6 +148,36 @@ class TransactionIdProvider:
     def _build_client_transaction(self):
         if not self._ensure_dependencies():
             return None
+        if not self._cookie_sets:
+            built, _kind = self._build_with_current_cookies()
+            if built is None and _kind is not None:
+                logger.warning("Transaction-id bootstrap failed: %s", describe_rejected_x_page(_kind))
+            return built
+        last_kind = None
+        for index, item in enumerate(self._cookie_sets):
+            self._cookies = item.get("cookies")
+            built, kind = self._build_with_current_cookies()
+            if built is not None:
+                return built
+            if kind is None:
+                continue
+            last_kind = kind
+            if index + 1 < len(self._cookie_sets):
+                logger.warning(
+                    "Transaction-id bootstrap: X did not accept the cookies of account %s (page=%s); "
+                    "trying the next account",
+                    item.get("username") or "-",
+                    kind,
+                )
+        if last_kind is not None:
+            logger.warning("Transaction-id bootstrap failed: %s", describe_rejected_x_page(last_kind))
+        return None
+
+    def _build_with_current_cookies(self):
+        """One build with ``self._cookies``. Returns ``(client_transaction, kind_of_rejected_page)``.
+
+        The second item is ``None`` when the build succeeded or failed for another reason than the page.
+        """
         from x_client_transaction import ClientTransaction
         from x_client_transaction.utils import handle_x_migration
 
@@ -139,7 +185,7 @@ class TransactionIdProvider:
         try:
             session = self.session_factory()
             if session is None:
-                return None
+                return None, None
 
             headers = {
                 "Referer": "https://x.com/",
@@ -160,17 +206,22 @@ class TransactionIdProvider:
             home_page = handle_x_migration(session=session)
 
             ondemand_url = _extract_ondemand_url(str(home_page))
+            page_kind = None
             if not ondemand_url:
                 # handle_x_migration reads https://x.com, which answers a 32 KB shell with no
-                # ondemand.s marker. self.home_url serves the full document that carries it.
+                # ondemand.s marker. self.home_url serves the full document to an accepted cookie.
                 home_response = session.get(self.home_url, timeout=20, allow_redirects=True)
                 home_text = str(getattr(home_response, "text", "") or "")
                 ondemand_url = _extract_ondemand_url(home_text)
                 if ondemand_url:
                     home_page = BeautifulSoup(home_text, "html.parser")
+                else:
+                    page_kind = classify_x_page(home_text, getattr(home_response, "url", None))
             if not ondemand_url:
-                logger.warning("Transaction-id bootstrap failed: ondemand URL not found")
-                return None
+                if page_kind is None or page_kind == X_PAGE_FULL:
+                    page_kind = classify_x_page(str(home_page))
+                logger.warning("Transaction-id bootstrap failed: ondemand URL not found (page=%s)", page_kind)
+                return None, page_kind
 
             od_response = session.get(ondemand_url, timeout=20, allow_redirects=True)
             if int(getattr(od_response, "status_code", 0) or 0) >= 400:
@@ -178,7 +229,7 @@ class TransactionIdProvider:
                     "Transaction-id bootstrap failed: ondemand status=%s",
                     getattr(od_response, "status_code", None),
                 )
-                return None
+                return None, None
 
             od_html = BeautifulSoup(str(getattr(od_response, "text", "") or ""), "html.parser")
             client_transaction = ClientTransaction(
@@ -186,10 +237,10 @@ class TransactionIdProvider:
                 ondemand_file_response=od_html,
             )
             logger.info("Transaction-id bootstrap success")
-            return client_transaction
+            return client_transaction, None
         except Exception as exc:
             logger.warning("Transaction-id bootstrap exception: %s", str(exc))
-            return None
+            return None, None
         finally:
             if session is not None and hasattr(session, "close"):
                 try:

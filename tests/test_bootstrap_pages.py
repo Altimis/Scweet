@@ -8,6 +8,11 @@ Two faults made the released library return 404 for every search, from every acc
    built. X answers 404 with an empty body when the header is absent.
 2. Each helper that builds a session from the configured proxy read the raw value, so a `{session}`
    placeholder reached the provider as a literal string. Apify answers HTTP 407 for that session name.
+
+Since 2026-09, `/home` carries the markers only for a request with the cookies of an account that X
+accepts. Measured 2026-09-28: an anonymous request, or one with a revoked token, is redirected to
+`/i/jf/onboarding/web`, a login page of 16,852 bytes with no marker. `tests/test_bootstrap_accounts.py`,
+`tests/test_transaction.py` and `tests/test_manifest.py` hold the guards for the cookies.
 """
 
 import inspect

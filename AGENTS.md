@@ -11,7 +11,7 @@ come before a feature.
 ## Map
 
 - `Scweet/` — the importable package. Every module is flat inside it, with no sub-package.
-- `tests/` — 47 files and 462 tests. A pytest marker selects the level. `tests/fixtures/` holds the
+- `tests/` — 51 files and 512 tests. A pytest marker selects the level. `tests/fixtures/` holds the
   captured answers of X.
 - `examples/` — short scripts that a reader can run.
 - `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.14.
@@ -38,11 +38,15 @@ Scweet.search()            the public method, in client.py
 - **A limit is a target and not a boundary.** Measured on 2026-09-04: a limit of 2,000 returned 2,340, which is
   17% above. The user owns the data, so the overshoot stays. Any code that bills for each item must not depend
   on the limit.
-- **Both bootstrap paths read `https://x.com/home` and never `https://x.com`.** Measured 2026-09-09: `x.com`
-  answers about 33,000 bytes with no `main.js` reference and no `"ondemand.s"` marker, and `x.com/home` answers
-  about 297,000 bytes with both, without a cookie. The scrape of the manifest and the bootstrap of the
-  transaction id each need one of those markers. Without the transaction id, X answers 404 with an empty body
-  for every request from every account, and that 404 describes our request and never the credentials.
+- **Both bootstrap paths read `https://x.com/home` with the cookies of an account that X accepts.** Measured
+  2026-09-28: to an anonymous request, or to a revoked token, every page of X answers a redirect to
+  `/i/jf/onboarding/web`, a login page of 16,852 bytes with no `main.js` reference and no `"ondemand.s"`
+  marker, and `https://x.com` answers a shell of about 34,000 bytes with neither. Only an accepted cookie gets
+  the full document of about 304,000 bytes with both. The scrape of the manifest and the bootstrap of the
+  transaction id each need one of those markers, so `client.py` gives both the cookies of the newest usable
+  account and the configured proxy, skips a row marked `unusable`, and the provider tries the next account
+  when X rejects one. Without the transaction id, X answers 404 with an empty body for every request from
+  every account, and that 404 describes our request and never the credentials.
 - **A request never leaves without the transaction id, and a 404 rebuilds it before any cooldown.**
   `TransactionIdProvider.generate` retries the build with a backoff, because the build needs a live page
   of X and a flaky network drops it. `api_engine._graphql_get` retries a 404 once after a
@@ -136,6 +140,9 @@ A change is complete when a test fails without it.
 - The body gives the reason: what was not possible before, what happens now, and each number that you measured.
 - One commit for each change in behaviour, including its tests and its documents.
 - `CHANGELOG.md` carries a line for each release that a user can act on.
+- A fix for a reported defect names the issue in the body of the commit, as `Closes #197` or `Refs #197`,
+  and in its line of `CHANGELOG.md`. The subject stays a sentence about the behaviour, and a test name never
+  holds the number.
 
 ## For agents
 
