@@ -114,7 +114,7 @@ def test_the_client_reports_each_changed_id(tmp_path):
     fresh["query_ids"]["search_timeline"] = "NEW_ID_AFTER_ROTATION"
 
     provider = client._manifest_provider
-    provider.scrape_from_x_sync = lambda *, strict=False, force=False: (
+    provider.scrape_from_x_sync = lambda *, strict=False, force=False, **_page_kwargs: (
         ManifestModel.model_validate(fresh)
     )
     changes = client.refresh_manifest()

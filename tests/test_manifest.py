@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import asyncio
 
-from Scweet.manifest import ManifestProvider, scrape_manifest_from_x, _extract_operation_features
+from Scweet.manifest import (
+    ManifestModel,
+    ManifestProvider,
+    _DEFAULT_MANIFEST,
+    _extract_operation_features,
+    scrape_manifest_from_x,
+)
 from Scweet.repos import ManifestRepo
 
 def test_manifest_provider_uses_local_fallback_when_no_remote_url(tmp_path):
@@ -275,3 +281,116 @@ def test_get_manifest_prefers_live_scrape_cache(tmp_path, monkeypatch):
     provider = ManifestProvider(db_path=db_path, manifest_url=None, ttl_s=300)
     manifest = asyncio.run(provider.get_manifest())
     assert manifest.query_ids["search_timeline"] == "live-qid"
+
+
+# ── The scrape of the page of X needs an accepted cookie ───────────────
+
+
+def _install_recording_session(monkeypatch, *, home_text: str, home_url: str | None = None):
+    """A curl_cffi stand-in that records how the scrape opened it and serves one page."""
+    import sys as _sys
+    import types as _types
+
+    opened: list[dict] = []
+
+    class _Response:
+        def __init__(self, text, url=None):
+            self.text = text
+            self.status_code = 200
+            self.url = url
+
+    class _Session:
+        def __init__(self, **kwargs):
+            opened.append(kwargs)
+
+        def get(self, url, **kwargs):
+            return _Response(home_text, home_url or url)
+
+        def close(self):
+            pass
+
+    fake_curl = _types.ModuleType("curl_cffi.requests")
+    fake_curl.Session = _Session
+    monkeypatch.setitem(_sys.modules, "curl_cffi.requests", fake_curl)
+    return opened
+
+
+def test_the_scrape_sends_the_cookies_and_the_proxy_of_the_client(monkeypatch):
+    """Measured 2026-09-28: without an accepted cookie, /home answers the login page and names no bundle.
+    The old scrape opened a bare session, so `manifest_scrape_on_init=True` failed for every user."""
+    opened = _install_recording_session(monkeypatch, home_text="<html>no bundle</html>")
+    try:
+        scrape_manifest_from_x(
+            cookies={"auth_token": "tok", "ct0": "csrf"},
+            proxy="http://user:pass@proxy.example.com:8000",
+        )
+    except Exception:
+        pass
+    assert opened and opened[0]["cookies"] == {"auth_token": "tok", "ct0": "csrf"}
+    assert opened[0]["proxies"]["https"].startswith("http://user:pass@proxy.example.com:8000")
+
+
+def test_the_login_page_names_the_cause_and_the_action(monkeypatch):
+    from pathlib import Path as _Path
+
+    login_html = (_Path(__file__).parent / "fixtures" / "x_login_page.html").read_text(encoding="utf-8")
+    _install_recording_session(
+        monkeypatch,
+        home_text=login_html,
+        home_url="https://x.com/i/jf/onboarding/web?redirect_after_login=%2Fhome&mode=login",
+    )
+    import pytest as _pytest
+    from Scweet.exceptions import ManifestError
+
+    with _pytest.raises(ManifestError) as excinfo:
+        scrape_manifest_from_x()
+    message = str(excinfo.value)
+    assert "login page" in message and "fresh auth_token" in message
+
+
+def test_the_scrape_keeps_the_switches_that_each_operation_declares(monkeypatch):
+    """The scrape extracted the per-operation switches and then stored the defaults in their place.
+
+    Measured 2026-09-28 with the fresh SearchTimeline id of that day: a request with the union of every
+    switch answered 404, and the same request with the switches that the operation declares answered 200.
+    """
+    import sys as _sys
+    import types as _types
+
+    fake_home = '<html><script src="https://abs.twimg.com/responsive-web/client-web/main.abc123.js"></script></html>'
+    fake_js = (
+        'e.exports={queryId:"FRESH_SEARCH_ID",operationName:"SearchTimeline",operationType:"query",'
+        'metadata:{featureSwitches:["rweb_video_screen_enabled","brand_new_switch"],fieldToggles:[]}}'
+        'e.exports={queryId:"FRESH_USER_ID",operationName:"UserByScreenName",operationType:"query",'
+        'metadata:{featureSwitches:["rweb_video_screen_enabled"],fieldToggles:[]}}'
+    )
+
+    class _Response:
+        def __init__(self, text):
+            self.text = text
+            self.status_code = 200
+            self.url = None
+
+    class _Session:
+        def __init__(self, **kwargs):
+            pass
+
+        def get(self, url, **kwargs):
+            return _Response(fake_js if "main." in url else fake_home)
+
+        def close(self):
+            pass
+
+    fake_curl = _types.ModuleType("curl_cffi.requests")
+    fake_curl.Session = _Session
+    monkeypatch.setitem(_sys.modules, "curl_cffi.requests", fake_curl)
+
+    result = scrape_manifest_from_x(chunk_fetch_max=0)
+    search_switches = result["operation_features"]["search_timeline"]
+    assert set(search_switches) == {"rweb_video_screen_enabled", "brand_new_switch"}
+    base_value = _DEFAULT_MANIFEST["features"]["rweb_video_screen_enabled"]
+    assert search_switches["rweb_video_screen_enabled"] == base_value, "a known switch keeps the value of the base"
+    assert search_switches["brand_new_switch"] is False, "an unknown switch starts as False"
+    assert result["features"]["brand_new_switch"] is False, "the global set still learns the new name"
+    model = ManifestModel.model_validate(result)
+    assert set(model.features_for("search_timeline")) >= {"rweb_video_screen_enabled", "brand_new_switch"}

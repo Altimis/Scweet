@@ -374,12 +374,21 @@ class ManifestProvider:
 
     # ── Live manifest scraping from X ───────────────────────────────────
 
-    def scrape_from_x_sync(self, *, strict: bool = False, force: bool = False) -> ManifestModel:
+    def scrape_from_x_sync(
+        self,
+        *,
+        strict: bool = False,
+        force: bool = False,
+        cookies: Optional[dict[str, Any]] = None,
+        proxy: Any = None,
+    ) -> ManifestModel:
         """Fetch X's main.js bundle and extract fresh query IDs + features.
 
         Results are cached in the DB (same TTL as remote manifests).
         Falls back to local manifest on failure unless strict=True.
         A user-triggered refresh passes force=True, so it never answers from the cache.
+        ``cookies`` are the cookies of an account that X accepts: X serves the page that names the
+        bundle only to such a request. ``proxy`` is the configured proxy of the client.
         """
 
         local_manifest = self._load_local_manifest()
@@ -394,7 +403,7 @@ class ManifestProvider:
                 return parsed
 
         try:
-            scraped = scrape_manifest_from_x()
+            scraped = scrape_manifest_from_x(cookies=cookies, proxy=proxy)
             manifest = self._coerce_manifest(scraped)
             if manifest is None:
                 raise ManifestError("scraped manifest is invalid")
@@ -423,11 +432,14 @@ class ManifestProvider:
 def scrape_manifest_from_x(
     *,
     # Not "https://x.com": that URL answers a 32 KB shell that carries no bundle reference. The /home
-    # path serves the full document, and it needs no cookie.
+    # path serves the full document to a request that carries the cookies of an account that X accepts.
+    # To any other request it answers its login page, which names no bundle.
     home_url: str = "https://x.com/home",
     impersonate: str = "chrome",
     timeout: int = 15,
     chunk_fetch_max: int = 30,
+    cookies: Optional[dict[str, Any]] = None,
+    proxy: Any = None,
 ) -> dict[str, Any]:
     """Scrape X's main.js to extract fresh query IDs and per-operation features.
 
@@ -439,7 +451,19 @@ def scrape_manifest_from_x(
     except ImportError as exc:
         raise RuntimeError("curl_cffi is required for live manifest scraping") from exc
 
-    session = CurlSession(impersonate=impersonate)
+    from .account_session import fill_proxy_session_placeholder
+    from .http_utils import classify_x_page, describe_rejected_x_page, normalize_http_proxies
+
+    session_kwargs: dict[str, Any] = {"impersonate": impersonate}
+    proxies = normalize_http_proxies(fill_proxy_session_placeholder(proxy, {"username": "manifest"}))
+    if proxies:
+        session_kwargs["proxies"] = proxies
+    if cookies:
+        session_kwargs["cookies"] = dict(cookies)
+    try:
+        session = CurlSession(**session_kwargs)
+    except TypeError:
+        session = CurlSession(impersonate=impersonate)
     try:
         # Step 1: Fetch X home page to find the main JS bundle URL.
         resp = session.get(home_url, timeout=timeout, allow_redirects=True)
@@ -451,7 +475,10 @@ def scrape_manifest_from_x(
             resp.text,
         )
         if not main_js_urls:
-            raise ManifestError("Could not find main.js bundle URL in X home page")
+            kind = classify_x_page(resp.text, getattr(resp, "url", None))
+            raise ManifestError(
+                f"Could not find main.js bundle URL in X home page: {describe_rejected_x_page(kind)}"
+            )
 
         # Step 2: Fetch the main JS bundle.
         js_resp = session.get(main_js_urls[0], timeout=20, allow_redirects=True)
@@ -506,12 +533,22 @@ def scrape_manifest_from_x(
                 if key not in base_features:
                     base_features[key] = False
 
+        # Each operation keeps the switches that its own entry in main.js declares, with the value of
+        # the base for a known switch. Not the default operation_features alone: with a fresh query id,
+        # X answers 404 to a request whose features are not the ones the operation declares, while the
+        # old id still tolerates them. So a scrape that drops these gives a manifest that fails.
+        merged_operation_features = dict(_DEFAULT_MANIFEST.get("operation_features", {}))
+        for manifest_key, names in operation_features.items():
+            merged_operation_features[manifest_key] = {
+                name: base_features.get(name, False) for name in names
+            }
+
         result = {
             "version": "v5-live-scrape",
             "query_ids": query_ids,
             "endpoints": endpoints,
             "features": base_features,
-            "operation_features": _DEFAULT_MANIFEST.get("operation_features", {}),
+            "operation_features": merged_operation_features,
             "operation_field_toggles": _DEFAULT_MANIFEST.get("operation_field_toggles", {}),
         }
 
