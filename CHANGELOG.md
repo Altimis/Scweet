@@ -4,6 +4,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [5.8.1] - 2026-09-28
+
+X now serves the page that the request signature needs only to a request with the cookies of an account that X accepts. This release follows that change. Every change is additive: no method, no field and no default of 5.8.0 changes.
+
+### Fixed
+
+- **A fresh `auth_token` works again when the state file also holds an old one** (#197). The bootstrap of the `x-client-transaction-id` header read the first account row of the state file, with no check. A row with a revoked token stays in the file as `unusable`; X answers its login page to that row, the header was never built, and every request of the fresh account answered 404. The bootstrap now skips a row marked `unusable`, reads the newest usable account first, and tries the next account when X rejects one.
+- **A rejected `auth_token` names itself** (#197). X answers its login page to a token that it does not accept, and that page still sets cookies. The import counted those cookies as a success and stored the reason `missing_csrf`. The reason is now `rejected_auth_token`, the warning says what to do, and a run that fails on 404 without the header explains the cause in its summary instead of ending as an expired cookie.
+- **`manifest_scrape_on_init=True` and `refresh_manifest()` give a manifest that X accepts** (#197). The scrape opened a session with no cookies and no proxy, and X answers its login page to such a request. It also extracted the feature switches of each operation and then stored the defaults in their place; with a fresh query id, X answers 404 to a request whose switches are not the ones the operation declares. The scrape now sends the cookies of a usable account, uses the configured proxy, and keeps the switches of each operation.
+
 ## [5.8.0] - 2026-09-15
 
 This release removes the silent failures that a user could meet, makes the first run obvious, and adds the newest versions of Python. Every change is additive: no method, no field and no default of 5.7.x changes.
