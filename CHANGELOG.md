@@ -4,7 +4,9 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## [5.8.2] - 2026-10-22
+
+A proxy with `{session}` now replaces an exit IP that fails, so one dead exit no longer costs a profile its rows. Every change is additive: no method and no default of 5.8.1 changes, and one field is new.
 
 ### Fixed
 
