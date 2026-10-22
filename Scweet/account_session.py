@@ -107,13 +107,36 @@ def fill_proxy_session_placeholder(proxy: Any, account: Mapping[str, Any]) -> An
         name = re.sub(r"[^A-Za-z0-9]", "", str(account.get("username") or "")) or "acct"
         return f"{name}{uuid.uuid4().hex[:8]}"
 
-    if isinstance(proxy, str) and "{session}" in proxy:
-        return proxy.replace("{session}", _token())
+    if not _holds_session_placeholder(proxy):
+        return proxy
+    token = _token()
+    if isinstance(proxy, str):
+        return proxy.replace("{session}", token)
+    return {k: (v.replace("{session}", token) if isinstance(v, str) else v) for k, v in proxy.items()}
+
+
+def _holds_session_placeholder(proxy: Any) -> bool:
+    if isinstance(proxy, str):
+        return "{session}" in proxy
     if isinstance(proxy, dict):
-        if any(isinstance(v, str) and "{session}" in v for v in proxy.values()):
-            token = _token()
-            return {k: (v.replace("{session}", token) if isinstance(v, str) else v) for k, v in proxy.items()}
-    return proxy
+        return any(isinstance(v, str) and "{session}" in v for v in proxy.values())
+    return False
+
+
+_PROXY_TEMPLATE_ATTR = "_scweet_proxy_template"
+
+
+def repin_proxy_session(session: Any) -> bool:
+    """Give the session a new `{session}` token, so its next request leaves from a new exit IP.
+
+    The session keeps its cookies and headers. Returns False when the proxy holds no `{session}`.
+    """
+    remembered = getattr(session, _PROXY_TEMPLATE_ATTR, None)
+    if not remembered:
+        return False
+    template, account = remembered
+    proxies = normalize_http_proxies(fill_proxy_session_placeholder(template, account))
+    return bool(proxies) and apply_proxies_to_session(session, proxies)
 
 
 @dataclass(frozen=True)
@@ -275,6 +298,11 @@ class AccountSessionBuilder:
         try:
             account_proxy = _normalize_proxy_payload(_record_get(account, "proxy_json", "proxy"))
             proxy_source = account_proxy if account_proxy is not None else self.proxy
+            if _holds_session_placeholder(proxy_source):
+                try:
+                    setattr(session, _PROXY_TEMPLATE_ATTR, (proxy_source, {"username": account.get("username")}))
+                except Exception:
+                    pass
             proxy_source = fill_proxy_session_placeholder(proxy_source, account)
             effective_proxies = normalize_http_proxies(proxy_source)
             if effective_proxies is None:

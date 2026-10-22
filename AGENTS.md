@@ -11,7 +11,7 @@ come before a feature.
 ## Map
 
 - `Scweet/` — the importable package. Every module is flat inside it, with no sub-package.
-- `tests/` — 51 files and 512 tests. A pytest marker selects the level. `tests/fixtures/` holds the
+- `tests/` — 52 files and 531 tests. A pytest marker selects the level. `tests/fixtures/` holds the
   captured answers of X.
 - `examples/` — short scripts that a reader can run.
 - `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.14.
@@ -57,6 +57,13 @@ Scweet.search()            the public method, in client.py
   holds `fill_proxy_session_placeholder`, and the check on lease, the bootstrap of the transaction id, and the
   bootstrap of the cookies each call it. A literal `{session}` is not a valid session name: measured
   2026-09-09, the provider answered HTTP 407 for 15 of 15 checks and the run stopped before it reached X.
+- **A request that fails in the network retries only from a new exit IP.** With `{session}` in the proxy URL,
+  `api_engine._graphql_get` retries up to `network_error_retries` (2) times on the same account, and
+  `repin_proxy_session` in `account_session.py` fills `{session}` again on the same session, so the cookies stay.
+  A URL without `{session}` returns 599 at once, because its next request reaches the same exit. Measured
+  2026-10-22 on a residential provider: 5 of 30 fresh sessions timed out, and a session that failed once failed
+  again, 6 of 6. Two static datacenter proxies answered 60 of 60. Without the retry, a profile timeline lost its
+  one user lookup and reported the target complete with 0 tweets.
 - **A run waits a bounded time for a cooldown before it fails.** When every account holds a cooldown, the run
   waits up to `pool_wait_max_s` (120s) and retries every `pool_wait_poll_s` (5s), because a cooldown expires.
   It ends with `AccountPoolExhausted` only after the wait. Set `pool_wait_max_s` to 0 to fail at once.

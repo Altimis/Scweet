@@ -620,6 +620,7 @@ s = Scweet(
 | `api_http_impersonate` | `str \| None` | `"chrome"` | Browser impersonation target for curl_cffi. `"chrome"` follows the newest Chrome fingerprint that the installed curl_cffi supports. |
 | `api_user_agent` | `str \| None` | `None` | Custom User-Agent string |
 | `request_404_retries` | `int` | `1` | Retries of a request that answers 404, after Scweet builds a fresh transaction id. X answers 404 when the id is stale, so one retry usually repairs the request. `0` stops the retry. |
+| `network_error_retries` | `int` | `2` | Retries of a request that fails in the network, for example a proxy timeout, when the proxy URL holds `{session}`. Each retry stays on the same account and uses a new session token, so it leaves from a new exit IP. A proxy URL without `{session}` does not retry. `0` stops the retry. |
 | `transaction_init_attempts` | `int` | `3` | Attempts to build the transaction id when the client starts. X refuses a request with no `x-client-transaction-id` header, so a failure here stops every request. |
 | `transaction_init_backoff_s` | `float` | `1.5` | Seconds between two attempts to build the transaction id. Each attempt waits this value multiplied by the number of the attempt. |
 

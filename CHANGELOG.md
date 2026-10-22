@@ -4,6 +4,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **With `{session}` in the proxy URL, a proxy timeout no longer ends a profile timeline, a follower list or a lookup with no rows.** These paths send each request on one session of one account, and a request that failed in the network returned 0 rows at once. The profile timeline also reported the target as complete. A residential exit IP that times out stays dead for its session, so a plain repeat fails again. Now, when the proxy URL holds `{session}`, a request that fails in the network retries on the same account up to `network_error_retries` times (default 2). Each retry uses a new session token, so it leaves from a new exit IP, and the session keeps its cookies. A proxy URL without `{session}`, for example a static datacenter proxy, keeps the earlier behaviour.
+
 ## [5.8.1] - 2026-09-28
 
 X now serves the page that the request signature needs only to a request with the cookies of an account that X accepts. This release follows that change. Every change is additive: no method, no field and no default of 5.8.0 changes.

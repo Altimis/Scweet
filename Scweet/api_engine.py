@@ -11,7 +11,7 @@ from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
 from .http_utils import NO_SIGNATURE_DETAIL
-from .account_session import AccountSessionBuilder
+from .account_session import AccountSessionBuilder, repin_proxy_session
 from .cooldown import (
     compute_cooldown,
     effective_status_with_rate_limit_headers,
@@ -2970,7 +2970,9 @@ class ApiEngine:
             # header, and that 404 describes the request and never the account. So a
             # 404 rebuilds the id and retries on the same session before it returns.
             retries_404 = self._coerce_positive_int(_cfg(self.config, "request_404_retries", 1)) or 0
+            network_retries = self._coerce_positive_int(_cfg(self.config, "network_error_retries", 2)) or 0
             attempt = 0
+            network_attempt = 0
             while True:
                 request_headers: dict[str, str] = {}
                 tx_id = await self._build_transaction_id(method="GET", url=url)
@@ -2983,14 +2985,31 @@ class ApiEngine:
                         "X answers 404 for such a request. The build of the id failed."
                     )
 
-                response = await self._session_get(
-                    active_session,
-                    url,
-                    params=params,
-                    timeout=timeout_s,
-                    allow_redirects=True,
-                    headers=request_headers if request_headers else None,
-                )
+                try:
+                    response = await self._session_get(
+                        active_session,
+                        url,
+                        params=params,
+                        timeout=timeout_s,
+                        allow_redirects=True,
+                        headers=request_headers if request_headers else None,
+                    )
+                except Exception as exc:
+                    # Only a new exit IP can help: a failed exit stays dead for its session, and a URL
+                    # without {session} has no other exit to offer, so it fails at once.
+                    if network_attempt >= network_retries or not repin_proxy_session(active_session):
+                        raise
+                    network_attempt += 1
+                    logger.warning(
+                        "API request endpoint=%s account=%s failed in the network (%s); retry %s/%s "
+                        "on the same account from a new proxy session",
+                        url,
+                        account_label,
+                        str(exc)[:120],
+                        network_attempt,
+                        network_retries,
+                    )
+                    continue
                 status = int(getattr(response, "status_code", 0) or 0)
                 headers = dict(getattr(response, "headers", {}) or {})
                 text_snippet = str(getattr(response, "text", "") or "")[:200]

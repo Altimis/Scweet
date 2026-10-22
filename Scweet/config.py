@@ -97,6 +97,9 @@ class ScweetConfig(BaseModel):
     transaction_init_backoff_s: float = Field(default=1.5, ge=0.0)
     # A 404 rebuilds the id and retries once on the same account before any cooldown.
     request_404_retries: int = Field(default=1, ge=0)
+    # With `{session}` in the proxy URL, a request that fails in the network retries on the same account from
+    # a new exit IP, because a dead exit stays dead for its session. A URL without `{session}` never retries.
+    network_error_retries: int = Field(default=2, ge=0)
 
     # Manifest: the GraphQL query ids. X rotates them, and a stale id answers 404.
     manifest_url: Optional[str] = None
