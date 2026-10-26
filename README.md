@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>Scrape Twitter / X without the official API.</strong>
+  <strong>Twitter scraper: scrape X without the official API.</strong>
   <br>
   Tweets, profiles, followers, trends and more.
   <br>
@@ -50,18 +50,21 @@
 
 ## Two ways to run it
 
+Both give you the same data. Hosted: you press a button and get the results. Self-hosted: you run the code, and you manage the accounts and the proxies.
+
 ### 1. Hosted : nothing to manage ⭐
 
 Runs on Apify. **You do not need X accounts, cookies or proxies.**
 
 - Configure and run **from your browser**, no code needed, or drive it from code with the [Python API](https://apify.com/altimis/scweet/api/python)
 - **Search** tweets, profile timelines, follower / following lists
+- **Monitor** accounts, a brand or a token on a schedule, with no server to run
 - **Export** in different formats (**JSON, CSV or XLSX**)
 - **Free tier included**; pay-as-you-go pricing is on the Actor page
 
 <p align="center">
   <a href="https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=jeb97">
-    <img height="44" alt="Run Scweet on Apify - free tier" src="https://img.shields.io/badge/%20Run%20Scweet%20on%20Apify-Free%20tier-246DFF?style=for-the-badge&logoColor=white&logo=data:image/svg%2Bxml;base64,PHN2ZyB3aWR0aD0iMTA4MCIgaGVpZ2h0PSIxMDgwIiB2aWV3Qm94PSIwIDAgMTA4MCAxMDgwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNNjA3Ljg1OSA3OC4yMjE4SDk4Ny43ODVDOTk1LjUxMyA3OC4yMjE4IDEwMDEuNzggODQuNDg2OCAxMDAxLjc4IDkyLjIxNTFWNjcyLjgzNEMxMDAxLjc4IDY4Ni43NDIgOTgzLjY5IDY5Mi4xMzQgOTc2LjA3NSA2ODAuNDk2TDU5Ni4xNSA5OS44NzdDNTkwLjA2IDkwLjU3MDMgNTk2LjczNyA3OC4yMjE4IDYwNy44NTkgNzguMjIxOFoiIGZpbGw9IiMyNDZERkYiLz4KPHBhdGggZD0iTTQ3Mi4xNDEgNzguMjIxOEg5Mi4yMTVDODQuNDg2NyA3OC4yMjE4IDc4LjIyMTcgODQuNDg2OCA3OC4yMjE3IDkyLjIxNTFWNjcyLjgzNEM3OC4yMjE3IDY4Ni43NDIgOTYuMzA5NCA2OTIuMTM0IDEwMy45MjQgNjgwLjQ5Nkw0ODMuODUgOTkuODc3QzQ4OS45NCA5MC41NzAzIDQ4My4yNjMgNzguMjIxOCA0NzIuMTQxIDc4LjIyMThaIiBmaWxsPSIjMjBBMzRFIi8+CjxwYXRoIGQ9Ik01MzMuNDkxIDU0My4wODZMMTAxLjg5NSA5NzcuOTI3QzkzLjEzMDIgOTg2Ljc1OCA5OS4zODQ5IDEwMDEuNzggMTExLjgyNiAxMDAxLjc4SDk2OC41MjlDOTgwLjkxOSAxMDAxLjc4IDk4Ny4xOTcgOTg2Ljg2MyA5NzguNTM1IDk3OC4wMDNMNTUzLjQyOSA1NDMuMTYxQzU0Ny45NjkgNTM3LjU3NiA1MzguOTkzIDUzNy41NDIgNTMzLjQ5MSA1NDMuMDg2WiIgZmlsbD0iI0Y4NjYwNiIvPgo8L3N2Zz4K">
+    <img width="400" alt="Run Scweet on Apify - free trial" src="https://img.shields.io/badge/%20Run%20Scweet%20on%20Apify-Free%20trial-246DFF?style=for-the-badge&logoColor=white&logo=data:image/svg%2Bxml;base64,PHN2ZyB3aWR0aD0iMTA4MCIgaGVpZ2h0PSIxMDgwIiB2aWV3Qm94PSIwIDAgMTA4MCAxMDgwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNNjA3Ljg1OSA3OC4yMjE4SDk4Ny43ODVDOTk1LjUxMyA3OC4yMjE4IDEwMDEuNzggODQuNDg2OCAxMDAxLjc4IDkyLjIxNTFWNjcyLjgzNEMxMDAxLjc4IDY4Ni43NDIgOTgzLjY5IDY5Mi4xMzQgOTc2LjA3NSA2ODAuNDk2TDU5Ni4xNSA5OS44NzdDNTkwLjA2IDkwLjU3MDMgNTk2LjczNyA3OC4yMjE4IDYwNy44NTkgNzguMjIxOFoiIGZpbGw9IiMyNDZERkYiLz4KPHBhdGggZD0iTTQ3Mi4xNDEgNzguMjIxOEg5Mi4yMTVDODQuNDg2NyA3OC4yMjE4IDc4LjIyMTcgODQuNDg2OCA3OC4yMjE3IDkyLjIxNTFWNjcyLjgzNEM3OC4yMjE3IDY4Ni43NDIgOTYuMzA5NCA2OTIuMTM0IDEwMy45MjQgNjgwLjQ5Nkw0ODMuODUgOTkuODc3QzQ4OS45NCA5MC41NzAzIDQ4My4yNjMgNzguMjIxOCA0NzIuMTQxIDc4LjIyMThaIiBmaWxsPSIjMjBBMzRFIi8+CjxwYXRoIGQ9Ik01MzMuNDkxIDU0My4wODZMMTAxLjg5NSA5NzcuOTI3QzkzLjEzMDIgOTg2Ljc1OCA5OS4zODQ5IDEwMDEuNzggMTExLjgyNiAxMDAxLjc4SDk2OC41MjlDOTgwLjkxOSAxMDAxLjc4IDk4Ny4xOTcgOTg2Ljg2MyA5NzguNTM1IDk3OC4wMDNMNTUzLjQyOSA1NDMuMTYxQzU0Ny45NjkgNTM3LjU3NiA1MzguOTkzIDUzNy41NDIgNTMzLjQ5MSA1NDMuMDg2WiIgZmlsbD0iI0Y4NjYwNiIvPgo8L3N2Zz4K">
   </a>
 </p>
 
@@ -76,7 +79,20 @@ s = Scweet(auth_token="YOUR_AUTH_TOKEN")
 tweets = s.search("bitcoin", limit=100)
 ```
 
-Both give you the same data. Self-hosted: you run the code, and you manage the accounts and the proxies. Hosted: you press a button and get the results.
+Scweet works with any proxy. A proxy is optional for a small run and recommended for real volume, because many requests from one IP raise the risk to an account. Put the values of your proxy in place of each value that starts with `YOUR_`:
+
+```python
+s = Scweet(auth_token="YOUR_AUTH_TOKEN",
+           proxy="http://YOUR_LOGIN:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT")
+```
+
+With several accounts or a rotating proxy, see [Multiple accounts & proxies](#multiple-accounts--proxies).
+
+Our proxy sponsor, [Proxy-Seller](https://proxy-seller.com/?utm_source=github&utm_medium=referral&utm_campaign=partner_promo&utm_term=github&partner=8S8IFKOYT12CE3), gives 15% off residential, ISP and IPv4 proxies with the code `SCWEET`.
+
+<p align="center">
+  <a href="https://proxy-seller.com/?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=partner_promo&amp;utm_term=github&amp;partner=8S8IFKOYT12CE3"><img src="assets/sponsors/proxy-seller.png" alt="Proxy-Seller: residential, ISP and IPv4 proxies. Promo code SCWEET" width="560"></a>
+</p>
 
 ---
 
@@ -128,17 +144,7 @@ tweets = s.search("ethereum", limit=100, save=True)   # save=True writes a CSV
 
 > Always set `limit`. Without it, a run continues until the daily cap of the account.
 
-**Next:** [add a proxy](#proxies) for real volume, [use several accounts](#multiple-accounts--proxies), or read the [full documentation](DOCUMENTATION.md).
-
-### Proxies
-
-A proxy is optional for a small run and recommended for real volume, because many requests from one IP raise the risk to an account. Pass one URL for all accounts:
-
-```python
-s = Scweet(auth_token="YOUR_AUTH_TOKEN", proxy="http://user:pass@proxy.example.com:8000")
-```
-
-On a rotating provider, put `{session}` in the URL to give each account its own exit IP: `http://user,session-{session}:pass@proxy.example.com:8000`. For a proxy per account, see [Multiple accounts & proxies](#multiple-accounts--proxies).
+**Next:** [add proxies and several accounts](#multiple-accounts--proxies) for real volume, or read the [full documentation](DOCUMENTATION.md).
 
 > All methods have async variants: `asearch()`, `aget_profile_tweets()`, `aget_followers()`, etc.
 
@@ -219,22 +225,31 @@ For multi-account runs, use `--cookies-file cookies.json`.
 
 ## Multiple accounts & proxies
 
-For higher throughput and reduced ban risk, use multiple dedicated accounts with per-account proxies.
+For higher throughput and reduced ban risk, use several dedicated accounts. List them in `cookies.json`, and replace each value that starts with `YOUR_`.
 
-Running Scweet locally at any real volume usually means dedicated accounts and proxies. You can use a single proxy, a rotating proxy, or assign one per account. On a rotating provider, put `{session}` in the proxy URL to give each account its own session — see "Proxy modes" in DOCUMENTATION.md.
-
-**`cookies.json` format:**
+**A fixed proxy for each account**, for example datacenter or ISP proxies:
 
 ```json
 [
-  { "username": "acct1", "cookies": { "auth_token": "..." }, "proxy": "http://user1:pass1@host1:port1" },
-  { "username": "acct2", "cookies": { "auth_token": "..." }, "proxy": "http://user2:pass2@host2:port2" }
+  { "username": "acct1", "cookies": { "auth_token": "YOUR_AUTH_TOKEN_1" },
+    "proxy": "http://YOUR_LOGIN:YOUR_PASSWORD@YOUR_HOST_1:YOUR_PORT" },
+  { "username": "acct2", "cookies": { "auth_token": "YOUR_AUTH_TOKEN_2" },
+    "proxy": "http://YOUR_LOGIN:YOUR_PASSWORD@YOUR_HOST_2:YOUR_PORT" }
 ]
 ```
 
 ```python
 s = Scweet(cookies_file="cookies.json")  # proxies are read from the file, one per account
 ```
+
+**One rotating proxy for all accounts**, for example residential proxies. Leave `"proxy"` out of `cookies.json`, and put `{session}` where your provider names a sticky session. Keep `{session}` exactly as it is:
+
+```python
+s = Scweet(cookies_file="cookies.json",
+           proxy="http://YOUR_LOGIN-session-{session}:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT")
+```
+
+Scweet replaces `{session}` with the name of the account and 8 random characters, for example `YOUR_LOGIN-session-acct1a3f9c2b7` for `acct1`. Each account therefore keeps its own IP, and a request that fails in the network retries from a new IP. Each provider writes the session in its own way: read [Proxy modes](DOCUMENTATION.md#proxy-modes).
 
 > **Never use your personal Twitter/X account for scraping.** Use dedicated accounts only.
 
@@ -262,7 +277,7 @@ One page of X is easy to fetch. 10,000 tweets is not, because accounts get rate-
 - 25 fields per tweet, including view counts, quotes, bookmarks, language and the nested quoted or retweeted post.
 
 **Or let us run it for you**
-- The [hosted version](https://apify.com/altimis/scweet?fpr=a40q9) does all of the above on our accounts and proxies. Free tier included.
+- The [hosted version](https://apify.com/altimis/scweet?fpr=a40q9) does all of the above on our accounts and proxies. Free trial included.
 
 > Also on [twint](https://github.com/twintproject/twint) and [snscrape](https://github.com/JustAnotherArchivist/snscrape): both are unmaintained and no longer work against X's current backend. If you are migrating from either, Scweet covers the same ground and more.
 
