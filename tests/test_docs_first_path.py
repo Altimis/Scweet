@@ -43,7 +43,9 @@ def test_both_documents_start_with_the_same_credential():
 def test_the_readme_quickstart_code_block_has_no_placeholder_proxy():
     """The first code block once carried a proxy `host:port` that passes the
     validator, so a copy of it sent a request to a host named `host`."""
-    quickstart = README[README.find("## Python Quickstart") : README.find("### Proxies")]
+    start = README.find("## Python Quickstart")
+    quickstart = README[start : README.find("\n---", start)]
+    assert "```python" in quickstart, "the quickstart section is not where the test looks"
     assert "@host:port" not in quickstart, "a placeholder proxy in the runnable block"
     # The runnable first block names no proxy at all.
     first_block = quickstart[quickstart.find("```python") : quickstart.find("```", quickstart.find("```python") + 3)]

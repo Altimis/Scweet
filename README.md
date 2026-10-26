@@ -211,7 +211,7 @@ For the full list of supported search operators, see [twitter-advanced-search](h
 
 ```bash
 # Search with proxy, save to CSV
-scweet --auth-token YOUR_AUTH_TOKEN --proxy http://user:pass@host:port \
+scweet --auth-token YOUR_AUTH_TOKEN --proxy http://YOUR_LOGIN:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT \
   search "bitcoin" --since 2026-01-01 --limit 500 --save
 
 # Followers, saved as JSON
