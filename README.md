@@ -1,12 +1,13 @@
 <p align="center">
-  <img src="assets/scweet_banner.png" alt="Scweet" width="480" />
+  <img src="assets/scweet_banner.png" alt="Scweet: Twitter scraper and X scraper for Python" width="480" />
 </p>
 
+<h1 align="center">Scweet: Twitter Scraper and X Scraper for Python</h1>
+
 <p align="center">
-  <strong>Twitter scraper: scrape X without the official API.</strong>
+  Scrape tweets, profiles, followers, following and trends from X (Twitter) without the official API.
   <br>
-  Tweets, profiles, followers, trends and more.
-  <br>
+  Run the hosted version with nothing to manage, or use the Python library with your own accounts.
 </p>
 
 <p align="center">
