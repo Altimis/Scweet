@@ -4,7 +4,9 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## [5.8.3] - 2026-11-20
+
+A failed build of the request signature no longer ends a run, and a save never mixes two kinds of row in one file. No method, no setting and no default of 5.8.2 changes: a saved file keeps its name, and only a save of another kind of row goes to a file of its own. An unsigned request now reports the status `490` in place of `404`.
 
 ### Fixed
 
