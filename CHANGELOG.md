@@ -8,6 +8,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- **A save never mixes two kinds of row in one file.** The default name of a saved file of a profile method is the handle, for example `NASA.csv`, and every save appends. So `profile-tweets NASA`, `followers NASA` and `following NASA` with `--save` put rows of three shapes into one file. The default name does not change. Now a save whose rows are of another kind than the rows already in the file goes to a file named after the operation, for example `NASA_followers.csv`, and the log names that file. A second save of the same kind still appends to `NASA.csv`.
 - **A failed build of the request signature no longer ends a run with one account, and the account no longer rests for it.** When Scweet could not build the `x-client-transaction-id` header, X answered 404 to the request, and that 404 gave the account a cooldown and ended the task with no retry. A run with one account then ended with 0 tweets, and the next call raised `AccountPoolExhausted` until the cooldown ended. Now such a request reports the status `490`, the account takes no cooldown, and the task retries on the same account. Each new build of the signature also reaches a new exit IP when the proxy URL holds `{session}`, where every attempt used the same exit before. A 404 to a request that carried the header keeps its earlier treatment.
 
 ## [5.8.2] - 2026-10-22

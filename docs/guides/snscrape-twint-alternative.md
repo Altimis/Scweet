@@ -62,8 +62,8 @@ Each Scweet command starts with `scweet --auth-token YOUR_AUTH_TOKEN`. After the
 account in its state file, and the option is no longer necessary.
 
 The command prints nothing by default. `--save` writes the rows to the folder `outputs/`, and `--pretty` prints
-them as JSON. Give each command its own `--save-name`: a run adds its rows to the end of a file with the same name,
-and the default name of a profile command is the handle only.
+them as JSON. Give each command its own `--save-name`, because a run adds its rows to the end of a file with the same
+name.
 
 ## The code map
 

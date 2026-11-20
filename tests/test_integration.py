@@ -86,8 +86,9 @@ def test_search_with_save_creates_csv_and_json(client, tmp_path):
     s = Scweet(**_creds, db_path=db_path, config=cfg)
     tweets = s.search("python", since=_YESTERDAY, until=_TODAY, limit=3, save=True, save_format="both")
     if tweets:
-        assert (tmp_path / "search.csv").exists()
-        assert (tmp_path / "search.json").exists()
+        # The default name holds the query and the dates.
+        assert (tmp_path / f"python_{_YESTERDAY}_{_TODAY}.csv").exists()
+        assert (tmp_path / f"python_{_YESTERDAY}_{_TODAY}.json").exists()
 
 
 @_skip

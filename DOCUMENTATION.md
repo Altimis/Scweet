@@ -454,7 +454,7 @@ tweets = s.search("query", since="2024-01-01", limit=200, save=True, save_format
 tweets = s.search("query", since="2024-01-01", limit=200, save=True, save_format="both")
 ```
 
-Output files are written to the `save_dir` directory (default: `"outputs"`). File names are based on the operation type (`search.csv`, `profile_tweets.json`, `followers.csv`, etc.).
+Output files are written to the `save_dir` directory (default: `"outputs"`). The default name of a search holds its query and its dates, for example `bitcoin_2026-11-01_2026-11-20.csv`. The default name of a method that takes profiles holds the handles, for example `NASA.csv`. A save adds its rows to the end of a file with the same name. When that file already holds another kind of row, tweets against profiles or followers against following, the save goes to a file named after the operation, for example `NASA_followers.csv`, and the log names it. Give `save_name` for a name of your choice.
 
 The default format can be set globally via `ScweetConfig(save_format="json")`.
 

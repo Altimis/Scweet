@@ -1134,6 +1134,35 @@ class Scweet:
     # ── Output helpers ──────────────────────────────────────────────────
 
     @staticmethod
+    def _row_kind(row: dict) -> tuple[str, Optional[str]]:
+        """A tweet, or a profile of one list: the field `type` names the list of a follower row."""
+        if row.get("tweet_id"):
+            return ("tweet", None)
+        return ("user", row.get("type") or None)
+
+    @staticmethod
+    def _kind_of_saved_file(base: str, fmt: str) -> Optional[tuple[str, Optional[str]]]:
+        """The kind of the first row of an earlier save to this name, or None when no file holds a row."""
+        import csv
+        import json
+
+        csv_path, json_path = f"{base}.csv", f"{base}.json"
+        if fmt in ("csv", "both") and os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
+            with open(csv_path, newline="", encoding="utf-8") as handle:
+                first = next(csv.DictReader(handle), None)
+            if first is not None:
+                return Scweet._row_kind(first)
+        if fmt in ("json", "both") and os.path.exists(json_path) and os.path.getsize(json_path) > 0:
+            try:
+                with open(json_path, encoding="utf-8") as handle:
+                    data = json.load(handle)
+            except ValueError:
+                return None
+            if isinstance(data, list) and data and isinstance(data[0], dict):
+                return Scweet._row_kind(data[0])
+        return None
+
+    @staticmethod
     def _build_save_name(
         operation: str,
         *,
@@ -1185,6 +1214,14 @@ class Scweet:
             base_name = operation
 
         base = os.path.join(save_dir, base_name)
+        # Every save appends, and the default name of a profile method is the handle only. A file that already
+        # holds another kind of row keeps its rows, and this save goes to a file named after the operation.
+        held = self._kind_of_saved_file(base, fmt)
+        if held is not None and held != self._row_kind(rows[0]):
+            logger.warning(
+                "%s already holds another kind of row; the %s rows go to %s_%s", base, operation, base, operation
+            )
+            base = f"{base}_{operation}"
 
         if fmt in ("csv", "both"):
             from .outputs import TWEET_COLUMN_ORDER, USER_COLUMN_ORDER, write_csv_auto_header
