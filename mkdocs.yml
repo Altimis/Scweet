@@ -43,6 +43,11 @@ theme:
 
 nav:
   - Home: index.md
+  - Guides:
+      - Scrape tweets without the API: guides/scrape-tweets-without-api.md
+      - Replace snscrape and twint: guides/snscrape-twint-alternative.md
+      - Read X accounts after Nitter: guides/nitter-alternative.md
+      - Scrape followers and following: guides/scrape-followers.md
   - Reference: documentation.md
   - Changelog: changelog.md
   - Contributing: contributing.md

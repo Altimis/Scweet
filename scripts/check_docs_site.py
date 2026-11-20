@@ -28,6 +28,14 @@ _PAGES = {
     "contributing": "CONTRIBUTING.md",
 }
 
+# The guides have their text in `docs/guides/` and no copy at the root, so only their page is checked.
+_GUIDES = [
+    "guides/scrape-tweets-without-api",
+    "guides/snscrape-twint-alternative",
+    "guides/nitter-alternative",
+    "guides/scrape-followers",
+]
+
 
 def _fail(message: str) -> None:
     print(f"FAIL: {message}")
@@ -39,11 +47,11 @@ def main() -> None:
         _fail("site/ is absent. Run `mkdocs build --strict` first.")
 
     # 1. every page exists
-    for page in ["index", *_PAGES]:
+    for page in ["index", *_PAGES, *_GUIDES]:
         name = "index.html" if page == "index" else f"{page}/index.html"
         if not (_SITE / name).is_file():
             _fail(f"the site holds no page {name}")
-    print(f"ok   every page of the navigation exists ({1 + len(_PAGES)} pages)")
+    print(f"ok   every page of the navigation exists ({1 + len(_PAGES) + len(_GUIDES)} pages)")
 
     # 2. the reference holds every section of the file at the root
     for page, source in _PAGES.items():

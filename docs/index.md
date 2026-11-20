@@ -1,3 +1,8 @@
+---
+title: Twitter scraper and X scraper for Python
+description: Scweet is a Python library and CLI that scrapes tweets, profiles, followers and trends from X (Twitter) without the official API.
+---
+
 # Scweet
 
 Scrape Twitter / X without the official API. Tweets, profiles, followers and trends, from Python or the

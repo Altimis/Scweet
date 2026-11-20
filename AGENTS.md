@@ -14,6 +14,10 @@ come before a feature.
 - `tests/` — 52 files and 531 tests. A pytest marker selects the level. `tests/fixtures/` holds the
   captured answers of X.
 - `examples/` — short scripts that a reader can run.
+- `docs/` — the pages that only the site holds: `index.md` and `guides/`. `docs_hooks.py` copies `DOCUMENTATION.md`,
+  `CHANGELOG.md` and `CONTRIBUTING.md` into it at each build. `scripts/check_docs_site.py` fails when a page of the
+  navigation is missing. Keep `docs/google345d2061a18e9895.html`: Google Search Console reads it to prove the
+  owner of the site.
 - `.github/workflows/tests.yml` — the only gate. It runs the unit tests on Python 3.9 to 3.14, on `ubuntu-24.04`,
   because `ubuntu-latest` (Ubuntu 26.04) has no build of Python 3.9. Each version runs to its end.
 

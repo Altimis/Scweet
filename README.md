@@ -305,6 +305,8 @@ Full API reference, config options, structured search filters, async patterns, r
 
 **Read it as a site: [altimis.github.io/Scweet](https://altimis.github.io/Scweet/)** — the same text, with search and a navigation menu.
 
+**Guides:** [scrape tweets without the API](https://altimis.github.io/Scweet/guides/scrape-tweets-without-api/) · [replace snscrape and twint](https://altimis.github.io/Scweet/guides/snscrape-twint-alternative/) · [read X accounts after Nitter](https://altimis.github.io/Scweet/guides/nitter-alternative/) · [scrape followers and following](https://altimis.github.io/Scweet/guides/scrape-followers/)
+
 - [Account setup](DOCUMENTATION.md#account-setup)
 - [Search API](DOCUMENTATION.md#search-api)
 - [Profile tweets](DOCUMENTATION.md#profile-tweets)
