@@ -29,6 +29,7 @@ from .account_session import fill_proxy_session_placeholder
 from .http_utils import (
     NO_SIGNATURE_CAUSE,
     NO_SIGNATURE_DETAIL,
+    UNSIGNED_REQUEST_STATUS,
     apply_proxies_to_session,
     normalize_http_proxies,
 )
@@ -46,7 +47,7 @@ from .scheduler import (
 _TS_FMT = "%Y-%m-%d_%H:%M:%S_UTC"
 _DATE_FMT = "%Y-%m-%d"
 _AUTH_ERROR_CODES = {401, 403}
-_TRANSIENT_CODES = {429, 598, 599}
+_TRANSIENT_CODES = {429, 598, 599, UNSIGNED_REQUEST_STATUS}
 _MAX_ERROR_EVENTS = 50
 logger = logging.getLogger(__name__)
 
@@ -1243,6 +1244,10 @@ class Runner:
                     async with stats_lock:
                         stats.tasks_failed += 1
 
+                # The account did nothing wrong, so its worker stays and takes the retry. With one account the
+                # run would end here, because no other worker exists to take the task.
+                if status_code == UNSIGNED_REQUEST_STATUS and can_retry:
+                    continue
                 # Non-success exits this account worker to allow cooldown/account-switch flow.
                 break
         finally:

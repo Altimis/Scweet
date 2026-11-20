@@ -181,6 +181,13 @@ class TransactionIdProvider:
         from x_client_transaction import ClientTransaction
         from x_client_transaction.utils import handle_x_migration
 
+        # A new token for {session} at each build: with one token for the life of the provider, a dead exit
+        # failed every attempt and every rebuild, and each request then left without the header.
+        from .account_session import fill_proxy_session_placeholder
+
+        self._http_proxies = normalize_http_proxies(
+            fill_proxy_session_placeholder(self.proxy, {"username": "manifest"})
+        )
         session = None
         try:
             session = self.session_factory()

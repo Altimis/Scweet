@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 
 from Scweet.api_engine import ApiEngine
+from Scweet.http_utils import UNSIGNED_REQUEST_STATUS
 from Scweet.transaction import TransactionIdProvider
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -151,7 +152,7 @@ def test_a_404_rebuilds_the_id_and_retries_on_the_same_session():
     )
 
 
-def test_without_the_retry_budget_the_404_stays():
+def test_without_the_retry_budget_the_unsigned_answer_stays():
     session = _HeaderGateSession()
     provider = _RecoveringProvider()
     engine = ApiEngine(
@@ -171,5 +172,5 @@ def test_without_the_retry_budget_the_404_stays():
         )
 
     _data, status, _headers, _snippet = asyncio.run(run())
-    assert status == 404
+    assert status == UNSIGNED_REQUEST_STATUS
     assert len(session.calls) == 1

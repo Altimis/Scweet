@@ -4,6 +4,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **A failed build of the request signature no longer ends a run with one account, and the account no longer rests for it.** When Scweet could not build the `x-client-transaction-id` header, X answered 404 to the request, and that 404 gave the account a cooldown and ended the task with no retry. A run with one account then ended with 0 tweets, and the next call raised `AccountPoolExhausted` until the cooldown ended. Now such a request reports the status `490`, the account takes no cooldown, and the task retries on the same account. Each new build of the signature also reaches a new exit IP when the proxy URL holds `{session}`, where every attempt used the same exit before. A 404 to a request that carried the header keeps its earlier treatment.
+
 ## [5.8.2] - 2026-10-22
 
 A proxy with `{session}` now replaces an exit IP that fails, so one dead exit no longer costs a profile its rows. Every change is additive: no method and no default of 5.8.1 changes, and one field is new.

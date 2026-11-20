@@ -138,10 +138,14 @@ def extract_proxy_server(proxy: Any) -> Optional[str]:
 
 
 NO_SIGNATURE_DETAIL = "no x-client-transaction-id header: the build of the request signature failed"
+# Not 404: X answers 404 with an empty body to a request without the x-client-transaction-id header, and that 404
+# names our request, never the account. The engine returns this code in its place, so no account rests for it.
+UNSIGNED_REQUEST_STATUS = 490
 NO_SIGNATURE_CAUSE = (
     "cause: X answers 404 to a request without the x-client-transaction-id header. Scweet could not "
-    "build that header, because X did not accept the cookies of any account for its bootstrap page. "
-    "Add an account with a fresh auth_token from a browser where you are logged in."
+    "build that header: X did not accept the cookies of any account for its bootstrap page, or the proxy "
+    "did not reach x.com. Add an account with a fresh auth_token from a browser where you are logged in, "
+    "or check the proxy."
 )
 
 X_PAGE_FULL = "full"

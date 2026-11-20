@@ -10,7 +10,7 @@ import uuid
 from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
-from .http_utils import NO_SIGNATURE_DETAIL
+from .http_utils import NO_SIGNATURE_DETAIL, UNSIGNED_REQUEST_STATUS
 from .account_session import AccountSessionBuilder, repin_proxy_session
 from .cooldown import (
     compute_cooldown,
@@ -3030,6 +3030,7 @@ class ApiEngine:
             if status == 404 and not tx_id and not text_snippet.strip():
                 # X answers 404 with an empty body to a request without the header. The empty body
                 # tells the run summary nothing, so the cause travels in its place.
+                status = UNSIGNED_REQUEST_STATUS
                 text_snippet = NO_SIGNATURE_DETAIL
 
             if status != 200:

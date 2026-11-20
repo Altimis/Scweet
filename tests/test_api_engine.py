@@ -91,13 +91,14 @@ def _manifest() -> ManifestModel:
     )
 
 
-def _engine_for_response(response=None, error: Exception | None = None):
+def _engine_for_response(response=None, error: Exception | None = None, transaction_id_provider=None):
     session = _Session(response=response, error=error)
     engine = ApiEngine(
         config=None,
         accounts_repo=None,
         manifest_provider=_ManifestProvider(_manifest()),
         session_factory=lambda: session,
+        transaction_id_provider=transaction_id_provider,
     )
     return engine, session
 
@@ -170,7 +171,10 @@ def test_api_engine_maps_auth_error_codes_and_404_path():
     out_403 = _run_search(engine_403)
     assert out_403["status_code"] == 403
 
-    engine_404, _ = _engine_for_response(_Response(status_code=404, payload=None))
+    # A signed request: a 404 without the header is our unsigned request and has its own status.
+    engine_404, _ = _engine_for_response(
+        _Response(status_code=404, payload=None), transaction_id_provider=_TxProvider("tx-signed")
+    )
     out_404 = _run_search(engine_404)
     assert out_404["status_code"] == 404
 

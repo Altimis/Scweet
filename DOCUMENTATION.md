@@ -917,10 +917,13 @@ from Scweet.exceptions import (
 **`RunFailed` / `NetworkError`**
 - Check your internet connection and proxy configuration
 - X may have rotated GraphQL query IDs — pass `manifest_scrape_on_init=True` to `Scweet()` (or `--manifest-scrape-on-init` in the CLI) to auto-fetch fresh ones
-- A 404 on every request, and the summary says `no x-client-transaction-id header`: X did not accept the
-  cookies of any account for the page that the header needs. The state file can hold an old row with a
-  revoked token next to a fresh one; Scweet skips a row marked `unusable` and reads the newest first. Add an
-  account with a fresh `auth_token` from a browser where you are logged in.
+- `status=490` in the summary, with `no x-client-transaction-id header`: Scweet could not build the header,
+  so X answered 404 to each request. Scweet then gives the account no cooldown and retries the task, each
+  build from a new exit IP when the proxy URL holds `{session}`. When every attempt fails, X did not accept
+  the cookies of any account for the page that the header needs, or the proxy did not reach x.com. The state
+  file can hold an old row with a revoked token next to a fresh one; Scweet skips a row marked `unusable` and
+  reads the newest first. Add an account with a fresh `auth_token` from a browser where you are logged in, or
+  check the proxy.
 - A 404 with the header means a stale query id, not bad auth. Refresh the query ids as above.
 
 ---

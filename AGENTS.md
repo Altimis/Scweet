@@ -52,11 +52,16 @@ Scweet.search()            the public method, in client.py
   account and the configured proxy, skips a row marked `unusable`, and the provider tries the next account
   when X rejects one. Without the transaction id, X answers 404 with an empty body for every request from
   every account, and that 404 describes our request and never the credentials.
-- **A request never leaves without the transaction id, and a 404 rebuilds it before any cooldown.**
+- **A request never leaves without the transaction id, and an unsigned request never spends the account.**
   `TransactionIdProvider.generate` retries the build with a backoff, because the build needs a live page
-  of X and a flaky network drops it. `api_engine._graphql_get` retries a 404 once after a
-  `refresh()` of the id, on the same account. `cooldown.py` spends the account only when a request with a
-  valid header still answers 404. Measured 2026-09-14: with no header the fill was 0%; with it, 102%.
+  of X and a flaky network drops it. Each build fills `{session}` again, so a retry reaches a new exit IP.
+  `api_engine._graphql_get` retries a 404 once after a `refresh()` of the id, on the same account. When the
+  request still had no header and X answered 404 with an empty body, it returns `UNSIGNED_REQUEST_STATUS`
+  (490, in `http_utils.py`) in place of 404. That status gives the account no cooldown, the task retries, and
+  the worker keeps its account to take the retry, so a run with one account continues. A 404 with a valid
+  header stays 404 and takes the transient cooldown. Measured 2026-09-14: with no header the fill was 0%;
+  with it, 102%. Measured 2026-11-20 with one account and the first builds forced to fail: the run gave 0
+  tweets and the account rested; with this rule the same run gave 100 of 100.
   A silent `None` from the builder once hid the cause of a whole failed run.
 - **Each path that builds a session fills the `{session}` placeholder of the proxy.** `account_session.py`
   holds `fill_proxy_session_placeholder`, and the check on lease, the bootstrap of the transaction id, and the
