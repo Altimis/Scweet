@@ -78,4 +78,4 @@ The [reference](../documentation.md#user-record) gives every field.
 ## Without your own accounts
 
 The same engine also runs as a hosted service on Apify. You need no X account, no cookie and no proxy:
-[run Scweet on Apify](https://apify.com/altimis/scweet).
+[run Scweet on Apify](https://apify.com/altimis/scweet?fpr=a40q9&fp_sid=guidefollowers).
